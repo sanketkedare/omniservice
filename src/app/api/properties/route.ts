@@ -27,30 +27,21 @@ const createPropertySchema = z.object({
 export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
-    // Default user ID for session demo
-    const userId = "65f01234567890abcdef0001";
-    let properties = await Property.find({ isActive: true }).sort({ isDefault: -1, createdAt: -1 }).lean();
-
-    if (!properties || properties.length === 0) {
-      // Return demo properties if none created yet
-      return NextResponse.json({
-        success: true,
-        data: DEMO_PROPERTIES,
-        count: DEMO_PROPERTIES.length,
-      });
-    }
+    const properties = await Property.find({ isActive: true })
+      .sort({ isDefault: -1, createdAt: -1 })
+      .lean();
 
     return NextResponse.json({
       success: true,
-      data: properties,
-      count: properties.length,
+      data: properties || [],
+      count: properties ? properties.length : 0,
     });
   } catch (error) {
     return NextResponse.json({
-      success: true,
-      data: DEMO_PROPERTIES,
-      count: DEMO_PROPERTIES.length,
-      fallback: true,
+      success: false,
+      data: [],
+      count: 0,
+      error: "Failed to fetch properties",
     });
   }
 }

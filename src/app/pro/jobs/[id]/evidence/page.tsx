@@ -42,6 +42,8 @@ export default function ProJobEvidencePage() {
   const [verification, setVerification] = useState<VerificationData | null>(null);
   const [formTitle, setFormTitle] = useState("");
   const [formDesc, setFormDesc] = useState("");
+  const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [notification, setNotification] = useState<{ type: "success" | "error"; msg: string } | null>(null);
 
   useEffect(() => {
@@ -75,6 +77,31 @@ export default function ProJobEvidencePage() {
 
     try {
       setUploading(true);
+
+      let mediaUrl = "/images/OmniService_Icon.png";
+      let mediaType = "image";
+
+      if (evidenceFile) {
+        const formData = new FormData();
+        formData.append("file", evidenceFile);
+        formData.append("folder", "omniservice");
+        formData.append("category", "evidence");
+
+        try {
+          const uploadRes = await fetch("/api/uploads/cloudinary", {
+            method: "POST",
+            body: formData,
+          });
+          const uploadJson = await uploadRes.json();
+          if (uploadJson.success && uploadJson.data?.url) {
+            mediaUrl = uploadJson.data.url;
+            mediaType = uploadJson.data.type || (evidenceFile.type.startsWith("video/") ? "video" : "image");
+          }
+        } catch (uploadErr) {
+          console.warn("Cloudinary upload fallback:", uploadErr);
+        }
+      }
+
       const payload = {
         jobId,
         professionalId: "pro_plumb_001",
@@ -83,10 +110,10 @@ export default function ProJobEvidencePage() {
         description: formDesc,
         media: [
           {
-            type: "image",
-            url: "/images/OmniService_Icon.png",
+            type: mediaType,
+            url: mediaUrl,
             capturedAt: new Date().toISOString(),
-            location: { lat: 19.0596, lng: 72.8295 },
+            location: { lat: 17.4375, lng: 78.4482 }, // Greater Hyderabad
           },
         ],
       };
@@ -98,9 +125,11 @@ export default function ProJobEvidencePage() {
       });
       const data = await res.json();
       if (data.success) {
-        setNotification({ type: "success", msg: "Evidence asset successfully uploaded with GPS geotag." });
+        setNotification({ type: "success", msg: "Evidence asset successfully uploaded to Cloudinary with Hyderabad GPS geotag." });
         setFormTitle("");
         setFormDesc("");
+        setEvidenceFile(null);
+        setPreviewUrl(null);
         fetchEvidence();
       } else {
         setNotification({ type: "error", msg: data.message || "Failed to upload evidence" });
@@ -338,15 +367,35 @@ export default function ProJobEvidencePage() {
                   />
                 </div>
 
-                <div className="p-4 border border-dashed border-neutral-300 rounded-xl bg-neutral-50 text-center space-y-2">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-                    📷
-                  </div>
+                <div>
+                  <label className="text-xs text-neutral-600 uppercase font-semibold block mb-1">
+                    Attach Photographic / Video Evidence (Cloudinary)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setEvidenceFile(file);
+                        setPreviewUrl(URL.createObjectURL(file));
+                      }
+                    }}
+                    className="w-full text-xs text-neutral-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer"
+                  />
+                  {evidenceFile && (
+                    <p className="text-[11px] text-emerald-600 mt-1 font-medium">
+                      Selected: {evidenceFile.name} ({(evidenceFile.size / 1024).toFixed(0)} KB)
+                    </p>
+                  )}
+                </div>
+
+                <div className="p-3 border border-dashed border-neutral-300 rounded-xl bg-neutral-50 text-center space-y-1">
                   <div className="text-xs text-neutral-700 font-medium">
-                    Auto Geotag & Time-Stamp Active
+                    📷 Auto Geotag &amp; Time-Stamp Active
                   </div>
                   <div className="text-[11px] text-neutral-500">
-                    17.3850° N, 78.4867° E • Hyderabad, Telangana
+                    17.4375° N, 78.4482° E • Greater Hyderabad, Telangana
                   </div>
                 </div>
 

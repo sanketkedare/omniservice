@@ -97,41 +97,36 @@ export default function NewServiceRequestPage() {
 
         setUploadProgress(40);
 
-        // Request presigned URL from API
-        const presignRes = await fetch("/api/uploads/presign", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            filename: file.name,
-            contentType: file.type || (isVideo ? "video/mp4" : "image/jpeg"),
-            category: "diagnostic",
-            fileSize: file.size,
-          }),
-        });
+        // Upload to Cloudinary
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "omniservice");
+        formData.append("category", "diagnostic");
 
-        const presignData = await presignRes.json();
-        setUploadProgress(75);
-
-        // Upload to URL (or mock receiver)
-        const uploadUrl = presignData?.data?.uploadUrl || "/api/uploads/mock-receiver";
+        let uploadedUrl = "";
         try {
-          await fetch(uploadUrl, {
-            method: "PUT",
-            headers: { "Content-Type": file.type },
-            body: file,
+          const uploadRes = await fetch("/api/uploads/cloudinary", {
+            method: "POST",
+            body: formData,
           });
-        } catch {
-          // If direct PUT fails in dev, continue
+          const uploadJson = await uploadRes.json();
+          if (uploadJson.success && uploadJson.data?.url) {
+            uploadedUrl = uploadJson.data.url;
+          }
+        } catch (uploadErr) {
+          console.warn("Direct Cloudinary upload notice:", uploadErr);
         }
 
-        // Local object URL for instant preview
+        setUploadProgress(85);
+
+        // Local object URL for instant preview if remote upload not yet configured
         const localPreviewUrl = URL.createObjectURL(file);
 
         setMediaList((prev) => [
           ...prev,
           {
             id: `media_${Date.now()}_${i}`,
-            url: presignData?.data?.publicUrl || localPreviewUrl,
+            url: uploadedUrl || localPreviewUrl,
             type: isVideo ? "video" : "image",
             filename: file.name,
             fileSize: file.size,

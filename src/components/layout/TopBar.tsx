@@ -360,6 +360,54 @@ export function TopBar({ className }: { className?: string }) {
                   <span>Book AI Diagnostic</span>
                 </Link>
 
+                {currentUser?.role === "admin" ? (
+                  <>
+                    <div className="pt-2 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-orange-700">
+                      Admin Governance
+                    </div>
+                    <Link
+                      href="/admin/dashboard"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60"
+                    >
+                      <Layers className="h-4 w-4 text-[#f05a28]" />
+                      <span>Admin Dashboard</span>
+                    </Link>
+                    <Link
+                      href="/admin/escrow"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60"
+                    >
+                      <Shield className="h-4 w-4 text-emerald-600" />
+                      <span>Escrow Treasury</span>
+                    </Link>
+                    <Link
+                      href="/admin/disputes"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60"
+                    >
+                      <Briefcase className="h-4 w-4 text-amber-600" />
+                      <span>Disputes Chamber</span>
+                    </Link>
+                    <Link
+                      href="/admin/users"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60"
+                    >
+                      <User className="h-4 w-4 text-blue-600" />
+                      <span>User Directory</span>
+                    </Link>
+                    <Link
+                      href="/admin/professionals"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60"
+                    >
+                      <Briefcase className="h-4 w-4 text-purple-600" />
+                      <span>Professionals</span>
+                    </Link>
+                  </>
+                ) : null}
+
                 <Link
                   href="/customer/dashboard"
                   onClick={() => setMobileMenuOpen(false)}

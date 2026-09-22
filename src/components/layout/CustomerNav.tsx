@@ -16,7 +16,7 @@ export interface NavItem {
 const customerNavItems: NavItem[] = [
   { label: "Home", href: "/", icon: Home },
   { label: "Explore", href: "/explore", icon: Compass },
-  { label: "Requests", href: "/customer/requests", icon: ClipboardList, badge: 2 },
+  { label: "Requests", href: "/customer/requests", icon: ClipboardList },
   { label: "HomePass", href: "/customer/homepass", icon: ShieldCheck },
   { label: "Profile", href: "/customer/profile", icon: User },
 ];

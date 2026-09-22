@@ -13,55 +13,87 @@ import {
   ChevronRight,
   ShieldCheck,
   Radio,
+  RefreshCw,
 } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 
+interface ProMetrics {
+  todayRevenuePaise: number;
+  pendingEscrowPaise: number;
+  activeJobsCount: number;
+  completedJobsCount: number;
+  trustScore: number;
+}
+
 export default function ProfessionalDashboardPage() {
   const [providerName, setProviderName] = useState<string>("Verified Provider");
   const [trade, setTrade] = useState<string>("Service Specialist");
   const [leads, setLeads] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState<ProMetrics | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // 1. Try local storage user profile
+  const loadData = async () => {
     try {
-      const stored = localStorage.getItem("omniservice_user");
-      if (stored) {
-        const u = JSON.parse(stored);
-        if (u.name) setProviderName(u.name);
+      setLoading(true);
+
+      // 1. Try local storage user profile
+      try {
+        const stored = localStorage.getItem("omniservice_user");
+        if (stored) {
+          const u = JSON.parse(stored);
+          if (u.name) setProviderName(u.name);
+        }
+      } catch {}
+
+      // 2. Fetch authenticated profile
+      const authRes = await fetch("/api/auth/me");
+      const authData = await authRes.json();
+      if (authData.success && authData.user?.name) {
+        setProviderName(authData.user.name);
+        if (authData.user.trade) setTrade(authData.user.trade);
       }
-    } catch {}
 
-    // 2. Fetch authenticated profile
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success && data.user?.name) {
-          setProviderName(data.user.name);
-          if (data.user.trade) setTrade(data.user.trade);
-        }
-      })
-      .catch(() => {});
+      // 3. Fetch live metrics from MongoDB
+      const metricsRes = await fetch("/api/pro/metrics");
+      const metricsData = await metricsRes.json();
+      if (metricsData.success && metricsData.data) {
+        setMetrics(metricsData.data);
+      }
 
-    // 3. Fetch live algorithmic dispatch leads
-    fetch("/api/jobs/feed")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.leads)) {
-          setLeads(data.leads);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      // 4. Fetch live algorithmic dispatch leads from MongoDB
+      const feedRes = await fetch("/api/jobs/feed");
+      const feedData = await feedRes.json();
+      if (feedData.success && Array.isArray(feedData.leads)) {
+        setLeads(feedData.leads);
+      } else if (feedData.success && Array.isArray(feedData.data)) {
+        setLeads(feedData.data);
+      }
+    } catch (err) {
+      console.error("Error loading pro dashboard data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   const topLead = leads.length > 0 ? leads[0] : null;
 
+  const revenueFormatted = metrics
+    ? `₹${(metrics.todayRevenuePaise / 100).toLocaleString("en-IN")}`
+    : "₹0";
+
+  const escrowPendingFormatted = metrics
+    ? `₹${(metrics.pendingEscrowPaise / 100).toLocaleString("en-IN")}`
+    : "₹0";
+
   return (
-    <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 py-6 sm:py-8 space-y-8 text-neutral-900">
+    <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8 text-neutral-900">
       {/* Header */}
       <PageHeader
         title="Provider Operations Center"
@@ -71,19 +103,29 @@ export default function ProfessionalDashboardPage() {
           { label: "Provider Dashboard" },
         ]}
         actions={
-          <div className="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800 shadow-2xs">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping" />
-            <span>Live Standby • Ready for Dispatch</span>
+          <div className="flex items-center gap-3">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={loadData}
+              leftIcon={<RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />}
+            >
+              Sync
+            </Button>
+            <div className="hidden sm:flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800 shadow-2xs">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping" />
+              <span>Live Standby • Greater Hyderabad</span>
+            </div>
           </div>
         }
       />
 
-      {/* KPI Stats Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* KPI Stats Bar (Responsive 2 -> 4 cols) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <Card className="bg-white border-2 border-orange-100 shadow-xs p-4">
-          <span className="text-xs text-neutral-500">Today&apos;s Revenue</span>
-          <p className="mt-1 text-2xl font-black text-[#2d130a]">
-            {leads.length > 0 ? "₹2,800" : "₹0"}
+          <span className="text-xs text-neutral-500">Released Earnings</span>
+          <p className="mt-1 text-xl sm:text-2xl font-black text-[#2d130a] font-mono">
+            {loading ? "..." : revenueFormatted}
           </p>
           <span className="text-[11px] text-emerald-600 font-medium">
             100% Guaranteed Escrow
@@ -92,17 +134,19 @@ export default function ProfessionalDashboardPage() {
 
         <Card className="bg-white border-2 border-orange-100 shadow-xs p-4">
           <span className="text-xs text-neutral-500">Active Jobs</span>
-          <p className="mt-1 text-2xl font-black text-[#f05a28]">
-            {leads.length > 0 ? "1" : "0"}
+          <p className="mt-1 text-xl sm:text-2xl font-black text-[#f05a28] font-mono">
+            {loading ? "..." : metrics?.activeJobsCount ?? 0}
           </p>
           <span className="text-[11px] text-neutral-500 font-medium">
-            {leads.length > 0 ? "1 dispatch incoming" : "Standby queue active"}
+            {metrics?.activeJobsCount ? "Jobs in progress" : "Standby queue active"}
           </span>
         </Card>
 
         <Card className="bg-white border-2 border-orange-100 shadow-xs p-4">
           <span className="text-xs text-neutral-500">TrustLock Score</span>
-          <p className="mt-1 text-2xl font-black text-emerald-600">100%</p>
+          <p className="mt-1 text-xl sm:text-2xl font-black text-emerald-600 font-mono">
+            {loading ? "..." : `${metrics?.trustScore ?? 100}%`}
+          </p>
           <span className="text-[11px] text-neutral-500 font-medium">
             Fiduciary compliance verified
           </span>
@@ -110,8 +154,8 @@ export default function ProfessionalDashboardPage() {
 
         <Card className="bg-white border-2 border-orange-100 shadow-xs p-4">
           <span className="text-xs text-neutral-500">Escrow Pending</span>
-          <p className="mt-1 text-2xl font-black text-[#f05a28]">
-            {leads.length > 0 ? "₹2,800" : "₹0"}
+          <p className="mt-1 text-xl sm:text-2xl font-black text-[#f05a28] font-mono">
+            {loading ? "..." : escrowPendingFormatted}
           </p>
           <span className="text-[11px] text-amber-700 font-medium">
             Releasing upon photo proof
@@ -141,12 +185,12 @@ export default function ProfessionalDashboardPage() {
           <Card className="bg-white border-2 border-orange-100 shadow-xs p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-bold text-[#2d130a]">
                     {topLead.title}
                   </span>
                   <Badge variant="warning" size="sm">
-                    {topLead.urgency?.toUpperCase() || "URGENT"}
+                    {topLead.urgency?.toUpperCase() || "ROUTINE"}
                   </Badge>
                 </div>
                 <p className="text-xs text-neutral-500 flex items-center gap-1.5">
@@ -158,7 +202,7 @@ export default function ProfessionalDashboardPage() {
               <div className="text-left sm:text-right">
                 <span className="text-xs text-neutral-500">Locked Scope Price</span>
                 <p className="text-xl font-mono font-bold text-emerald-600">
-                  ₹{((topLead.priceCeilingPaise || 280000) / 100).toLocaleString("en-IN")}
+                  ₹{((topLead.priceCeilingPaise || 250000) / 100).toLocaleString("en-IN")}
                 </p>
               </div>
             </div>
@@ -173,7 +217,7 @@ export default function ProfessionalDashboardPage() {
               </p>
             </div>
 
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
               <Link
                 href="/pro/leads"
                 className="text-xs font-semibold text-[#f05a28] hover:underline inline-flex items-center gap-1"
@@ -205,7 +249,7 @@ export default function ProfessionalDashboardPage() {
             <p className="text-xs text-neutral-500 mt-1 max-w-md mx-auto">
               Your technician profile and inventory are online across Greater Hyderabad. When an InspectAI repair matching your trade is verified, it will instantly appear here with locked pricing.
             </p>
-            <div className="pt-4 flex justify-center gap-2">
+            <div className="pt-4 flex flex-wrap justify-center gap-2">
               <Link href="/pro/inventory">
                 <Button variant="outline" size="sm">
                   Check Van Inventory

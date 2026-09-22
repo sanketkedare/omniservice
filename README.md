@@ -42,13 +42,13 @@ Urban home services in India face a persistent **"trust and efficiency deficit"*
 
 Evaluators and reviewers can immediately explore all three distinct platform roles on the [Live Deployment](https://omniservice.volcanic.world/login):
 
-| Role | Test Email | Password | Primary Portal Route |
+| Role | Evaluation Email | Universal Password | Primary Portal Route |
 | :--- | :--- | :--- | :--- |
-| **Governance Admin** | `admin@omniservice.volcanic.world` | `Admin@123` | [`/admin/dashboard`](https://omniservice.volcanic.world/admin/dashboard) |
-| **Service Professional (Pro)** | `provider@omniservice.volcanic.world` | `Pro@123` | [`/pro/dashboard`](https://omniservice.volcanic.world/pro/dashboard) |
-| **Customer / Homeowner** | `customer@omniservice.volcanic.world` | `Customer@123` | [`/customer/dashboard`](https://omniservice.volcanic.world/customer/dashboard) |
+| **Governance Admin** | `admin@gmail.com` *(or `admin@omniservice.volcanic.world`)* | `admin@123` | [`/admin/dashboard`](https://omniservice.volcanic.world/admin/dashboard) |
+| **Service Professional (Pro)** | `provider@gmail.com` *(or `pro@gmail.com`)* | `admin@123` | [`/pro/dashboard`](https://omniservice.volcanic.world/pro/dashboard) |
+| **Customer / Homeowner** | `customer@gmail.com` *(or `customer@omniservice.volcanic.world`)* | `admin@123` | [`/customer/dashboard`](https://omniservice.volcanic.world/customer/dashboard) |
 
-> *Google One-Tap and instant 6-digit Email OTP authentication are also active across all environments.*
+> **Note for Evaluators**: All evaluation accounts are pre-seeded directly into the live MongoDB Atlas cluster with NIST SP 800-132 PBKDF2 (SHA-512) password hashing. One-click Google Sign-In and 6-digit Email OTPs are also active.
 
 ---
 
@@ -187,6 +187,15 @@ Visit [`http://localhost:3000`](http://localhost:3000) in your browser.
 
 ---
 
+## 👨‍💻 Engineering Team & Contributors
+
+| Contributor | Role & Specialization | Contact & Portfolio |
+| :--- | :--- | :--- |
+| **Sanket Kedare** | **Full Stack Developer**<br />Lead Systems Architecture &amp; AI Integration | 🌐 [sanketkedare.com](https://sanketkedare.com)<br />📧 [sanketkedare200@gmail.com](mailto:sanketkedare200@gmail.com)<br />📞 [+91 86248 51910](tel:+918624851910) |
+| **Suraj Phunde** | **Full Stack Developer**<br />Full Stack Engineering &amp; Platform Infrastructure | 📧 [surajphunde1999@gmail.com](mailto:surajphunde1999@gmail.com)<br />📞 [+91 79 7294 6142](tel:+917972946142) |
+
+---
+
 ## 📋 Project Submission Summary
 
 | Attribute | Specification |
@@ -196,9 +205,10 @@ Visit [`http://localhost:3000`](http://localhost:3000) in your browser.
 | **Live Web Application** | [**https://omniservice.volcanic.world/**](https://omniservice.volcanic.world/) |
 | **Case Study &amp; Architecture** | [**https://omniservice.volcanic.world/case-study**](https://omniservice.volcanic.world/case-study) |
 | **Operational Region** | Greater Hyderabad, Telangana, India |
+| **Lead Engineers &amp; Contributors** | **Sanket Kedare** &bull; **Suraj Phunde** |
 | **Engineering Organization** | **Volcanic Digital Solutions** |
 | **Official Support &amp; Queries** | [volcanic.digitalsolutions@gmail.com](mailto:volcanic.digitalsolutions@gmail.com) |
-| **Core Technologies** | Next.js 16+, TypeScript (Strict), MongoDB Atlas 8.0, Gemini 1.5 Pro Vision, Tailwind CSS, Turbopack, Vitest |
+| **Core Technologies** | Next.js 16+, TypeScript (Strict), MongoDB Atlas 8.0, Gemini 1.5 Pro Vision, Cloudinary, Tailwind CSS, Turbopack, Vitest |
 
 ---
 

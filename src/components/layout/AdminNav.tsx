@@ -19,13 +19,21 @@ import {
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 
-const adminNavItems = [
+export interface AdminNavItem {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string | number;
+  badgeVariant?: "brand" | "destructive" | "default" | "outline" | "success" | "warning" | "info";
+}
+
+const adminNavItems: AdminNavItem[] = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "User Directory", href: "/admin/users", icon: Users },
   { label: "Professionals", href: "/admin/professionals", icon: Briefcase },
   { label: "Service Categories", href: "/admin/categories", icon: Layers },
-  { label: "Escrow & Payouts", href: "/admin/escrow", icon: Banknote, badge: "Live" },
-  { label: "Disputes", href: "/admin/disputes", icon: AlertTriangle, badge: 1, badgeVariant: "destructive" as const },
+  { label: "Escrow & Payouts", href: "/admin/escrow", icon: Banknote },
+  { label: "Disputes", href: "/admin/disputes", icon: AlertTriangle },
   { label: "AI Inferences", href: "/admin/ai-inferences", icon: Cpu },
   { label: "Audit Logs", href: "/admin/logs", icon: FileText },
   { label: "System Settings", href: "/admin/settings", icon: Settings },
