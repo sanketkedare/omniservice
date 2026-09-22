@@ -102,10 +102,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body
-        className="antialiased bg-[#fafafa] text-neutral-900 min-h-screen font-serif"
-        style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
-      >
+      <body className="antialiased bg-[#fafafa] text-neutral-900 min-h-screen font-sans selection:bg-[#f05a28]/15 selection:text-[#9a2c06]">
         <FirebaseAnalytics />
         <ToastProvider>{children}</ToastProvider>
       </body>

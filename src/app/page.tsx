@@ -31,9 +31,11 @@ import {
   Lock,
   User,
   LogOut,
-  Activity,
   Bot,
-  Compass,
+  Menu,
+  X,
+  Activity,
+  Briefcase,
 } from "lucide-react";
 import { HomeDiagnosticChat } from "@/components/ai/HomeDiagnosticChat";
 
@@ -97,19 +99,24 @@ const SIMULATION_STEPS = [
   },
 ];
 
-// ── Interactive Quick Fault Scanner Data (Hero Right Column) ───────────────────
-const HERO_SCANNER_PREVIEWS = [
+// ── Interactive Hero Terminal Previews ─────────────────────────────────────────
+const HERO_TERMINAL_PREVIEWS = [
   {
     id: "hvac",
-    label: "HVAC & AC Shudder",
+    label: "Split AC Shudder",
     icon: Flame,
     color: "#f05a28",
     fault: "Compressor Vibration & Capacitance Drift",
     frequency: "48Hz Motor Shudder",
-    confidence: "98.7%",
-    lockedCeiling: "₹2,800",
-    eta: "12 mins",
-    proMatch: "Apex AC Specialist (4.9★)",
+    confidence: "98.7% Neural Match",
+    model: "Gemini 3.5 Flash",
+    part: "45μF Dual Run Motor Capacitor (OEM)",
+    partCost: "₹750",
+    labor: "Master HVAC Service & Terminal Cleaning (₹2,050)",
+    totalCeiling: "₹2,800 Locked",
+    proName: "CoolAir Solutions (4.9★ • 420 jobs)",
+    vanStock: "45μF Capacitor: 2 units on mobile van",
+    eta: "12 mins to doorstep in Ameerpet",
   },
   {
     id: "electrical",
@@ -118,10 +125,15 @@ const HERO_SCANNER_PREVIEWS = [
     color: "#eab308",
     fault: "Neutral Ground Short in Geyser Loop",
     frequency: "50Hz Residual Leakage",
-    confidence: "96.4%",
-    lockedCeiling: "₹1,450",
-    eta: "15 mins",
-    proMatch: "VoltMaster Electric (5.0★)",
+    confidence: "96.4% Neural Match",
+    model: "Gemini 3.1 Flash Lite",
+    part: "32A Double-Pole Residual MCB",
+    partCost: "₹480",
+    labor: "Insulation Megger Testing & Terminal Rewire (₹970)",
+    totalCeiling: "₹1,450 Locked",
+    proName: "VoltMaster Electric (5.0★ • 310 jobs)",
+    vanStock: "32A DP MCB: 4 units on mobile van",
+    eta: "15 mins to doorstep in Ameerpet",
   },
   {
     id: "plumbing",
@@ -130,22 +142,32 @@ const HERO_SCANNER_PREVIEWS = [
     color: "#0284c7",
     fault: "P-Trap Washer Fatigue & Joint Calcification",
     frequency: "Acoustic Drip @ 2.4s interval",
-    confidence: "95.8%",
-    lockedCeiling: "₹1,850",
-    eta: "18 mins",
-    proMatch: "FlowCare Plumbers (4.8★)",
+    confidence: "95.8% Neural Match",
+    model: "Gemini 3.5 Flash",
+    part: "EPDM Compression Gaskets & Brass Coupler",
+    partCost: "₹350",
+    labor: "Pressure Hydro-Test & P-Trap Overhaul (₹1,500)",
+    totalCeiling: "₹1,850 Locked",
+    proName: "FlowCare Plumbers (4.8★ • 290 jobs)",
+    vanStock: "EPDM Couplers: 6 units on mobile van",
+    eta: "18 mins to doorstep in Ameerpet",
   },
   {
     id: "purifier",
-    label: "RO Purifier TDS Alert",
+    label: "RO TDS Alert",
     icon: Droplets,
     color: "#0d9488",
-    fault: "RO Membrane Exhaustion & Low Pump Bar",
+    fault: "RO Membrane Exhaustion & Pump Churn",
     frequency: "High TDS & Pump Churn",
-    confidence: "97.2%",
-    lockedCeiling: "₹1,499",
-    eta: "20 mins",
-    proMatch: "AquaPure Technicians (4.9★)",
+    confidence: "97.2% Neural Match",
+    model: "Gemini 3.5 Flash",
+    part: "Dow Filmtec 80 GPD Membrane (OEM)",
+    partCost: "₹850",
+    labor: "Pressure Chamber Sanitize & Calibration (₹649)",
+    totalCeiling: "₹1,499 Locked",
+    proName: "AquaPure Technicians (4.9★ • 510 jobs)",
+    vanStock: "80 GPD Membrane: 3 units on mobile van",
+    eta: "20 mins to doorstep in Ameerpet",
   },
 ];
 
@@ -226,7 +248,8 @@ export default function HomePage() {
   const [currentUser, setCurrentUser] = useState<LoggedUser | null>(null);
   const [activeSimIndex, setActiveSimIndex] = useState(0);
   const [simPlaying, setSimPlaying] = useState(true);
-  const [selectedScannerId, setSelectedScannerId] = useState("hvac");
+  const [selectedTerminalId, setSelectedTerminalId] = useState("hvac");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Authenticated user recall via localStorage & /api/auth/me
   useEffect(() => {
@@ -254,6 +277,18 @@ export default function HomePage() {
       .catch(() => {});
   }, []);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [mobileMenuOpen]);
+
   // Auto-cycle simulation steps silently (NO toasts)
   useEffect(() => {
     if (!simPlaying) return;
@@ -272,11 +307,14 @@ export default function HomePage() {
     document.cookie = "omniservice-role=; path=/; max-age=0";
     document.cookie = "omniservice-user=; path=/; max-age=0";
     setCurrentUser(null);
+    setMobileMenuOpen(false);
     router.refresh();
   };
 
   const currentStep = (SIMULATION_STEPS[activeSimIndex] ?? SIMULATION_STEPS[0])!;
-  const currentScanner = (HERO_SCANNER_PREVIEWS.find((s) => s.id === selectedScannerId) || HERO_SCANNER_PREVIEWS[0])!;
+  const currentTerminal =
+    (HERO_TERMINAL_PREVIEWS.find((p) => p.id === selectedTerminalId) ||
+      HERO_TERMINAL_PREVIEWS[0])!;
 
   const getPortalLink = (role: string) => {
     switch (role) {
@@ -292,24 +330,21 @@ export default function HomePage() {
   const portal = currentUser ? getPortalLink(currentUser.role) : null;
 
   return (
-    <div
-      className="min-h-screen bg-[#fafafa] text-neutral-900 font-serif selection:bg-[#f05a28]/10"
-      style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
-    >
+    <div className="min-h-screen bg-[#fafafa] text-neutral-900 font-sans selection:bg-[#f05a28]/15 selection:text-[#9a2c06]">
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* 1. TOP NAVBAR (BALANCED SPACING & JWT PERSISTENCE)                  */}
+      {/* 1. TOP NAVBAR                                                       */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      <header className="sticky top-0 z-50 w-full border-b border-orange-200/70 bg-[#fffbf7]/95 backdrop-blur-md shadow-xs">
+      <header className="sticky top-0 z-40 w-full border-b border-orange-200/70 bg-[#fffbf7]/95 backdrop-blur-md shadow-xs">
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 lg:px-10 h-20 flex items-center justify-between gap-4">
           {/* Brand Logo & Ameerpet Hub Badge */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <Link href="/" className="flex items-center group" aria-label="OmniService AI Home">
               <Image
                 src="/images/OmniService_Logo.png"
                 alt="OmniService"
-                width={200}
-                height={50}
-                className="h-9 sm:h-11 w-auto rounded-xl object-contain transition-transform group-hover:scale-102"
+                width={190}
+                height={48}
+                className="h-8 sm:h-10 w-auto rounded-xl object-contain transition-transform group-hover:scale-102"
                 priority
               />
             </Link>
@@ -320,7 +355,7 @@ export default function HomePage() {
             </span>
           </div>
 
-          {/* Navigation Links */}
+          {/* Desktop Navigation Links */}
           <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold text-[#431407]">
             <Link href="#lifecycle-flow" className="transition-colors hover:text-[#f05a28]">
               Lifecycle Flow
@@ -336,19 +371,19 @@ export default function HomePage() {
             </Link>
             <Link
               href="/demo"
-              className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-[#f05a28]/70 bg-gradient-to-r from-orange-50 to-amber-50 px-3 py-0.5 text-xs font-bold text-[#c2410c] transition-all hover:bg-orange-100 hover:border-[#f05a28]"
+              className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-[#f05a28]/70 bg-gradient-to-r from-orange-50 to-amber-50 px-3.5 py-1 text-xs font-bold text-[#c2410c] transition-all hover:bg-orange-100 hover:border-[#f05a28]"
             >
               <Eye className="h-3.5 w-3.5 text-[#f05a28]" />
               <span>Sandbox Demo</span>
             </Link>
           </nav>
 
-          {/* Action CTAs: Authenticated vs Unauthenticated */}
-          <div className="flex items-center gap-3">
+          {/* Desktop Action CTAs: Authenticated vs Unauthenticated */}
+          <div className="hidden sm:flex items-center gap-3">
             {currentUser && portal ? (
               <div className="flex items-center gap-3">
                 {/* User Profile Pill */}
-                <div className="hidden sm:flex items-center gap-2 rounded-xl border border-orange-200/90 bg-white/90 px-3 py-1.5 shadow-2xs">
+                <div className="flex items-center gap-2 rounded-xl border border-orange-200/90 bg-white/90 px-3 py-1.5 shadow-2xs">
                   <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#f05a28] to-[#ea580c] text-white text-xs font-black">
                     {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : "U"}
                   </div>
@@ -400,32 +435,261 @@ export default function HomePage() {
               </div>
             )}
           </div>
+
+          {/* Mobile Hamburger Button */}
+          <div className="flex lg:hidden items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open mobile navigation menu"
+              className="rounded-xl border-2 border-orange-200 bg-white p-2 text-[#c2410c] hover:bg-orange-50 transition-colors shadow-xs"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+          </div>
         </div>
       </header>
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* 2. HERO SECTION (REDESIGNED: VALUE PROP + QUICK SCANNER CARD)       */}
+      {/* MOBILE SLIDE-OUT SIDEBAR DRAWER (FOR SMALL SCREENS)                 */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      <section className="relative w-full overflow-hidden border-b border-orange-200/70 bg-gradient-to-b from-[#fffbf7] via-[#fff5eb] to-[#feede0] py-14 lg:py-22 emergent-mesh">
-        {/* Ambient Glows */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-gradient-to-tr from-[#f05a28]/25 via-amber-400/20 to-transparent blur-3xl pointer-events-none" />
-        <div className="absolute top-1/3 -right-24 w-96 h-96 rounded-full bg-gradient-to-bl from-[#ea580c]/20 via-orange-300/25 to-transparent blur-3xl pointer-events-none" />
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end lg:hidden">
+          {/* Backdrop Blur Overlay */}
+          <div
+            className="fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
+          />
 
-        <div className="max-w-7xl mx-auto w-full px-6 sm:px-10 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-14 items-center relative z-10">
-          {/* Left Column: Value Proposition */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500/10 via-amber-500/15 to-orange-500/10 px-3.5 py-1 text-xs font-bold text-[#c2410c] border border-orange-300/70 shadow-2xs">
-                <Sparkles className="h-3.5 w-3.5 text-[#f05a28]" />
-                Ameerpet, Hyderabad Local Services
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-200">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                TrustLock Protected Escrow
-              </span>
+          {/* Slide-out Sidebar Content */}
+          <aside className="relative w-[85vw] max-w-[340px] h-full bg-[#fffbf7] border-l border-orange-200/90 shadow-2xl flex flex-col z-10 overflow-y-auto animate-in slide-in-from-right duration-200">
+            {/* Drawer Header */}
+            <div className="p-5 border-b border-orange-200/70 flex items-center justify-between bg-white/80">
+              <div className="flex items-center gap-2">
+                <Image
+                  src="/images/OmniService_Logo.png"
+                  alt="OmniService"
+                  width={150}
+                  height={38}
+                  className="h-7 w-auto object-contain"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Close mobile menu"
+                className="rounded-xl border border-orange-200 p-2 text-neutral-500 hover:text-neutral-800 hover:bg-orange-50 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl xl:text-6xl font-extrabold tracking-tight text-[#2d130a] leading-[1.12]">
+            {/* Authenticated User Status in Mobile Drawer */}
+            <div className="p-4 border-b border-orange-100 bg-gradient-to-r from-orange-50/50 to-amber-50/50">
+              {currentUser && portal ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#f05a28] to-[#ea580c] text-white font-bold text-sm shadow-sm">
+                      {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : "U"}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block font-bold text-sm text-[#2d130a] truncate">
+                        {currentUser.name}
+                      </span>
+                      <span className="block text-xs font-semibold text-[#c2410c] capitalize">
+                        {portal.badge} • Active
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <Link
+                      href={portal.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex-1 text-center rounded-xl bg-gradient-to-r from-[#f05a28] to-[#ea580c] py-2 text-xs font-bold text-white shadow-xs"
+                    >
+                      {portal.label}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="rounded-xl border border-orange-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-neutral-500 block uppercase tracking-wider">
+                    Welcome to OmniService
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link
+                      href="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-center rounded-xl border border-orange-200 bg-white py-2 text-xs font-bold text-[#c2410c] shadow-2xs hover:bg-orange-50"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-center rounded-xl bg-gradient-to-r from-[#f05a28] to-[#ea580c] py-2 text-xs font-bold text-white shadow-xs hover:from-[#ea580c] hover:to-[#c2410c]"
+                    >
+                      Get Started
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Navigation Options List */}
+            <div className="p-4 space-y-1 flex-1">
+              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest px-3 block mb-1">
+                Explore Platform
+              </span>
+
+              <Link
+                href="#lifecycle-flow"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 hover:text-[#f05a28] transition-colors"
+              >
+                <Layers className="h-4 w-4 text-[#f05a28]" />
+                <span>Lifecycle Flow</span>
+              </Link>
+
+              <Link
+                href="#how-it-works"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 hover:text-[#f05a28] transition-colors"
+              >
+                <Clock className="h-4 w-4 text-[#f05a28]" />
+                <span>How It Works</span>
+              </Link>
+
+              <Link
+                href="#categories"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 hover:text-[#f05a28] transition-colors"
+              >
+                <Wrench className="h-4 w-4 text-[#f05a28]" />
+                <span>Trade Categories</span>
+              </Link>
+
+              <Link
+                href="#technology"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 hover:text-[#f05a28] transition-colors"
+              >
+                <Sparkles className="h-4 w-4 text-[#f05a28]" />
+                <span>AI Multi-Model Engine</span>
+              </Link>
+
+              <Link
+                href="/demo"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 hover:text-[#f05a28] transition-colors"
+              >
+                <span className="flex items-center gap-3">
+                  <Eye className="h-4 w-4 text-[#f05a28]" />
+                  <span>Sandbox Demo</span>
+                </span>
+                <span className="text-[10px] font-bold text-[#c2410c] bg-orange-100 px-2 py-0.5 rounded-full">
+                  Try Live
+                </span>
+              </Link>
+
+              <div className="pt-3 border-t border-orange-100 mt-2">
+                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest px-3 block mb-1">
+                  Actions &amp; Roles
+                </span>
+
+                <Link
+                  href="/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-[#c2410c] hover:bg-orange-100/60 transition-colors"
+                >
+                  <Camera className="h-4 w-4 text-[#f05a28]" />
+                  <span>Book AI Diagnostic</span>
+                </Link>
+
+                <Link
+                  href="/professional/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 transition-colors"
+                >
+                  <Briefcase className="h-4 w-4 text-[#f05a28]" />
+                  <span>Join as Pro Partner</span>
+                </Link>
+
+                <Link
+                  href="/customer/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 transition-colors"
+                >
+                  <User className="h-4 w-4 text-[#f05a28]" />
+                  <span>Customer Portal</span>
+                </Link>
+
+                <Link
+                  href="/pro/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 transition-colors"
+                >
+                  <Truck className="h-4 w-4 text-[#f05a28]" />
+                  <span>Pro Operations</span>
+                </Link>
+
+                <Link
+                  href="/admin/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 transition-colors"
+                >
+                  <ShieldCheck className="h-4 w-4 text-[#f05a28]" />
+                  <span>Governance Admin</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Mobile Drawer Footer Contacts */}
+            <div className="p-4 border-t border-orange-200/70 bg-white space-y-2 text-xs text-neutral-600">
+              <div className="flex items-center gap-2">
+                <Phone className="h-3.5 w-3.5 text-[#f05a28]" />
+                <a href="tel:+918624851910" className="hover:text-[#f05a28] font-bold">
+                  +91 86248 51910
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 text-[#f05a28]" />
+                <span className="truncate">Ameerpet, Hyderabad, 500016</span>
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* 2. HERO SECTION (CENTERED • INTERACTIVE SHOWCASE TERMINAL • WOW UI) */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <section className="relative w-full overflow-hidden border-b border-orange-200/70 bg-gradient-to-b from-[#fffbf7] via-[#fff5eb] to-[#feede0] py-14 sm:py-20 lg:py-24 emergent-mesh">
+        {/* Ambient Glowing Orbs */}
+        <div className="absolute -top-32 left-1/3 w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-[#f05a28]/18 via-amber-400/15 to-transparent blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 -right-32 w-[500px] h-[500px] rounded-full bg-gradient-to-bl from-[#ea580c]/12 via-orange-300/15 to-transparent blur-3xl pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto w-full px-4 sm:px-8 lg:px-12 flex flex-col items-center text-center relative z-10 space-y-8 sm:space-y-10">
+          {/* Centered Pill Capsule */}
+          <div className="inline-flex items-center gap-2 rounded-full border border-orange-300/80 bg-gradient-to-r from-orange-500/10 via-amber-500/15 to-orange-500/10 px-4 py-1.5 text-xs font-bold text-[#c2410c] shadow-xs backdrop-blur-md">
+            <span className="flex h-2 w-2 rounded-full bg-[#f05a28] animate-ping" />
+            <span>Ameerpet, Hyderabad Hub</span>
+            <span className="text-orange-300">•</span>
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+            <span className="text-emerald-800">TrustLock™ Protected Escrow</span>
+          </div>
+
+          {/* Centered Grand Headline */}
+          <div className="space-y-4 max-w-4xl">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#2d130a] leading-[1.08]">
               Show the problem.{" "}
               <span className="bg-gradient-to-r from-[#f05a28] via-[#ea580c] to-[#c2410c] bg-clip-text text-transparent">
                 Let AI diagnose it.
@@ -433,163 +697,206 @@ export default function HomePage() {
               Pay only when verified.
             </h1>
 
-            <p className="text-base sm:text-lg text-neutral-700 leading-relaxed max-w-2xl">
+            <p className="text-base sm:text-xl text-neutral-700 leading-relaxed max-w-3xl mx-auto font-normal">
               OmniService AI replaces blind technician guesswork with 15-second video diagnostics, locked fair-market price ceilings, and verified mobile van dispatch across Ameerpet and Greater Hyderabad. Your money stays in escrow until pre- and post-work photos pass verified AI inspection.
             </p>
+          </div>
 
-            {/* Hero CTAs */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#f05a28] via-[#ea580c] to-[#d04618] px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/40 transition-all hover:scale-102"
-              >
-                <Camera className="h-4 w-4" />
-                <span>Book AI Diagnostic</span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+          {/* Centered Action CTAs */}
+          <div className="flex flex-wrap items-center justify-center gap-3.5 pt-1">
+            <Link
+              href="/register"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f05a28] via-[#ea580c] to-[#d04618] px-7 py-4 text-sm sm:text-base font-bold text-white shadow-xl shadow-orange-500/30 hover:shadow-orange-500/40 transition-all hover:scale-102"
+            >
+              <Camera className="h-5 w-5" />
+              <span>Book AI Diagnostic</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
 
-              <Link
-                href="#lifecycle-flow"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-orange-300/80 bg-white/90 px-5 py-3.5 text-sm font-bold text-[#c2410c] hover:border-[#f05a28] hover:text-[#f05a28] hover:bg-orange-50/70 transition-all shadow-xs"
-              >
-                <Layers className="h-4 w-4 text-[#f05a28]" />
-                <span>View Lifecycle Flow</span>
-              </Link>
+            <Link
+              href="#lifecycle-flow"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-orange-300/80 bg-white/95 px-6 py-4 text-sm sm:text-base font-bold text-[#c2410c] hover:border-[#f05a28] hover:text-[#f05a28] hover:bg-orange-50/70 transition-all shadow-xs"
+            >
+              <Layers className="h-5 w-5 text-[#f05a28]" />
+              <span>View Lifecycle Flow</span>
+            </Link>
 
-              <Link
-                href="/professional/register"
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-orange-200/80 bg-white/80 px-4 py-3.5 text-sm font-semibold text-[#7c2d12] hover:bg-white hover:border-orange-300 transition-colors"
-              >
-                <span>Join as Pro</span>
-              </Link>
+            <Link
+              href="/professional/register"
+              className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-orange-200/80 bg-white/80 px-5 py-4 text-sm sm:text-base font-semibold text-[#7c2d12] hover:bg-white hover:border-orange-300 transition-colors"
+            >
+              <span>Join as Pro</span>
+            </Link>
+          </div>
+
+          {/* ── Interactive Centerpiece: InspectAI™ Live Diagnostic Terminal ── */}
+          <div className="w-full max-w-5xl rounded-3xl border-2 border-orange-200/90 bg-white/95 backdrop-blur-2xl shadow-2xl shadow-orange-950/15 overflow-hidden text-left p-5 sm:p-8">
+            {/* Terminal Window Chrome */}
+            <div className="flex flex-wrap items-center justify-between pb-4 border-b border-orange-100 gap-3">
+              <div className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-rose-400 inline-block" />
+                <span className="h-3 w-3 rounded-full bg-amber-400 inline-block" />
+                <span className="h-3 w-3 rounded-full bg-emerald-400 inline-block" />
+                <span className="ml-2 text-xs font-mono font-medium text-neutral-500 hidden sm:inline-block">
+                  omniservice.world/inspect-ai/live-hyderabad-session
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-200">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                  {currentTerminal.model} Active • 0ms Failover
+                </span>
+              </div>
             </div>
 
-            {/* Live Trust Metrics Row */}
-            <div className="pt-6 border-t border-orange-200/70 grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div>
-                <span className="text-2xl font-black text-[#2d130a] block">₹14.8L+</span>
-                <span className="text-xs text-neutral-600 font-medium">Escrow Protected</span>
+            {/* Quick Interactive Trade Selector Tabs */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4 pb-6">
+              {HERO_TERMINAL_PREVIEWS.map((item) => {
+                const Icon = item.icon;
+                const isSelected = selectedTerminalId === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setSelectedTerminalId(item.id)}
+                    className={`flex items-center gap-2 p-3 rounded-xl border text-left transition-all ${
+                      isSelected
+                        ? "bg-gradient-to-r from-orange-50 to-amber-50 border-[#f05a28] shadow-xs text-[#c2410c] font-bold"
+                        : "bg-[#fffbf7] border-orange-100/80 text-neutral-600 hover:bg-orange-50/50"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" style={{ color: item.color }} />
+                    <span className="text-xs truncate">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Terminal Body: Real-Time Diagnostic Stream & Locked Scope */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left Pane: Simulated Camera & Acoustic Stream */}
+              <div className="lg:col-span-6 rounded-2xl border border-orange-200/80 bg-gradient-to-br from-[#fff8f0] to-[#fff3e8] p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#c2410c] uppercase tracking-wider">
+                    <Activity className="h-4 w-4 text-[#f05a28] animate-pulse" />
+                    15-Sec Video &amp; Acoustic Stream
+                  </span>
+                  <span className="rounded-md bg-emerald-100 px-2.5 py-0.5 text-xs font-black text-emerald-800">
+                    {currentTerminal.confidence}
+                  </span>
+                </div>
+
+                {/* Viewfinder Frame with Audio Spectrogram */}
+                <div className="relative rounded-xl border border-orange-200 bg-white/90 p-4 space-y-3 shadow-inner">
+                  <div className="flex items-center justify-between text-xs text-neutral-500">
+                    <span className="font-mono text-[11px]">REC [00:12.4s]</span>
+                    <span className="font-bold text-[#2d130a]">{currentTerminal.fault}</span>
+                  </div>
+
+                  {/* Frequency Waveform Animation */}
+                  <div className="flex items-center justify-between gap-1 h-10 bg-neutral-900 rounded-lg px-4 text-white">
+                    <span className="text-[11px] font-mono text-emerald-400">
+                      {currentTerminal.frequency}
+                    </span>
+                    <div className="flex items-end gap-1.5 h-6">
+                      <span className="w-1 bg-[#f05a28] rounded-full h-3 animate-pulse" />
+                      <span className="w-1 bg-[#ea580c] rounded-full h-6 animate-pulse delay-75" />
+                      <span className="w-1 bg-amber-400 rounded-full h-4 animate-pulse delay-150" />
+                      <span className="w-1 bg-emerald-400 rounded-full h-2 animate-pulse delay-100" />
+                      <span className="w-1 bg-[#f05a28] rounded-full h-5 animate-pulse" />
+                      <span className="w-1 bg-amber-400 rounded-full h-3 animate-pulse delay-75" />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-neutral-600 leading-relaxed">
+                    InspectAI visual frame decomposition and acoustic vibration matching confirmed primary root failure mode without physical tool disassembly.
+                  </p>
+                </div>
+
+                {/* Direct Scan Trigger */}
+                <Link
+                  href="/register"
+                  className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-[#f05a28] to-[#ea580c] py-3 text-xs font-bold text-white shadow-xs hover:from-[#ea580c] hover:to-[#c2410c] transition-all"
+                >
+                  <Camera className="h-4 w-4" />
+                  <span>Start 15-Sec Video Diagnostic Scan</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
-              <div>
-                <span className="text-2xl font-black text-emerald-700 block">0.12%</span>
-                <span className="text-xs text-neutral-600 font-medium">Dispute Rate</span>
-              </div>
-              <div>
-                <span className="text-2xl font-black text-[#2d130a] block">15 Sec</span>
-                <span className="text-xs text-neutral-600 font-medium">Video Intake</span>
-              </div>
-              <div>
-                <span className="text-2xl font-black text-[#f05a28] block">100%</span>
-                <span className="text-xs text-neutral-600 font-medium">Locked Price Ceiling</span>
+
+              {/* Right Pane: Locked SOW & SmartRoute Dispatch */}
+              <div className="lg:col-span-6 rounded-2xl border border-orange-200/80 bg-white p-5 space-y-4 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-3 border-b border-orange-100">
+                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                      Immutable Scope of Work (SOW)
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                      <Lock className="h-3 w-3" /> Price Ceiling Locked
+                    </span>
+                  </div>
+
+                  <div className="space-y-2.5 pt-3 text-xs">
+                    <div className="flex items-center justify-between text-neutral-700">
+                      <span className="text-neutral-500">Diagnosed OEM Part:</span>
+                      <span className="font-bold text-[#2d130a]">{currentTerminal.part}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-neutral-700">
+                      <span className="text-neutral-500">Component Cost:</span>
+                      <span className="font-bold text-neutral-800">{currentTerminal.partCost}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-neutral-700">
+                      <span className="text-neutral-500">Fair-Market Labor:</span>
+                      <span className="font-bold text-neutral-800">{currentTerminal.labor}</span>
+                    </div>
+
+                    <div className="pt-2 border-t border-orange-100 flex items-center justify-between">
+                      <span className="font-bold text-[#2d130a]">Total Price Ceiling:</span>
+                      <span className="text-lg font-black text-[#f05a28]">
+                        {currentTerminal.totalCeiling}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SmartRoute & Van Inventory Match */}
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between text-emerald-900 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <Truck className="h-4 w-4 text-emerald-700" />
+                      SmartRoute Mobile Van Match
+                    </span>
+                    <span className="text-xs text-emerald-800 font-black">{currentTerminal.eta}</span>
+                  </div>
+                  <div className="text-neutral-700 font-medium">{currentTerminal.proName}</div>
+                  <div className="text-[11px] text-emerald-800 font-semibold">
+                    ✓ {currentTerminal.vanStock}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column: AI Diagnostic Quick Scanner Preview Card */}
-          <div className="lg:col-span-5">
-            <div className="rounded-3xl border-2 border-orange-200/90 bg-white/95 backdrop-blur-xl p-6 shadow-xl shadow-orange-950/10 relative overflow-hidden">
-              {/* Card Header */}
-              <div className="flex items-center justify-between border-b border-orange-100 pb-3.5 mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#f05a28]/10 text-[#f05a28]">
-                    <Activity className="h-4 w-4 animate-pulse text-[#f05a28]" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black text-[#2d130a] leading-tight">
-                      InspectAI™ Live Diagnostic Scan
-                    </h3>
-                    <p className="text-[11px] text-neutral-500">
-                      Multi-Model Multimodal Vision &amp; Acoustic Inference
-                    </p>
-                  </div>
-                </div>
-
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
-                  Live Triage
-                </span>
-              </div>
-
-              {/* Category Quick Chips */}
-              <div className="grid grid-cols-2 gap-1.5 mb-4">
-                {HERO_SCANNER_PREVIEWS.map((p) => {
-                  const Icon = p.icon;
-                  const isSelected = selectedScannerId === p.id;
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => setSelectedScannerId(p.id)}
-                      className={`flex items-center gap-1.5 rounded-xl p-2 text-left transition-all ${
-                        isSelected
-                          ? "bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-300 shadow-2xs font-bold text-[#c2410c]"
-                          : "border border-neutral-200/80 bg-neutral-50/60 text-neutral-600 hover:bg-neutral-100"
-                      }`}
-                    >
-                      <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: p.color }} />
-                      <span className="text-[11px] truncate">{p.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Simulated Spectrogram / Audio Waveform Preview */}
-              <div className="rounded-2xl border border-orange-200/70 bg-gradient-to-br from-[#fff8f0] to-[#fff3e6] p-4 space-y-3 shadow-2xs">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-[#2d130a] flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-[#f05a28]" />
-                    {currentScanner.fault}
-                  </span>
-                  <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-extrabold text-emerald-800">
-                    {currentScanner.confidence} Neural Match
-                  </span>
-                </div>
-
-                {/* Animated Frequency Bars */}
-                <div className="flex items-center justify-between gap-1 h-9 bg-white/80 rounded-xl px-3 border border-orange-100">
-                  <span className="text-[10px] text-neutral-500 font-mono">
-                    {currentScanner.frequency}
-                  </span>
-                  <div className="flex items-end gap-1 h-5">
-                    <span className="w-1 bg-[#f05a28] rounded-full h-3 animate-pulse" />
-                    <span className="w-1 bg-[#ea580c] rounded-full h-5 animate-pulse delay-75" />
-                    <span className="w-1 bg-amber-500 rounded-full h-4 animate-pulse delay-150" />
-                    <span className="w-1 bg-emerald-500 rounded-full h-2 animate-pulse delay-100" />
-                    <span className="w-1 bg-[#f05a28] rounded-full h-4 animate-pulse" />
-                  </div>
-                </div>
-
-                {/* Live Diagnostic Metrics */}
-                <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
-                  <div className="rounded-xl bg-white p-2.5 border border-orange-100">
-                    <span className="text-[10px] text-neutral-500 block">Locked Price Ceiling</span>
-                    <span className="text-base font-black text-[#f05a28] block">
-                      {currentScanner.lockedCeiling}
-                    </span>
-                    <span className="text-[9px] text-emerald-600 font-medium">Parts &amp; Labor Fixed</span>
-                  </div>
-
-                  <div className="rounded-xl bg-white p-2.5 border border-orange-100">
-                    <span className="text-[10px] text-neutral-500 block">SmartRoute Dispatch</span>
-                    <span className="text-base font-black text-emerald-700 block">
-                      {currentScanner.eta}
-                    </span>
-                    <span className="text-[9px] text-neutral-600 truncate block">
-                      Ameerpet Doorstep
-                    </span>
-                  </div>
-                </div>
-
-                {/* Bottom Trigger Action */}
-                <Link
-                  href="/register"
-                  className="mt-1 flex items-center justify-center gap-1.5 w-full rounded-xl bg-gradient-to-r from-[#f05a28] to-[#ea580c] py-2.5 text-xs font-bold text-white shadow-sm hover:from-[#ea580c] hover:to-[#c2410c] transition-all"
-                >
-                  <Camera className="h-3.5 w-3.5" />
-                  <span>Start 15-Sec Video Diagnostic</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
+          {/* Centered Framed Trust Metrics Row */}
+          <div className="w-full max-w-4xl rounded-2xl border border-orange-200/80 bg-white/90 backdrop-blur-md p-6 shadow-sm shadow-orange-950/5 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+            <div className="space-y-1">
+              <span className="text-2xl sm:text-3xl font-black text-[#2d130a] block">₹14.8L+</span>
+              <span className="text-xs text-neutral-600 font-medium">Escrow Protected</span>
+            </div>
+            <div className="space-y-1">
+              <span className="text-2xl sm:text-3xl font-black text-emerald-700 block">0.12%</span>
+              <span className="text-xs text-neutral-600 font-medium">Dispute Rate</span>
+            </div>
+            <div className="space-y-1">
+              <span className="text-2xl sm:text-3xl font-black text-[#2d130a] block">15 Sec</span>
+              <span className="text-xs text-neutral-600 font-medium">Video Intake</span>
+            </div>
+            <div className="space-y-1">
+              <span className="text-2xl sm:text-3xl font-black text-[#f05a28] block">100%</span>
+              <span className="text-xs text-neutral-600 font-medium">Locked Price Ceiling</span>
             </div>
           </div>
         </div>
@@ -600,7 +907,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════ */}
       <section
         id="lifecycle-flow"
-        className="w-full px-6 sm:px-10 lg:px-16 py-16 lg:py-24 border-b border-orange-200/70 bg-[#fffdfa]"
+        className="w-full px-5 sm:px-10 lg:px-16 py-16 lg:py-24 border-b border-orange-200/70 bg-[#fffdfa]"
       >
         <div className="max-w-7xl mx-auto w-full space-y-10">
           {/* Section Header */}
@@ -612,13 +919,12 @@ export default function HomePage() {
               The OmniService Verified Trust Lifecycle
             </h2>
             <p className="text-sm sm:text-base text-neutral-600 leading-relaxed">
-              Experience the end-to-step verification flow from instant 15-second video diagnosis to mobile van stock dispatch and TrustLock biometric escrow release.
+              Experience the end-to-end verification flow from instant 15-second video diagnosis to mobile van stock dispatch and TrustLock biometric escrow release.
             </p>
           </div>
 
           {/* 4-Step Horizontal Timeline Stepper */}
           <div className="relative">
-            {/* Step Indicators Track */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {SIMULATION_STEPS.map((s, idx) => {
                 const isActive = activeSimIndex === idx;
@@ -886,9 +1192,9 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* 4. HOW IT WORKS (THE 4 PILLARS • MAX-W-7XL • WARM CANVAS)           */}
+      {/* 4. HOW IT WORKS (THE 4 PILLARS)                                     */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      <section id="how-it-works" className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 py-16 lg:py-24 border-b border-orange-200/70 bg-[#fffdfa]">
+      <section id="how-it-works" className="w-full px-5 sm:px-10 lg:px-16 xl:px-24 py-16 lg:py-24 border-b border-orange-200/70 bg-[#fffdfa]">
         <div className="max-w-7xl mx-auto w-full space-y-12">
           <div className="text-center space-y-3 max-w-3xl mx-auto">
             <span className="inline-block rounded-full bg-gradient-to-r from-orange-500/10 to-amber-500/15 px-3.5 py-1 text-xs font-bold text-[#c2410c] uppercase tracking-wider border border-orange-200/80 shadow-2xs">
@@ -969,7 +1275,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* 5. SERVICE CATEGORIES (GRID VIEW)                                   */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      <section id="categories" className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 py-16 lg:py-24 border-b border-orange-200/70 bg-[#faf8f5]">
+      <section id="categories" className="w-full px-5 sm:px-10 lg:px-16 xl:px-24 py-16 lg:py-24 border-b border-orange-200/70 bg-[#faf8f5]">
         <div className="max-w-7xl mx-auto w-full space-y-12">
           <div className="text-center space-y-3 max-w-3xl mx-auto">
             <span className="inline-block rounded-full bg-gradient-to-r from-orange-500/10 to-amber-500/15 px-3.5 py-1 text-xs font-bold text-[#c2410c] uppercase tracking-wider border border-orange-200/80 shadow-2xs">
@@ -1038,7 +1344,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* 6. AI TECHNOLOGY SPOTLIGHT                                          */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      <section id="technology" className="w-full px-6 sm:px-10 lg:px-16 xl:px-24 py-16 lg:py-24 border-b border-orange-200/70 bg-gradient-to-b from-white to-[#fff8f0]">
+      <section id="technology" className="w-full px-5 sm:px-10 lg:px-16 xl:px-24 py-16 lg:py-24 border-b border-orange-200/70 bg-gradient-to-b from-white to-[#fff8f0]">
         <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-6 space-y-6">
             <span className="inline-block rounded-full bg-orange-500/10 px-3.5 py-1 text-xs font-bold text-[#c2410c] uppercase tracking-wider border border-orange-200/80">
@@ -1119,7 +1425,7 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* 7. FOOTER                                                           */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      <footer className="w-full bg-[#1c0d08] text-neutral-300 py-16 px-6 sm:px-10 lg:px-16 border-t border-orange-950">
+      <footer className="w-full bg-[#1c0d08] text-neutral-300 py-16 px-5 sm:px-10 lg:px-16 border-t border-orange-950">
         <div className="max-w-7xl mx-auto w-full space-y-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="space-y-4">
