@@ -118,5 +118,6 @@ PropertySchema.index({ "address.coordinates": "2dsphere" });
 PropertySchema.index({ customerId: 1, isDefault: 1 });
 
 // ── Model ─────────────────────────────────────────────────────────────────────
-export const Property = models.Property ?? model<IProperty>("Property", PropertySchema);
+export const Property: mongoose.Model<IProperty> =
+  (models.Property as mongoose.Model<IProperty>) ?? model<IProperty>("Property", PropertySchema);
 export default Property;

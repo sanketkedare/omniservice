@@ -115,7 +115,7 @@ const PricingEstimateSchema = new Schema<IPricingEstimate>(
 PricingEstimateSchema.index({ serviceRequestId: 1 });
 PricingEstimateSchema.index({ validUntil: 1, isExpired: 1 });
 
-export const PricingEstimate =
-  models.PricingEstimate ??
+export const PricingEstimate: mongoose.Model<IPricingEstimate> =
+  (models.PricingEstimate as mongoose.Model<IPricingEstimate>) ??
   model<IPricingEstimate>("PricingEstimate", PricingEstimateSchema);
 export default PricingEstimate;

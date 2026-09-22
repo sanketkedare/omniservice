@@ -10,7 +10,7 @@ import { schemaOptions } from "./_base";
 export interface IProfessionalVehicle extends Document {
   professionalId: mongoose.Types.ObjectId;
   make: string;
-  model: string;
+  vehicleModel: string;
   year: number;
   licensePlate?: string;
   color?: string;
@@ -31,7 +31,7 @@ const ProfessionalVehicleSchema = new Schema<IProfessionalVehicle>(
       index: true,
     },
     make: { type: String, required: true, trim: true, maxlength: 100 },
-    model: { type: String, required: true, trim: true, maxlength: 100 },
+    vehicleModel: { type: String, required: true, trim: true, maxlength: 100 },
     year: { type: Number, required: true, min: 1970, max: new Date().getFullYear() + 2 },
     licensePlate: { type: String, trim: true, uppercase: true },
     color: { type: String, trim: true },

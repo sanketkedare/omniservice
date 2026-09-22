@@ -9,7 +9,7 @@ export default function NotFound() {
   return (
     <div
       style={{
-        fontFamily: "'Inter', system-ui, sans-serif",
+        fontFamily: "'Times New Roman', Times, 'Liberation Serif', serif",
         minHeight: "100dvh",
         background: "#fafafa",
         display: "flex",

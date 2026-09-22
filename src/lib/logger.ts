@@ -14,26 +14,12 @@ const isServer = typeof window === "undefined";
 const serverLogger = isServer
   ? pino({
       level: env.LOG_LEVEL,
-      ...(env.NODE_ENV === "development"
-        ? {
-            transport: {
-              target: "pino-pretty",
-              options: {
-                colorize: true,
-                translateTime: "HH:MM:ss",
-                ignore: "pid,hostname",
-              },
-            },
-          }
-        : {
-            // Production: raw JSON for log aggregation (Datadog, etc.)
-            formatters: {
-              level: (label: string) => ({ level: label }),
-            },
-            timestamp: pino.stdTimeFunctions.isoTime,
-          }),
+      formatters: {
+        level: (label: string) => ({ level: label }),
+      },
+      timestamp: pino.stdTimeFunctions.isoTime,
       base: {
-        app: "forgelocal",
+        app: "omniservice",
         env: env.NODE_ENV,
       },
     })

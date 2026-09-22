@@ -218,7 +218,7 @@ export interface INotification extends Document {
 
 const NotificationSchema = new Schema<INotification>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     channel: {
       type: String,
       enum: ["push", "email", "sms", "whatsapp", "in_app"],
@@ -326,10 +326,21 @@ AuditLogSchema.index({ entityType: 1, entityId: 1, createdAt: -1 });
 AuditLogSchema.index({ action: 1, createdAt: -1 });
 
 // ── Model Exports ─────────────────────────────────────────────────────────────
-export const Dispute = models.Dispute ?? model<IDispute>("Dispute", DisputeSchema);
-export const Review = models.Review ?? model<IReview>("Review", ReviewSchema);
-export const MaintenanceRecord = models.MaintenanceRecord ?? model<IMaintenanceRecord>("MaintenanceRecord", MaintenanceRecordSchema);
-export const Warranty = models.Warranty ?? model<IWarranty>("Warranty", WarrantySchema);
-export const Notification = models.Notification ?? model<INotification>("Notification", NotificationSchema);
-export const AIInference = models.AIInference ?? model<IAIInference>("AIInference", AIInferenceSchema);
-export const AuditLog = models.AuditLog ?? model<IAuditLog>("AuditLog", AuditLogSchema);
+export const Dispute: mongoose.Model<IDispute> =
+  (models.Dispute as mongoose.Model<IDispute>) ?? model<IDispute>("Dispute", DisputeSchema);
+export const Review: mongoose.Model<IReview> =
+  (models.Review as mongoose.Model<IReview>) ?? model<IReview>("Review", ReviewSchema);
+export const MaintenanceRecord: mongoose.Model<IMaintenanceRecord> =
+  (models.MaintenanceRecord as mongoose.Model<IMaintenanceRecord>) ??
+  model<IMaintenanceRecord>("MaintenanceRecord", MaintenanceRecordSchema);
+export const Warranty: mongoose.Model<IWarranty> =
+  (models.Warranty as mongoose.Model<IWarranty>) ?? model<IWarranty>("Warranty", WarrantySchema);
+export const Notification: mongoose.Model<INotification> =
+  (models.Notification as mongoose.Model<INotification>) ??
+  model<INotification>("Notification", NotificationSchema);
+export const AIInference: mongoose.Model<IAIInference> =
+  (models.AIInference as mongoose.Model<IAIInference>) ??
+  model<IAIInference>("AIInference", AIInferenceSchema);
+export const AuditLog: mongoose.Model<IAuditLog> =
+  (models.AuditLog as mongoose.Model<IAuditLog>) ?? model<IAuditLog>("AuditLog", AuditLogSchema);
+

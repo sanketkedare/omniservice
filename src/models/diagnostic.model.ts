@@ -59,7 +59,6 @@ const DiagnosticSessionSchema = new Schema<IDiagnosticSession>(
       type: Schema.Types.ObjectId,
       ref: "ServiceRequest",
       required: true,
-      index: true,
     },
     customerId: {
       type: Schema.Types.ObjectId,
@@ -157,13 +156,12 @@ const DiagnosticFindingSchema = new Schema<IDiagnosticFinding>(
 
 DiagnosticFindingSchema.index({ sessionId: 1, type: 1 });
 
-// Models
-export const DiagnosticSession =
-  models.DiagnosticSession ??
+export const DiagnosticSession: mongoose.Model<IDiagnosticSession> =
+  (models.DiagnosticSession as mongoose.Model<IDiagnosticSession>) ??
   model<IDiagnosticSession>("DiagnosticSession", DiagnosticSessionSchema);
 
-export const DiagnosticFinding =
-  models.DiagnosticFinding ??
+export const DiagnosticFinding: mongoose.Model<IDiagnosticFinding> =
+  (models.DiagnosticFinding as mongoose.Model<IDiagnosticFinding>) ??
   model<IDiagnosticFinding>("DiagnosticFinding", DiagnosticFindingSchema);
 
 export default { DiagnosticSession, DiagnosticFinding };

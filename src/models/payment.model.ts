@@ -75,8 +75,8 @@ const PaymentSchema = new Schema<IPayment>(
       enum: ["razorpay", "stripe", "mock"],
       required: true,
     },
-    providerPaymentId: { type: String, sparse: true },
-    providerOrderId: { type: String, sparse: true },
+    providerPaymentId: { type: String },
+    providerOrderId: { type: String },
 
     authorizedAmountPaise: { type: Number, required: true, min: 0 },
     capturedAmountPaise: { type: Number, min: 0 },
@@ -101,7 +101,7 @@ const PaymentSchema = new Schema<IPayment>(
     failedAt: Date,
     failureReason: { type: String, maxlength: 1000 },
 
-    idempotencyKey: { type: String, required: true, unique: true },
+    idempotencyKey: { type: String, required: true },
     metadata: { type: Schema.Types.Mixed },
   },
   schemaOptions

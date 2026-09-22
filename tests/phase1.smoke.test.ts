@@ -5,7 +5,7 @@ import { describe, it, expect } from "vitest";
 // This test runs without a database connection — it only checks that
 // TypeScript compilation, module resolution, and schema definitions work.
 
-describe("ForgeLocal — Phase 1 Smoke Tests", () => {
+describe("OmniService AI — Phase 1 Smoke Tests", () => {
   it("environment config module loads", async () => {
     // The env module validates at load time.
     // In test mode, we expect it to either succeed with test vars
@@ -17,10 +17,10 @@ describe("ForgeLocal — Phase 1 Smoke Tests", () => {
   it("zod is correctly installed and working", async () => {
     const { z } = await import("zod");
     const schema = z.object({ name: z.string() });
-    const result = schema.safeParse({ name: "ForgeLocal" });
+    const result = schema.safeParse({ name: "OmniService AI" });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.name).toBe("ForgeLocal");
+      expect(result.data.name).toBe("OmniService AI");
     }
   });
 
@@ -77,16 +77,17 @@ describe("ForgeLocal — Phase 1 Smoke Tests", () => {
     expect(EscrowTransaction.schema).toBeDefined();
   });
 
-  it("forgelocal product identity constants are correct", () => {
+  it("omniservice product identity constants are correct", () => {
     const PRODUCT = {
-      name: "ForgeLocal",
+      name: "OmniService AI",
       company: "Volcanic.World",
-      domain: "forgelocal.volcanic.world",
+      domain: "omniservice.volcanic.world",
       aiModules: ["InspectAI", "SmartRoute", "TrustLock", "HomePass"],
     };
 
-    expect(PRODUCT.name).toBe("ForgeLocal");
+    expect(PRODUCT.name).toBe("OmniService AI");
     expect(PRODUCT.company).toBe("Volcanic.World");
+    expect(PRODUCT.domain).toBe("omniservice.volcanic.world");
     expect(PRODUCT.aiModules).toHaveLength(4);
     expect(PRODUCT.aiModules).toContain("InspectAI");
     expect(PRODUCT.aiModules).toContain("TrustLock");

@@ -101,6 +101,8 @@ const ChangeOrderSchema = new Schema<IChangeOrder>(
 ChangeOrderSchema.index({ jobId: 1, status: 1 });
 ChangeOrderSchema.index({ expiresAt: 1, status: 1 });
 
-export const ChangeOrder =
-  models.ChangeOrder ?? model<IChangeOrder>("ChangeOrder", ChangeOrderSchema);
+export const ChangeOrder: mongoose.Model<IChangeOrder> =
+  (models.ChangeOrder as mongoose.Model<IChangeOrder>) ??
+  model<IChangeOrder>("ChangeOrder", ChangeOrderSchema);
 export default ChangeOrder;
+

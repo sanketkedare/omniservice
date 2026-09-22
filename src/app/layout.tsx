@@ -1,24 +1,27 @@
 import type { Metadata, Viewport } from "next";
+import { FirebaseAnalytics } from "@/components/shared";
+import { ToastProvider } from "@/components/ui/Toast";
 import "./globals.css";
 
 // ── Metadata ───────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://forgelocal.volcanic.world"
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://omniservice.volcanic.world"
   ),
   title: {
-    default: "ForgeLocal — AI-Powered Local Services",
-    template: "%s | ForgeLocal",
+    default: "OmniService AI — Local Solutions. Higher Standards.",
+    template: "%s | OmniService AI",
   },
   description:
-    "ForgeLocal by Volcanic.World. Show the problem. Let AI understand it. Get a transparent scope and price. Get matched with the right professional. Verify the work. Release payment with confidence.",
+    "OmniService AI by Volcanic.World. Local Solutions. Higher Standards. Show the problem. Let AI understand it. Get a transparent scope and price. Get matched with the right professional. Verify the work. Release payment with confidence.",
   keywords: [
     "local services",
     "home repair",
     "plumbing",
     "AI diagnostics",
     "service marketplace",
-    "ForgeLocal",
+    "OmniService",
+    "OmniService AI",
     "Volcanic World",
   ],
   authors: [{ name: "Volcanic.World", url: "https://volcanic.world" }],
@@ -38,34 +41,35 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "https://forgelocal.volcanic.world",
-    siteName: "ForgeLocal",
-    title: "ForgeLocal — AI-Powered Local Services",
+    url: "https://omniservice.volcanic.world",
+    siteName: "OmniService AI",
+    title: "OmniService AI — Local Solutions. Higher Standards.",
     description:
-      "AI-native local services marketplace. Diagnose, match, verify, and settle — all in one platform.",
+      "AI-native local services marketplace by Volcanic.World. Local solutions with higher standards: diagnose, match, verify, and settle.",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/images/OmniService_Logo.png",
         width: 1200,
         height: 630,
-        alt: "ForgeLocal — AI-Powered Local Services",
+        alt: "OmniService AI — Local Solutions. Higher Standards. by Volcanic.World",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ForgeLocal — AI-Powered Local Services",
+    title: "OmniService AI — Local Solutions. Higher Standards.",
     description:
       "AI-native local services marketplace by Volcanic.World",
     creator: "@volcanicworld",
-    images: ["/og-image.jpg"],
+    images: ["/images/OmniService_Logo.png"],
   },
   icons: {
     icon: [
+      { url: "/images/OmniService_Icon.png", sizes: "any", type: "image/png" },
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.svg", type: "image/svg+xml" },
     ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    apple: [{ url: "/images/OmniService_Icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/images/OmniService_Icon.png"],
   },
   manifest: "/manifest.json",
   other: {
@@ -89,7 +93,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="light" style={{ colorScheme: "light" }} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -98,8 +102,12 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className="antialiased">
-        {children}
+      <body
+        className="antialiased bg-[#fafafa] text-neutral-900 min-h-screen font-serif"
+        style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
+      >
+        <FirebaseAnalytics />
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

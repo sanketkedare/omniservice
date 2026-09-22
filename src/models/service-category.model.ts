@@ -6,7 +6,7 @@
  * professional matching, and SOW generation.
  */
 
-import { Schema, Document, model, models } from "mongoose";
+import mongoose, { Schema, Document, model, models } from "mongoose";
 import { schemaOptions } from "./_base";
 
 export type CategoryStatus = "active" | "inactive" | "coming_soon";
@@ -47,7 +47,6 @@ const ServiceCategorySchema = new Schema<IServiceCategory>(
     slug: {
       type: String,
       required: true,
-      unique: true,
       lowercase: true,
       trim: true,
     },
@@ -90,7 +89,7 @@ ServiceCategorySchema.index({ slug: 1 }, { unique: true });
 ServiceCategorySchema.index({ status: 1, displayOrder: 1 });
 ServiceCategorySchema.index({ phase: 1, status: 1 });
 
-export const ServiceCategory =
-  models.ServiceCategory ??
+export const ServiceCategory: mongoose.Model<IServiceCategory> =
+  (models.ServiceCategory as mongoose.Model<IServiceCategory>) ??
   model<IServiceCategory>("ServiceCategory", ServiceCategorySchema);
 export default ServiceCategory;

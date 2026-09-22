@@ -86,7 +86,6 @@ const ProfessionalSchema = new Schema<IProfessional>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true,
     },
 
     businessName: { type: String, trim: true, maxlength: 200 },

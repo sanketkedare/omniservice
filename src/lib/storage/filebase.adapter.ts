@@ -189,3 +189,6 @@ export function getStorageProvider(): FilebaseAdapter {
   }
   return storageInstance;
 }
+
+export const filebaseStorage = getStorageProvider();
+export { StorageKeys } from "./storage.interface";

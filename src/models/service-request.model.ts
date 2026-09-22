@@ -161,7 +161,7 @@ ServiceRequestSchema.index({ customerId: 1, createdAt: -1 });
 ServiceRequestSchema.index({ status: 1, createdAt: -1 });
 ServiceRequestSchema.index({ propertyId: 1, createdAt: -1 });
 
-export const ServiceRequest =
-  models.ServiceRequest ??
+export const ServiceRequest: mongoose.Model<IServiceRequest> =
+  (models.ServiceRequest as mongoose.Model<IServiceRequest>) ??
   model<IServiceRequest>("ServiceRequest", ServiceRequestSchema);
 export default ServiceRequest;

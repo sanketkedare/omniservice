@@ -163,6 +163,7 @@ const SOWSchema = new Schema<IScopeOfWork>(
 SOWSchema.index({ serviceRequestId: 1, version: -1 });
 SOWSchema.index({ customerId: 1, status: 1 });
 
-export const ScopeOfWork =
-  models.ScopeOfWork ?? model<IScopeOfWork>("ScopeOfWork", SOWSchema);
+export const ScopeOfWork: mongoose.Model<IScopeOfWork> =
+  (models.ScopeOfWork as mongoose.Model<IScopeOfWork>) ??
+  model<IScopeOfWork>("ScopeOfWork", SOWSchema);
 export default ScopeOfWork;

@@ -17,11 +17,12 @@ const envSchema = z.object({
     .default("development"),
 
   // Application
+  PORT: z.coerce.number().default(3012),
   NEXT_PUBLIC_APP_URL: z
     .string()
     .url()
-    .default("http://localhost:3000"),
-  NEXT_PUBLIC_APP_NAME: z.string().default("ForgeLocal"),
+    .default("http://localhost:3012"),
+  NEXT_PUBLIC_APP_NAME: z.string().default("OmniService AI"),
 
   // Database — MongoDB
   MONGODB_URI: z
@@ -43,15 +44,15 @@ const envSchema = z.object({
     .default("https://s3.filebase.com"),
   FILEBASE_BUCKET_NAME: z
     .string()
-    .min(1, "FILEBASE_BUCKET_NAME is required")
+    .default("omniservice-dev")
     .describe("Filebase bucket name"),
   FILEBASE_ACCESS_KEY: z
     .string()
-    .min(1, "FILEBASE_ACCESS_KEY is required")
+    .default("mock-access-key")
     .describe("Filebase access key"),
   FILEBASE_SECRET_KEY: z
     .string()
-    .min(1, "FILEBASE_SECRET_KEY is required")
+    .default("mock-secret-key")
     .describe("Filebase secret key"),
   FILEBASE_REGION: z.string().default("us-east-1"),
   FILEBASE_PUBLIC_URL: z
@@ -69,13 +70,30 @@ const envSchema = z.object({
     .enum(["gemini", "mock"])
     .default("mock")
     .describe("AI provider: 'gemini' for production, 'mock' for development"),
+  GEMINI_MODEL: z
+    .string()
+    .default("gemini-2.0-flash")
+    .describe("Google Gemini model (free tier: gemini-2.0-flash or gemini-1.5-flash)"),
 
-  // Email (optional for Phase 1, required Phase 2+)
+  // Firebase
+  NEXT_PUBLIC_FIREBASE_API_KEY: z.string().optional(),
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: z.string().optional(),
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID: z.string().optional(),
+  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: z.string().optional(),
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string().optional(),
+  NEXT_PUBLIC_FIREBASE_APP_ID: z.string().optional(),
+  NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: z.string().optional(),
+
+  // Email (Volcanic Digital Solutions Gmail SMTP)
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASSWORD: z.string().optional(),
   SMTP_FROM: z.string().email().optional(),
+
+  // Primary Support Contacts
+  NEXT_PUBLIC_SUPPORT_EMAIL: z.string().default("volcanic.digitalsolutions@gmail.com"),
+  NEXT_PUBLIC_SUPPORT_PHONE: z.string().default("+91 86248 51910"),
 
   // Logging
   LOG_LEVEL: z
@@ -94,7 +112,7 @@ function validateEnv() {
       .join("\n");
 
     console.error(
-      "\n🚨 ForgeLocal — Invalid environment variables:\n" +
+      "\n🚨 OmniService AI — Invalid environment variables:\n" +
         fieldErrors +
         "\n\nPlease check your .env.local file against .env.example\n"
     );

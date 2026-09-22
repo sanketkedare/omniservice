@@ -26,10 +26,10 @@ const MONGOOSE_OPTIONS: mongoose.ConnectOptions = {
   minPoolSize: 2,
   maxIdleTimeMS: 30_000,
 
-  // Timeouts
-  serverSelectionTimeoutMS: 5_000,
-  socketTimeoutMS: 45_000,
-  connectTimeoutMS: 10_000,
+  // Timeouts (fail fast in test mode when no local Mongo instance is running)
+  serverSelectionTimeoutMS: process.env.NODE_ENV === "test" ? 500 : 5_000,
+  socketTimeoutMS: process.env.NODE_ENV === "test" ? 2_000 : 45_000,
+  connectTimeoutMS: process.env.NODE_ENV === "test" ? 1_000 : 10_000,
 
   // Reliability
   retryWrites: true,
@@ -113,3 +113,5 @@ export function getDatabaseStatus(): {
     readyState: mongoose.connection.readyState,
   };
 }
+
+export const connectDB = connectToDatabase;

@@ -102,6 +102,7 @@ const JobEvidenceSchema = new Schema<IJobEvidence>(
 JobEvidenceSchema.index({ jobId: 1, type: 1 });
 JobEvidenceSchema.index({ jobId: 1, sequenceOrder: 1 });
 
-export const JobEvidence =
-  models.JobEvidence ?? model<IJobEvidence>("JobEvidence", JobEvidenceSchema);
+export const JobEvidence: mongoose.Model<IJobEvidence> =
+  (models.JobEvidence as mongoose.Model<IJobEvidence>) ??
+  model<IJobEvidence>("JobEvidence", JobEvidenceSchema);
 export default JobEvidence;

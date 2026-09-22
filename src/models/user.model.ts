@@ -24,9 +24,19 @@ export interface IUser extends Document {
   role: UserRole;
   status: UserStatus;
 
-  // Authentication (managed by Auth.js — stored here for reference)
+  // Authentication & Security
+  passwordHash?: string | null;
+  passwordSalt?: string | null;
+  authProvider: "credentials" | "google";
+  googleId?: string | null;
   emailVerified: Date | null;
   phoneVerified: boolean;
+
+  // Real-time Geolocation
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
 
   // Address
   address: {
@@ -62,14 +72,12 @@ const UserSchema = new Schema<IUser>(
     name: { type: String, required: true, trim: true, maxlength: 100 },
     email: {
       type: String,
-      sparse: true,
       lowercase: true,
       trim: true,
       match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
     },
     phone: {
       type: String,
-      sparse: true,
       trim: true,
       match: [/^\+?[\d\s\-()]{7,20}$/, "Invalid phone number format"],
     },
@@ -88,8 +96,22 @@ const UserSchema = new Schema<IUser>(
       default: "active",
     },
 
+    passwordHash: { type: String, select: false, default: null },
+    passwordSalt: { type: String, select: false, default: null },
+    authProvider: {
+      type: String,
+      enum: ["credentials", "google"],
+      default: "credentials",
+    },
+    googleId: { type: String, default: null },
+
     emailVerified: { type: Date, default: null },
     phoneVerified: { type: Boolean, default: false },
+
+    coordinates: {
+      lat: { type: Number, default: null },
+      lng: { type: Number, default: null },
+    },
 
     address: ADDRESS_SCHEMA,
 
@@ -102,7 +124,7 @@ const UserSchema = new Schema<IUser>(
     },
 
     lastActiveAt: { type: Date, default: null },
-    referralCode: { type: String, sparse: true, uppercase: true },
+    referralCode: { type: String, uppercase: true },
     referredBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -119,5 +141,6 @@ UserSchema.index({ role: 1, status: 1 });
 UserSchema.index({ referralCode: 1 }, { sparse: true, unique: true });
 
 // ── Model ─────────────────────────────────────────────────────────────────────
-export const User = models.User ?? model<IUser>("User", UserSchema);
+export const User: mongoose.Model<IUser> =
+  (models.User as mongoose.Model<IUser>) ?? model<IUser>("User", UserSchema);
 export default User;
