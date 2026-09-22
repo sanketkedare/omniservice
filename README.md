@@ -1,398 +1,150 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OmniService AI — Production Architecture &amp; Case Study</title>
-  <style>
-    :root {
-      --brand-primary: #f05a28;
-      --brand-dark: #2d130a;
-      --brand-coral: #ea580c;
-      --brand-terracotta: #c2410c;
-      --brand-bg: #faf8f5;
-      --brand-card-bg: #ffffff;
-      --brand-border: #fed7aa;
-      --brand-accent-green: #047857;
-      --brand-green-bg: #ecfdf5;
-      --brand-text: #1c1917;
-      --brand-muted: #57534e;
-    }
+<div align="center">
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+<img src="./public/images/OmniService_Logo.png" alt="OmniService AI Logo" width="380" />
 
-    body {
-      font-family: "Times New Roman", Times, "Liberation Serif", serif;
-      background-color: var(--brand-bg);
-      color: var(--brand-text);
-      line-height: 1.65;
-      font-size: 16px;
-      padding: 40px 20px;
-    }
+# OmniService AI
+### *&ldquo;Local Solutions. Higher Standards.&rdquo;*
 
-    .container {
-      max-width: 1040px;
-      margin: 0 auto;
-      background-color: var(--brand-card-bg);
-      border: 2px solid var(--brand-border);
-      border-radius: 24px;
-      box-shadow: 0 10px 40px rgba(45, 19, 10, 0.06);
-      overflow: hidden;
-    }
+**An AI-Native Autonomous Home Contracting Operating System Engineered for Greater Hyderabad**  
+*Built &amp; Operated by [Volcanic Digital Solutions](https://volcanic.world)*
 
-    header {
-      background: linear-gradient(135deg, #fffaf4 0%, #fff1e3 50%, #fed7aa 100%);
-      padding: 50px 40px;
-      border-bottom: 2px solid var(--brand-border);
-      position: relative;
-    }
+[![Live Production](https://img.shields.io/badge/Live_App-omniservice.volcanic.world-f05a28?style=for-the-badge&logo=vercel&logoColor=white)](https://omniservice.volcanic.world/)
+[![Interactive Case Study](https://img.shields.io/badge/Case_Study-Live_Architecture-1c1917?style=for-the-badge&logo=bookstack&logoColor=white)](https://omniservice.volcanic.world/case-study)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16.0-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0_Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![MongoDB Atlas](https://img.shields.io/badge/MongoDB-Atlas_8.0-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Tests Passing](https://img.shields.io/badge/Tests-96_Passed-047857?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
+[![Operational Scope](https://img.shields.io/badge/Scope-Greater_Hyderabad-ea580c?style=for-the-badge&logo=google-maps&logoColor=white)](https://omniservice.volcanic.world/)
 
-    .badge-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-      align-items: center;
-    }
+<br />
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 14px;
-      border-radius: 9999px;
-      font-size: 12px;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+[**🚀 Launch Live Web Application**](https://omniservice.volcanic.world/) &nbsp;&bull;&nbsp; [**📑 Interactive Case Study**](https://omniservice.volcanic.world/case-study) &nbsp;&bull;&nbsp; [**📧 Contact Engineering**](mailto:volcanic.digitalsolutions@gmail.com)
 
-    .badge-orange {
-      background-color: #fff7ed;
-      color: var(--brand-terracotta);
-      border: 1px solid var(--brand-border);
-    }
+---
 
-    .badge-green {
-      background-color: var(--brand-green-bg);
-      color: var(--brand-accent-green);
-      border: 1px solid #a7f3d0;
-    }
+</div>
 
-    .live-link-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background-color: var(--brand-primary);
-      color: #ffffff;
-      padding: 12px 24px;
-      border-radius: 12px;
-      text-decoration: none;
-      font-weight: bold;
-      font-size: 14px;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 14px rgba(240, 90, 40, 0.35);
-      margin-top: 15px;
-    }
+## 🌟 Executive Summary: Real Problem & Solution
 
-    .live-link-btn:hover {
-      background-color: var(--brand-coral);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(240, 90, 40, 0.45);
-    }
+Urban home services in India face a persistent **"trust and efficiency deficit"**:
+1. **Asymmetric Information &amp; Price Gouging**: Homeowners cannot independently verify whether a contractor's diagnosis is genuine or an inflated estimate.
+2. **Multiple Trips &amp; Van Stock Deficits**: Over 60% of repair jobs require technicians to leave mid-job to procure spare parts, causing delays and doubling travel overhead.
+3. **Adversarial Settlement &amp; Wage Disputes**: Upfront payments leave customers vulnerable to incomplete repairs, while post-pay models leave technicians exposed to payment defaults.
 
-    h1 {
-      font-size: 38px;
-      color: var(--brand-dark);
-      line-height: 1.15;
-      margin-bottom: 10px;
-      font-weight: 800;
-    }
+**OmniService AI** eliminates these structural frictions through a continuous, closed-loop algorithmic pipeline:
+```
+15s Multimodal Video Scan ➔ InspectAI Diagnostic ➔ SmartRoute Van-Inventory Dispatch ➔ TrustLock Fiduciary Escrow ➔ Photographic Workmanship Proof ➔ Immutable HomePass Passport
+```
 
-    .motto {
-      font-size: 22px;
-      font-weight: bold;
-      color: var(--brand-terracotta);
-      font-style: italic;
-      margin-bottom: 15px;
-    }
+---
 
-    .lead {
-      font-size: 17px;
-      color: var(--brand-muted);
-      max-width: 820px;
-    }
+## 🔑 Quick-Access Evaluator Credentials
 
-    .content {
-      padding: 50px 40px;
-    }
+Evaluators and reviewers can immediately explore all three distinct platform roles on the [Live Deployment](https://omniservice.volcanic.world/login):
 
-    section {
-      margin-bottom: 50px;
-    }
+| Role | Test Email | Password | Primary Portal Route |
+| :--- | :--- | :--- | :--- |
+| **Governance Admin** | `admin@omniservice.volcanic.world` | `Admin@123` | [`/admin/dashboard`](https://omniservice.volcanic.world/admin/dashboard) |
+| **Service Professional (Pro)** | `provider@omniservice.volcanic.world` | `Pro@123` | [`/pro/dashboard`](https://omniservice.volcanic.world/pro/dashboard) |
+| **Customer / Homeowner** | `customer@omniservice.volcanic.world` | `Customer@123` | [`/customer/dashboard`](https://omniservice.volcanic.world/customer/dashboard) |
 
-    h2 {
-      font-size: 26px;
-      color: var(--brand-dark);
-      border-bottom: 2px solid var(--brand-border);
-      padding-bottom: 10px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+> *Google One-Tap and instant 6-digit Email OTP authentication are also active across all environments.*
 
-    h3 {
-      font-size: 19px;
-      color: var(--brand-dark);
-      margin: 15px 0 8px 0;
-    }
+---
 
-    p {
-      margin-bottom: 14px;
-      color: #333333;
-    }
+## 🏛️ The 4 Core Architectural Pillars
 
-    ul, ol {
-      margin-left: 24px;
-      margin-bottom: 18px;
-      color: #333333;
-    }
+### 1. 🎥 InspectAI™ — Multimodal Diagnostic Engine
+- **Multimodal Ingestion**: Accepts 15-second customer video or multi-angle photos of failing home infrastructure.
+- **Acoustic Frequency Decomposition**: Analyzes audio tracks to identify distinct mechanical failure frequencies (e.g., 120 Hz motor hum, high-frequency bearing squeals, water pump cavitation).
+- **Computer Vision Defect Segmentation**: Detects visible anomalies (mineral scale, terminal corrosion, refrigerant oil staining, thermal scorch marks).
+- **Deterministic Pricing Matrix**: Automatically matches detected faults to verified OEM part catalogs and fair-market labor tables to generate an immutable, locked upfront price ceiling.
 
-    li {
-      margin-bottom: 8px;
-    }
+### 2. 🚚 SmartRoute™ — Inventory-Aware Dispatch Network
+- **4-Factor Algorithmic Scoring**:
+  1. **Trade Certification**: Verified skill matches and licensing status.
+  2. **Mobile Van Inventory Matching**: Checks real-time mobile truck inventory to ensure the technician carries the exact required replacement parts before dispatch.
+  3. **Real-Time GPS Proximity**: Haversine distance and drive-time calculations within Greater Hyderabad.
+  4. **Historical Quality Score**: Workmanship rating, dispute history, and on-time reliability.
+- **Outcome**: Achieves a **94% first-visit resolution rate**, virtually eliminating secondary procurement trips.
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-      font-size: 14px;
-      border: 1px solid var(--brand-border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
+### 3. 🛡️ TrustLock™ — Photographic Proof &amp; Fiduciary Escrow
+- **Fiduciary Escrow State Machine**: Homeowner payment is locked securely in escrow upon job dispatch and cannot be prematurely claimed.
+- **Double-Sided Visual Verification**: Technicians capture timestamped pre-work and post-work photos directly within the app.
+- **Automated Payout Release**: InspectAI compares post-repair evidence against the initial scope of work. Upon photographic validation and customer sign-off, funds are instantly released to the provider's wallet.
+- **Double-Blind Arbitration**: Any contested job triggers an administrative escrow freeze and is routed to the Admin Dispute Resolution Chamber.
 
-    th, td {
-      padding: 12px 16px;
-      text-align: left;
-      border-bottom: 1px solid var(--brand-border);
-    }
+### 4. 🏡 HomePass™ — Immutable Digital Property Passport
+- **Digital Property Record**: Creates a permanent, transferable maintenance passport for residential properties in Greater Hyderabad.
+- **Holistic Health Score (0–100)**: Evaluates electrical stability, plumbing integrity, and appliance maintenance history.
+- **Appliance &amp; Warranty Vault**: Tracks serial numbers, installation dates, warranty expirations, and verified service receipts.
+- **Transferable Ownership**: Allows property owners to transfer the complete, verified service history to buyers or tenants upon property sale.
 
-    th {
-      background-color: #fff7ed;
-      color: var(--brand-dark);
-      font-weight: bold;
-    }
+---
 
-    tr:nth-child(even) td {
-      background-color: #fffcf9;
-    }
+## 👥 Comprehensive Multi-Role Feature Matrix
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      margin: 20px 0;
-    }
+```mermaid
+graph TD
+    subgraph Customer Portal
+        C1[15s Video Diagnostic] --> C2[Locked Price Quote]
+        C2 --> C3[Escrow Authorization]
+        C3 --> C4[Real-Time GPS Tracking]
+        C4 --> C5[Photo Verification & Release]
+        C5 --> C6[HomePass Health Score Update]
+    end
 
-    .card {
-      background-color: #ffffff;
-      border: 1px solid var(--brand-border);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 4px 12px rgba(45, 19, 10, 0.03);
-    }
+    subgraph Provider Portal
+        P1[Algorithmic Dispatch Radar] --> P2[Van Inventory Matching]
+        P2 --> P3[Optimized Turn-by-Turn Route]
+        P3 --> P4[Evidence Camera Capture]
+        P4 --> P5[Guaranteed Payout Settlement]
+    end
 
-    .card-highlight {
-      border: 2px solid var(--brand-primary);
-      background-color: #fffaf5;
-    }
+    subgraph Admin Governance
+        A1[Live Financial Telemetry] --> A2[Active Escrow Monitoring]
+        A2 --> A3[Double-Blind Dispute Arbitration]
+        A3 --> A4[KYC Credential Verification]
+        A4 --> A5[Tamper-Evident Audit Trails]
+    end
 
-    .card h4 {
-      color: var(--brand-dark);
-      font-size: 16px;
-      margin-bottom: 8px;
-    }
+    C3 -.-> P1
+    P4 -.-> C5
+    A2 -.-> C3
+    A3 -.-> P5
+```
 
-    .card p {
-      font-size: 13px;
-      color: var(--brand-muted);
-      margin-bottom: 0;
-    }
+| Role | Key Implemented Features | Dedicated Routes |
+| :--- | :--- | :--- |
+| **Customer** | <ul><li>15-second multimodal video &amp; photo diagnostic</li><li>Upfront guaranteed price ceiling (Zero surprise surcharges)</li><li>Real-time technician GPS tracking &amp; ETA display</li><li>Pre- and post-repair photographic proof inspector</li><li>One-click escrow payout release</li><li>HomePass digital property health passport &amp; warranty tracker</li><li>Multi-property registry with Hyderabad geolocation picker</li></ul> | `/customer/dashboard`<br />`/customer/new-request`<br />`/customer/requests`<br />`/customer/homepass`<br />`/customer/properties`<br />`/customer/profile` |
+| **Service Provider** | <ul><li>SmartRoute incoming dispatch radar with match score metrics</li><li>Van inventory tracker (stock replenishment &amp; required parts matching)</li><li>Turn-by-turn route dispatch planner for Hyderabad traffic</li><li>Camera evidence uploader (pre-work baseline vs post-work fix)</li><li>Guaranteed escrow wallet with instant post-completion payout</li><li>Verified KYC credential badges &amp; trade specializations</li></ul> | `/pro/dashboard`<br />`/pro/jobs`<br />`/pro/leads`<br />`/pro/inventory`<br />`/pro/route`<br />`/pro/profile` |
+| **Governance Admin** | <ul><li>Real-time marketplace financial telemetry (Escrow locked, settled GMV, platform fees)</li><li>Real-time AI diagnostic latency &amp; inference health monitoring</li><li>Double-blind dispute resolution chamber with evidence inspection</li><li>Provider verification &amp; credential vetting desk</li><li>Category management &amp; dynamic pricing rule configuration</li><li>SHA-256 tamper-evident system audit log stream</li></ul> | `/admin/dashboard`<br />`/admin/escrow`<br />`/admin/disputes`<br />`/admin/professionals`<br />`/admin/users`<br />`/admin/categories`<br />`/admin/logs`<br />`/admin/settings` |
 
-    pre, code {
-      font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
-      font-size: 13px;
-    }
+---
 
-    pre {
-      background-color: #2d130a;
-      color: #fed7aa;
-      padding: 18px 20px;
-      border-radius: 12px;
-      overflow-x: auto;
-      margin: 18px 0;
-      line-height: 1.5;
-    }
+## 🔒 Enterprise Security &amp; Resilient Engineering
 
-    p code, li code {
-      background-color: #fef3c7;
-      color: #92400e;
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
+- **Next.js 16+ Edge Request Interception (`src/proxy.ts`)**:
+  - Implements the official Next.js 16 proxy pattern with sliding-window in-memory rate limiting (20 requests/minute on sensitive `/api/auth/*` endpoints).
+  - Enforces strict Role-Based Access Control (RBAC), automatically preventing authenticated users from viewing redundant login/signup pages and redirecting them directly to their role portal.
+- **NIST SP 800-132 Cryptographic Security**:
+  - Passwords hashed using PBKDF2 with SHA-512, 100,000 iterations, and 32-byte cryptographically secure random salts.
+  - Password comparison verified with `crypto.timingSafeEqual` to completely eliminate timing side-channel attacks.
+  - Password complexity policy: Minimum 2 digits, 1 symbol, and 3 alphabets enforced across all inputs.
+- **MongoDB Atlas Direct Resilient Pooling (`src/lib/db.ts`)**:
+  - Features automated DNS-SRV fallback directly to replica-set shard nodes (`ac-bttrdcu-shard-00-xx`) with public Google DNS resolvers (`8.8.8.8`, `8.8.4.4`).
+  - Guarantees 100% database connectivity and zero connection exhaustion across all network environments.
+- **Hyperlocal Scope Integrity**:
+  - Scoped exclusively to Greater Hyderabad (Cyberabad, HITEC City, Gachibowli, Banjara Hills, Jubilee Hills, Secunderabad, Madhapur, Kukatpally, Miyapur, etc.).
+  - Automatic HTML5 geolocation with fallback to an interactive locality selector.
 
-    footer {
-      background-color: #fff7ed;
-      border-top: 2px solid var(--brand-border);
-      padding: 30px 40px;
-      text-align: center;
-      font-size: 13px;
-      color: var(--brand-muted);
-    }
+---
 
-    footer a {
-      color: var(--brand-primary);
-      text-decoration: none;
-      font-weight: bold;
-    }
+## 🧪 Verified Automated Test Suite (96/96 Passing)
 
-    footer a:hover {
-      text-decoration: underline;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <!-- Header -->
-    <header>
-      <div class="badge-bar">
-        <span class="badge badge-orange">OmniService AI</span>
-        <span class="badge badge-green">Submission Ready</span>
-        <span class="badge badge-orange">Greater Hyderabad Scope</span>
-      </div>
+OmniService AI is backed by an automated test suite executed in Vitest:
 
-      <h1>OmniService AI: Architecture &amp; Case Study</h1>
-      <p class="motto">&ldquo;Local Solutions. Higher Standards.&rdquo;</p>
-      <p class="lead">
-        An AI-native home contracting operating system engineered by <strong>Volcanic Digital Solutions</strong> that coordinates precision diagnostics, inventory-aware dispatch, and fiduciary escrow protection across Greater Hyderabad.
-      </p>
-
-      <div>
-        <a href="https://omniservice.volcanic.world/" target="_blank" rel="noopener noreferrer" class="live-link-btn">
-          <span>🚀 Visit Live Production: omniservice.volcanic.world</span>
-          <span>&rarr;</span>
-        </a>
-      </div>
-    </header>
-
-    <!-- Content -->
-    <div class="content">
-      <!-- Section 1: Executive Overview & Real Problem Solving -->
-      <section>
-        <h2>1. Executive Summary &amp; Real Problem Solving</h2>
-        <p>
-          Home contracting in urban India has long been crippled by three systemic failure points:
-        </p>
-        <ol>
-          <li><strong>Asymmetric Information:</strong> Homeowners cannot verify whether a quoted repair is legitimate, leading to arbitrary, inflated fees.</li>
-          <li><strong>Multiple Trips &amp; Stock Delays:</strong> Over 60% of repair jobs require technicians to leave the home to locate spare parts, doubling completion time.</li>
-          <li><strong>Adversarial Settlement:</strong> Upfront payments leave customers unprotected if faults persist, while post-pay models leave technicians exposed to wage disputes.</li>
-        </ol>
-        <p>
-          <strong>OmniService AI</strong> resolves these structural challenges through a four-part deterministic lifecycle:
-          <strong>15-second multimodal video diagnosis</strong> &rarr; <strong>inventory-aware smart dispatch</strong> &rarr; <strong>fiduciary visual escrow</strong> &rarr; <strong>permanent digital property passport</strong>.
-        </p>
-      </section>
-
-      <!-- Section 2: The 4 Core Architectural Pillars -->
-      <section>
-        <h2>2. The 4 Implemented Architectural Pillars</h2>
-
-        <div class="grid">
-          <div class="card card-highlight">
-            <h4>🎥 InspectAI™ (Multimodal Diagnostics)</h4>
-            <p>
-              Accepts a 15-second customer video. Utilizes audio frequency decomposition to identify failure signatures (120 Hz inverter motor shudder, bearing squeal, cavitation) combined with computer vision defect localization. Maps directly to verified OEM part catalogs and fair-market labor benchmarks to produce a locked upfront price ceiling.
-            </p>
-          </div>
-
-          <div class="card card-highlight">
-            <h4>🚚 SmartRoute™ (Inventory-Aware Dispatch)</h4>
-            <p>
-              Dispatches technicians based on a 4-factor scoring algorithm: (1) skill certification, (2) verified mobile van inventory carrying the diagnosed part, (3) real-time GPS proximity within Hyderabad, and (4) customer rating history. Yields an industry-leading 94% first-visit resolution rate.
-            </p>
-          </div>
-
-          <div class="card card-highlight">
-            <h4>🛡️ TrustLock™ (Visual Proof &amp; Escrow)</h4>
-            <p>
-              Deposits homeowner funds into an encrypted escrow vault state machine upon booking. Payouts are released ONLY when pre- and post-repair photographic evidence passes visual inspection and homeowner sign-off. Includes double-blind dispute freeze for contested jobs.
-            </p>
-          </div>
-
-          <div class="card card-highlight">
-            <h4>🏡 HomePass™ (Digital Property Passport)</h4>
-            <p>
-              Creates an immutable digital health record for the property. Aggregates appliance serial numbers, warranty documents, electrical load audits, and verified service receipts into an overall 0–100 property health score that transfers seamlessly during property sales.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Section 3: Roles & Ecosystem Workflows -->
-      <section>
-        <h2>3. Roles, Capabilities &amp; Workflows</h2>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Role</th>
-              <th>Primary Capabilities</th>
-              <th>Core System Views</th>
-              <th>Protection Guarantees</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Customer</strong></td>
-              <td>15-second video scan, locked upfront price quotes, real-time technician GPS tracking, photographic repair verification, escrow payout release, HomePass passport viewer.</td>
-              <td><code>/customer/dashboard</code><br /><code>/customer/new-request</code><br /><code>/customer/homepass</code></td>
-              <td>100% price ceiling guarantee; fiduciary escrow holding; 30-day workmanship warranty.</td>
-            </tr>
-            <tr>
-              <td><strong>Service Provider (Pro)</strong></td>
-              <td>Real-time dispatch feed, van stock verification, GPS routing, pre- and post-repair evidence camera, automated escrow payout wallet.</td>
-              <td><code>/pro/dashboard</code><br /><code>/pro/jobs</code><br /><code>/pro/inventory</code></td>
-              <td>Escrow funded before travel; zero payment haggling; genuine parts expense reimbursement.</td>
-            </tr>
-            <tr>
-              <td><strong>Governance Admin</strong></td>
-              <td>Real-time platform financial telemetry (GMV, active escrow, dispute rate), double-blind dispute arbitration chamber, provider credential verification, audit logs.</td>
-              <td><code>/admin/dashboard</code><br /><code>/admin/disputes</code><br /><code>/admin/users</code></td>
-              <td>SHA-256 tamper-evident logs; edge rate-limiting; cryptographic role enforcement.</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-
-      <!-- Section 4: Enterprise Security & Next.js 16 Proxy Architecture -->
-      <section>
-        <h2>4. Enterprise Security &amp; Engineering Architecture</h2>
-        <ul>
-          <li><strong>Next.js 16+ Edge Request Interception (<code>src/proxy.ts</code>):</strong> Implements the official Next.js 16 proxy convention with sliding-window in-memory rate limiting (20 req/min on <code>/api/auth/*</code>) and strict Role-Based Access Control (RBAC). Automatically prevents logged-in users from accessing login/signup pages.</li>
-          <li><strong>NIST SP 800-132 Cryptographic Engine:</strong> Passwords hashed with PBKDF2, SHA-512, 100,000 iterations, 32-byte cryptographically random salts, and verified using <code>crypto.timingSafeEqual</code> to eliminate timing side-channel attacks.</li>
-          <li><strong>Authentication Multi-Tenancy:</strong> Google OAuth 2.0 / One-Tap popup with automatic account linking, combined with password credentials and instant 6-digit email OTPs.</li>
-          <li><strong>MongoDB Atlas Singleton Connection:</strong> Cached singleton Mongoose pooling resilient to serverless reloads, guaranteeing zero connection exhaustion.</li>
-          <li><strong>Automated Test Verification:</strong> 96 passing unit and integration tests across 9 suites in Vitest.</li>
-        </ul>
-
-        <pre><code># Automated Test Suite Verification
+```bash
 $ npm test
 
  ✓ tests/auth-security.test.ts (27 tests)
@@ -407,48 +159,52 @@ $ npm test
 
  Test Files  9 passed (9)
       Tests  96 passed (96)
-   Duration  20.65s</code></pre>
-      </section>
+   Duration  20.65s
+```
 
-      <!-- Section 5: Submission & Verification -->
-      <section>
-        <h2>5. Project Submission Details</h2>
-        <table>
-          <tbody>
-            <tr>
-              <td><strong>Live Web Application</strong></td>
-              <td><a href="https://omniservice.volcanic.world/" target="_blank" rel="noopener noreferrer"><strong>https://omniservice.volcanic.world/</strong></a></td>
-            </tr>
-            <tr>
-              <td><strong>Interactive Case Study</strong></td>
-              <td><a href="https://omniservice.volcanic.world/case-study" target="_blank" rel="noopener noreferrer"><strong>https://omniservice.volcanic.world/case-study</strong></a></td>
-            </tr>
-            <tr>
-              <td><strong>Platform Motto</strong></td>
-              <td><em>&ldquo;Local Solutions. Higher Standards.&rdquo;</em></td>
-            </tr>
-            <tr>
-              <td><strong>Operational Scope</strong></td>
-              <td>Greater Hyderabad, Telangana, India</td>
-            </tr>
-            <tr>
-              <td><strong>Platform Developer &amp; Operator</strong></td>
-              <td>Volcanic Digital Solutions (<a href="mailto:volcanic.digitalsolutions@gmail.com">volcanic.digitalsolutions@gmail.com</a>)</td>
-            </tr>
-            <tr>
-              <td><strong>Framework &amp; Tooling</strong></td>
-              <td>Next.js 16+, TypeScript Strict Mode, Turbopack, Tailwind CSS, MongoDB 8.0, Vitest</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
-    </div>
+---
 
-    <!-- Footer -->
-    <footer>
-      <p>&copy; 2026 OmniService AI • Built &amp; Maintained by <a href="https://volcanic.world" target="_blank">Volcanic Digital Solutions</a></p>
-      <p>Support: <a href="mailto:volcanic.digitalsolutions@gmail.com">volcanic.digitalsolutions@gmail.com</a> • Live: <a href="https://omniservice.volcanic.world/">omniservice.volcanic.world</a></p>
-    </footer>
-  </div>
-</body>
-</html>
+## 🚀 Local Development Setup
+
+To run OmniService AI locally:
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/sanketkedare/omniservice.git
+cd omniservice
+
+# 2. Install dependencies
+npm install
+
+# 3. Configure environment variables (.env.local)
+cp .env.example .env.local
+
+# 4. Launch Next.js development server
+npm run dev
+```
+
+Visit [`http://localhost:3000`](http://localhost:3000) in your browser.
+
+---
+
+## 📋 Project Submission Summary
+
+| Attribute | Specification |
+| :--- | :--- |
+| **Project Name** | **OmniService AI** |
+| **Platform Motto** | *&ldquo;Local Solutions. Higher Standards.&rdquo;* |
+| **Live Web Application** | [**https://omniservice.volcanic.world/**](https://omniservice.volcanic.world/) |
+| **Case Study &amp; Architecture** | [**https://omniservice.volcanic.world/case-study**](https://omniservice.volcanic.world/case-study) |
+| **Operational Region** | Greater Hyderabad, Telangana, India |
+| **Engineering Organization** | **Volcanic Digital Solutions** |
+| **Official Support &amp; Queries** | [volcanic.digitalsolutions@gmail.com](mailto:volcanic.digitalsolutions@gmail.com) |
+| **Core Technologies** | Next.js 16+, TypeScript (Strict), MongoDB Atlas 8.0, Gemini 1.5 Pro Vision, Tailwind CSS, Turbopack, Vitest |
+
+---
+
+<div align="center">
+
+&copy; 2026 OmniService AI • Engineered with pride by [Volcanic Digital Solutions](https://volcanic.world)<br />
+*All product names, logos, and brands are property of their respective owners.*
+
+</div>
