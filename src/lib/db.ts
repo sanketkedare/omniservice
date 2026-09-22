@@ -7,8 +7,16 @@
  */
 
 import mongoose from "mongoose";
+import dns from "dns";
 import { env } from "@/config/env";
 import { logger } from "@/lib/logger";
+
+// Set reliable public DNS servers for MongoDB Atlas SRV (_mongodb._tcp) resolution
+try {
+  dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"]);
+} catch {
+  // Ignore in environments where setServers is restricted
+}
 
 // ── Connection Cache ───────────────────────────────────────────────────────────
 // In development, store the promise on the global object to survive HMR.

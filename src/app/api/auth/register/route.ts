@@ -3,14 +3,18 @@ import { z } from "zod";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/models/user.model";
 import { Professional } from "@/models/professional.model";
-import { hashPassword } from "@/lib/crypto";
+import { hashPassword, signJwt } from "@/lib/crypto";
+
+const AUTH_SECRET =
+  process.env.AUTH_SECRET || "981d48acf799ab420d79178ad438ae9caf5fd060a3785f72e6b569ad2f758044";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(100),
   email: z.string().email("Invalid email format").optional().or(z.literal("")),
   phone: z.string().min(7, "Phone number must be at least 7 digits").optional().or(z.literal("")),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["customer", "professional", "admin"]).default("customer"),
+  // Strict RBAC: only customer or professional can self-register
+  role: z.enum(["customer", "professional"]).default("customer"),
   trade: z.string().optional(),
   coordinates: z
     .object({
@@ -43,45 +47,47 @@ export async function POST(req: NextRequest) {
 
     if (!cleanEmail && !cleanPhone) {
       return NextResponse.json(
-        { success: false, error: "Either email or phone number is required" },
+        { success: false, error: "Please provide either an email or mobile phone number" },
         { status: 400 }
       );
     }
 
     await connectToDatabase();
 
-    // Check for existing account
+    // Check for existing user with same email or phone
     const existingConditions: any[] = [];
     if (cleanEmail) existingConditions.push({ email: cleanEmail });
     if (cleanPhone) existingConditions.push({ phone: cleanPhone });
 
     const existingUser = await User.findOne({ $or: existingConditions });
     if (existingUser) {
-      const matchField = existingUser.email === cleanEmail ? "email address" : "phone number";
       return NextResponse.json(
         {
           success: false,
-          error: `An account with this ${matchField} already exists. Please sign in instead.`,
+          error:
+            cleanEmail && existingUser.email === cleanEmail
+              ? "An account with this email address already exists. Please sign in."
+              : "An account with this phone number already exists. Please sign in.",
         },
         { status: 409 }
       );
     }
 
-    // Cryptographic Password Hashing (PBKDF2 with SHA-512)
+    // Cryptographic Password Hashing (PBKDF2 SHA-512)
     const { hash, salt } = hashPassword(password);
 
-    // Create User Document in MongoDB
+    // Persist new User in MongoDB Atlas
     const newUser = await User.create({
-      name,
+      name: name.trim(),
       email: cleanEmail,
       phone: cleanPhone,
       passwordHash: hash,
       passwordSalt: salt,
-      authProvider: "credentials",
       role,
       status: "active",
-      coordinates: coordinates || null,
-      emailVerified: cleanEmail ? new Date() : null,
+      authProvider: "credentials",
+      coordinates: coordinates ? { lat: coordinates.lat, lng: coordinates.lng } : undefined,
+      emailVerified: Boolean(cleanEmail),
       phoneVerified: Boolean(cleanPhone),
     });
 
@@ -101,29 +107,66 @@ export async function POST(req: NextRequest) {
               issuedAt: new Date(),
             },
           ],
-          coordinates: [coordinates?.lng || 72.8347, coordinates?.lat || 19.0700],
+          coordinates: [coordinates?.lng || 78.4482, coordinates?.lat || 17.4375], // Ameerpet, Hyderabad
           isAvailable: true,
         });
       } catch (proErr) {
-        // Professional record creation is non-blocking for user registration
         console.warn("Failed to create supplemental Professional record:", proErr);
       }
     }
 
-    return NextResponse.json(
+    // Generate cryptographic HMAC-SHA256 JWT session token
+    const token = signJwt(
+      {
+        sub: newUser._id.toString(),
+        name: newUser.name,
+        email: newUser.email,
+        phone: newUser.phone,
+        role: newUser.role,
+        exp: Math.floor(Date.now() / 1000) + 7 * 86400,
+        iat: Math.floor(Date.now() / 1000),
+      },
+      AUTH_SECRET
+    );
+
+    const authenticatedUser = {
+      id: newUser._id.toString(),
+      name: newUser.name,
+      email: newUser.email,
+      phone: newUser.phone,
+      role: newUser.role,
+    };
+
+    const response = NextResponse.json(
       {
         success: true,
         message: "Account registered successfully",
-        user: {
-          id: newUser._id.toString(),
-          name: newUser.name,
-          email: newUser.email,
-          phone: newUser.phone,
-          role: newUser.role,
-        },
+        user: authenticatedUser,
+        token,
       },
       { status: 201 }
     );
+
+    const cookieMaxAge = 7 * 86400;
+    response.cookies.set("authjs.session-token", token, {
+      path: "/",
+      maxAge: cookieMaxAge,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+    response.cookies.set("omniservice-role", newUser.role, {
+      path: "/",
+      maxAge: cookieMaxAge,
+      sameSite: "lax",
+    });
+    response.cookies.set("omniservice-user", JSON.stringify(authenticatedUser), {
+      path: "/",
+      maxAge: cookieMaxAge,
+      sameSite: "lax",
+    });
+
+    return response;
   } catch (error: any) {
     console.error("Registration error:", error);
     return NextResponse.json(

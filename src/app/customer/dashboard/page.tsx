@@ -18,6 +18,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
+import { ProviderSuggestionsCard } from "@/components/providers/ProviderSuggestionsCard";
 
 export default function CustomerDashboardPage() {
   const [userName, setUserName] = React.useState<string>("Customer");
@@ -235,6 +236,11 @@ export default function CustomerDashboardPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* AI Provider Discovery & Real Area Suggestions (Registered Providers Prioritized) */}
+      <div className="pt-2">
+        <ProviderSuggestionsCard />
       </div>
     </div>
   );

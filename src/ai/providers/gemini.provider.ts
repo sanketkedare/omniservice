@@ -4,26 +4,14 @@ import {
   DiagnosticResult,
 } from "./ai-provider.interface";
 import { mockAIProvider } from "./mock.provider";
+import { geminiEngine, GEMINI_MODEL_POOL } from "@/lib/gemini-engine";
 import { logger } from "@/lib/logger";
-
-/**
- * Free-tier Google Gemini models ordered by performance and capability.
- * The provider dynamically shifts to the next free model without user interaction
- * or downtime if an error (e.g. rate limit, quota exceeded, 503 unavailable) occurs.
- */
-export const FREE_GEMINI_MODELS = [
-  "gemini-2.0-flash",
-  "gemini-1.5-flash",
-  "gemini-2.0-flash-lite",
-  "gemini-1.5-flash-8b",
-] as const;
 
 export class GeminiAIProvider implements IAIProvider {
   public readonly name = "google-gemini";
-  private activeModel: string = FREE_GEMINI_MODELS[0];
 
   public get version(): string {
-    return this.activeModel;
+    return geminiEngine.currentModel;
   }
 
   async analyzeDiagnostic(input: DiagnosticInput): Promise<DiagnosticResult> {
@@ -85,85 +73,44 @@ Return a valid JSON object matching the following structure:
       `Media Attachments Count: ${input.media.length}`,
     ].join("\n");
 
-    // Dynamic Multi-Model Failover Loop:
-    // Sequentially tries each free Gemini model without user interruption or notification.
-    for (const model of FREE_GEMINI_MODELS) {
-      try {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    try {
+      const result = await geminiEngine.generateContent({
+        systemPrompt,
+        userPrompt: userContent,
+        responseMimeType: "application/json",
+        temperature: 0.2,
+      });
 
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [
-              {
-                role: "user",
-                parts: [{ text: `${systemPrompt}\n\nProblem Details:\n${userContent}` }],
-              },
-            ],
-            generationConfig: {
-              responseMimeType: "application/json",
-              temperature: 0.2,
-            },
-          }),
-        });
+      const parsed = JSON.parse(result.text);
+      const sessionId = `gemini_sess_${Date.now()}`;
 
-        if (!response.ok) {
-          // Model failed (quota, rate-limit, 503 or unavailable) -> Shift seamlessly to next free model
-          logger.warn(
-            `Gemini model '${model}' returned HTTP ${response.status}. Automatically shifting to next free Gemini model dynamically.`
-          );
-          continue;
-        }
-
-        const data = await response.json();
-        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (!rawText) {
-          logger.warn(
-            `Gemini model '${model}' returned empty text candidate. Shifting to next free model.`
-          );
-          continue;
-        }
-
-        const parsed = JSON.parse(rawText);
-        this.activeModel = model;
-
-        const sessionId = `gemini_sess_${Date.now()}`;
-
-        return {
-          sessionId,
-          provider: this.name,
-          modelVersion: model,
-          problemSummary: parsed.problemSummary || input.title,
-          likelyRootCause: parsed.likelyRootCause || "Root cause identified via Gemini multimodal inference",
-          potentialSecondaryIssues: parsed.potentialSecondaryIssues || [],
-          overallConfidence: typeof parsed.overallConfidence === "number" ? parsed.overallConfidence : 0.92,
-          requiresHumanReview: Boolean(parsed.requiresHumanReview),
-          findings: parsed.findings || [],
-          tasks: parsed.tasks || [],
-          parts: parsed.parts || [],
-          estimatedLaborMinutes: parsed.estimatedLaborMinutes || 30,
-          tokensConsumed: {
-            input: data?.usageMetadata?.promptTokenCount || 800,
-            output: data?.usageMetadata?.candidatesTokenCount || 450,
-          },
-        };
-      } catch (err: any) {
-        // Network or JSON parsing error -> shift to next free Gemini model dynamically
-        logger.warn(
-          { model, error: err?.message },
-          `Dynamic failover: Error invoking Gemini model '${model}'. Switching to next free model.`
-        );
-      }
+      return {
+        sessionId,
+        provider: this.name,
+        modelVersion: result.modelUsed,
+        problemSummary: parsed.problemSummary || input.title,
+        likelyRootCause: parsed.likelyRootCause || "Root cause identified via Gemini multimodal inference",
+        potentialSecondaryIssues: parsed.potentialSecondaryIssues || [],
+        overallConfidence: typeof parsed.overallConfidence === "number" ? parsed.overallConfidence : 0.94,
+        requiresHumanReview: Boolean(parsed.requiresHumanReview),
+        findings: parsed.findings || [],
+        tasks: parsed.tasks || [],
+        parts: parsed.parts || [],
+        estimatedLaborMinutes: parsed.estimatedLaborMinutes || 30,
+        tokensConsumed: {
+          input: result.tokensConsumed?.input || 800,
+          output: result.tokensConsumed?.output || 450,
+        },
+      };
+    } catch (err: any) {
+      logger.warn(
+        { error: err?.message },
+        "All Gemini models in failover pool exhausted or connectivity failed. Falling back to local diagnostic engine."
+      );
+      return mockAIProvider.analyzeDiagnostic(input);
     }
-
-    // If all free Gemini models are exhausted, safely delegate to mock provider
-    logger.warn(
-      "All free Gemini models exhausted or encountered connectivity limits. Falling back to local diagnostic engine."
-    );
-    return mockAIProvider.analyzeDiagnostic(input);
   }
 }
 
 export const geminiAIProvider = new GeminiAIProvider();
+export { GEMINI_MODEL_POOL as FREE_GEMINI_MODELS };

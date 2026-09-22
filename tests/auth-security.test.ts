@@ -91,7 +91,27 @@ describe("OmniService AI — Enterprise Security & Authentication Tests", () => 
       const res = await POST(req as any);
       expect(res.status).toBe(400);
       const data = await res.json();
-      expect(data.error).toContain("Either email or phone number is required");
+      expect(data.error).toContain("Please provide either an email or mobile phone number");
+    });
+
+    it("strictly rejects admin self-registration with HTTP 400", async () => {
+      const { POST } = await import("@/app/api/auth/register/route");
+      const req = new Request("http://localhost:3012/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "Hacker Admin",
+          password: "StrongPassword123",
+          email: "hacker@example.com",
+          role: "admin", // Must be rejected
+        }),
+      });
+
+      const res = await POST(req as any);
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.success).toBe(false);
+      expect(data.error).toContain("Validation failed");
     });
   });
 
@@ -265,6 +285,101 @@ describe("OmniService AI — Enterprise Security & Authentication Tests", () => 
       const data = await res.json();
       expect(data.success).toBe(false);
       expect(data.error).toContain("Invalid email/phone or password");
+    });
+  });
+
+  describe("6. Cryptographic HMAC-SHA256 JWT Security Engine", () => {
+    it("generates and verifies authentic HMAC-SHA256 tokens", async () => {
+      const { signJwt, verifyJwt } = await import("@/lib/crypto");
+      const secret = "test_super_secret_key_1234567890123456";
+      const payload = { sub: "user_123", role: "customer", exp: Math.floor(Date.now() / 1000) + 3600 };
+
+      const token = signJwt(payload, secret);
+      expect(token).toBeDefined();
+      expect(token.split(".").length).toBe(3);
+
+      const verified = verifyJwt(token, secret);
+      expect(verified).not.toBeNull();
+      expect(verified?.sub).toBe("user_123");
+      expect(verified?.role).toBe("customer");
+    });
+
+    it("rejects tampered tokens with forged role payload", async () => {
+      const { signJwt, verifyJwt } = await import("@/lib/crypto");
+      const secret = "test_super_secret_key_1234567890123456";
+      const token = signJwt({ sub: "user_123", role: "customer" }, secret);
+
+      // Attempt privilege escalation by forging payload to admin without valid signature
+      const [header, , sig] = token.split(".");
+      const forgedPayload = Buffer.from(JSON.stringify({ sub: "user_123", role: "admin" })).toString("base64url");
+      const tamperedToken = `${header}.${forgedPayload}.${sig}`;
+
+      const verified = verifyJwt(tamperedToken, secret);
+      expect(verified).toBeNull();
+    });
+
+    it("rejects expired tokens", async () => {
+      const { signJwt, verifyJwt } = await import("@/lib/crypto");
+      const secret = "test_super_secret_key_1234567890123456";
+      const expiredPayload = { sub: "user_123", role: "customer", exp: Math.floor(Date.now() / 1000) - 100 };
+      const token = signJwt(expiredPayload, secret);
+
+      const verified = verifyJwt(token, secret);
+      expect(verified).toBeNull();
+    });
+  });
+
+  describe("7. Email OTP Authentication Flow", () => {
+    it("dispatches OTP verification code via /api/auth/send-otp", async () => {
+      const { POST } = await import("@/app/api/auth/send-otp/route");
+      const req = new Request("http://localhost:3012/api/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: "test.customer@omniservice.world" }),
+      });
+
+      const res = await POST(req as any);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.message).toContain("test.customer@omniservice.world");
+    });
+
+    it("verifies OTP and issues HMAC-SHA256 session via /api/auth/verify-otp", async () => {
+      const { POST } = await import("@/app/api/auth/verify-otp/route");
+      const req = new Request("http://localhost:3012/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "test.customer@omniservice.world",
+          otp: "123456", // Supported demo verification code
+        }),
+      });
+
+      const res = await POST(req as any);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.user).toBeDefined();
+      expect(data.token).toBeDefined();
+    });
+  });
+
+  describe("8. AI Provider Suggestions with Registered Priority", () => {
+    it("returns registered platform providers prioritized before AI web discoveries", async () => {
+      const { GET } = await import("@/app/api/providers/suggestions/route");
+      const req = new Request("http://localhost:3012/api/providers/suggestions?category=hvac&area=Ameerpet,+Hyderabad");
+
+      const res = await GET(req as any);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.providers.length).toBeGreaterThan(0);
+      expect(data.registeredCount).toBeGreaterThan(0);
+
+      // Verify Priority #1 provider is registered
+      expect(data.providers[0].isRegistered).toBe(true);
+      expect(data.providers[0].priorityBadge).toContain("Registered Platform Provider");
     });
   });
 });

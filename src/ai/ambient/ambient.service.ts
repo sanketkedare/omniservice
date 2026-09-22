@@ -115,12 +115,70 @@ export class AmbientService {
   }
 
   /**
-   * Conversational AI Assistant Diagnostic Intake
+   * Conversational AI Assistant Diagnostic Intake powered by Multi-Model Gemini Engine
    */
   async processChatMessage(
     history: ChatMessage[],
     userMessage: string
   ): Promise<ConversationalIntakeResult> {
+    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
+
+    if (apiKey) {
+      try {
+        const { geminiEngine } = await import("@/lib/gemini-engine");
+
+        const systemPrompt = `You are OmniService InspectAI, an empathetic and highly knowledgeable residential home maintenance and mechanical diagnostic engineer serving Hyderabad and Indian homes.
+Your role is to diagnose customer issues across HVAC / Air Conditioning, Electrical & MCBs, Plumbing & Drainage, RO Water Purifiers, and Kitchen Appliances.
+Analyze the user's issue and return a valid JSON object matching this exact format:
+{
+  "reply": "string (Clear, reassuring, professional diagnostic advice with practical safety precautions)",
+  "detectedCategory": "hvac" | "plumbing" | "electrical" | "appliance",
+  "detectedUrgency": "low" | "medium" | "high" | "emergency",
+  "estimatedCostRange": {
+    "minPaise": number (e.g. 50000 for ₹500),
+    "maxPaise": number (e.g. 180000 for ₹1800)
+  },
+  "suggestedFollowUp": ["question 1", "question 2", "question 3"],
+  "serviceRequestDraft": {
+    "title": "short descriptive title",
+    "category": "hvac" | "plumbing" | "electrical" | "appliance",
+    "symptomSummary": "string",
+    "urgency": "low" | "medium" | "high" | "emergency",
+    "estimatedCostPaise": number
+  }
+}
+Do not output markdown codeblocks. Output only valid JSON.`;
+
+        const formattedHistory = history.map((h) => ({
+          role: (h.role === "assistant" ? "model" : "user") as "user" | "model",
+          parts: [{ text: h.content }],
+        }));
+
+        const result = await geminiEngine.generateContent({
+          systemPrompt,
+          userPrompt: userMessage,
+          responseMimeType: "application/json",
+          temperature: 0.3,
+          history: formattedHistory,
+        });
+
+        const parsed = JSON.parse(result.text);
+        if (parsed.reply) {
+          return {
+            reply: parsed.reply,
+            detectedCategory: parsed.detectedCategory,
+            detectedUrgency: parsed.detectedUrgency,
+            estimatedCostRange: parsed.estimatedCostRange,
+            suggestedFollowUp: parsed.suggestedFollowUp || [],
+            serviceRequestDraft: parsed.serviceRequestDraft,
+          };
+        }
+      } catch (err) {
+        // Fall through to deterministic triage
+      }
+    }
+
+    // Deterministic Rule-Based Fallback Engine
     const text = userMessage.toLowerCase();
 
     // 1. Electrical & Power Hazard Detection (highest priority)
@@ -198,7 +256,7 @@ export class AmbientService {
     ) {
       return {
         reply:
-          "I've identified a plumbing anomaly. Based on typical Mumbai residential plumbing, this frequently stems from P-trap seal wear, braided hose micro-fractures, or cartridge calcification. I can dispatch an Apex Certified Plumber with OEM washers and pressure fittings.",
+          "I've identified a plumbing anomaly. Based on typical Hyderabad residential plumbing, this frequently stems from P-trap seal wear, braided hose micro-fractures, or cartridge calcification. I can dispatch an Apex Certified Plumber with OEM washers and pressure fittings.",
         detectedCategory: "plumbing",
         detectedUrgency: text.includes("burst") || text.includes("flooding") ? "emergency" : "medium",
         estimatedCostRange: { minPaise: 80000, maxPaise: 185000 },
@@ -220,7 +278,7 @@ export class AmbientService {
     // Default conversational assistant triage
     return {
       reply:
-        "Hello! I am ForgeLocal's AI Ambient Diagnostics Assistant. You can describe any home maintenance issue (AC, plumbing, electrical, water purifier, or appliance) or upload a photo/audio recording. How can I assist you today?",
+        "Hello! I am OmniService's InspectAI Diagnostics Assistant. You can describe any home maintenance issue (AC, plumbing, electrical, water purifier, or appliance) or ask for diagnostic guidance. How can I assist you today?",
       suggestedFollowUp: [
         "My split AC is not cooling properly",
         "Kitchen sink drain is gurgling and leaking",
