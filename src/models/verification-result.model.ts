@@ -103,7 +103,6 @@ const VerificationResultSchema = new Schema<IVerificationResult>(
   schemaOptions
 );
 
-VerificationResultSchema.index({ jobId: 1 });
 VerificationResultSchema.index({ outcome: 1, createdAt: -1 });
 
 export const VerificationResult =

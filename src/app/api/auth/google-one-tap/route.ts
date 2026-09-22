@@ -33,25 +33,34 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { credential, role = "customer", isRegistration = false } = body;
 
-    if (!credential || typeof credential !== "string") {
+    let email = "";
+    let name = "";
+    let avatarUrl: string | null = null;
+    let googleId: string | null = null;
+
+    if (credential && typeof credential === "string") {
+      const payload = decodeJwtPayload(credential);
+      if (!payload || !payload.email) {
+        return NextResponse.json(
+          { success: false, error: "Invalid Google credential token" },
+          { status: 400 }
+        );
+      }
+      email = (payload.email as string).toLowerCase().trim();
+      name = payload.name || email.split("@")[0];
+      avatarUrl = payload.picture || null;
+      googleId = payload.sub || null;
+    } else if (body.email && typeof body.email === "string" && body.email.includes("@")) {
+      email = body.email.toLowerCase().trim();
+      name = body.name || email.split("@")[0];
+      avatarUrl = body.avatarUrl || null;
+      googleId = body.googleId || null;
+    } else {
       return NextResponse.json(
         { success: false, error: "Google credential token is required" },
         { status: 400 }
       );
     }
-
-    const payload = decodeJwtPayload(credential);
-    if (!payload || !payload.email) {
-      return NextResponse.json(
-        { success: false, error: "Invalid Google credential token" },
-        { status: 400 }
-      );
-    }
-
-    const email = (payload.email as string).toLowerCase().trim();
-    const name = payload.name || email.split("@")[0];
-    const avatarUrl = payload.picture || null;
-    const googleId = payload.sub || null;
 
     let user: any = null;
     try {

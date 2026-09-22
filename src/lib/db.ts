@@ -18,6 +18,56 @@ try {
   // Ignore in environments where setServers is restricted
 }
 
+// Direct known cluster nodes for volcanic-1.soentmg.mongodb.net
+const KNOWN_DIRECT_FALLBACK_HOSTS =
+  "ac-bttrdcu-shard-00-00.soentmg.mongodb.net:27017,ac-bttrdcu-shard-00-01.soentmg.mongodb.net:27017,ac-bttrdcu-shard-00-02.soentmg.mongodb.net:27017";
+
+/**
+ * Resolves or converts a mongodb+srv:// URI into a direct replica set connection URI.
+ * This permanently resolves Windows/ISP DNS SRV (querySrv ECONNREFUSED) failures.
+ */
+async function resolveMongoUri(uri: string): Promise<string> {
+  if (!uri.startsWith("mongodb+srv://")) {
+    return uri;
+  }
+
+  const match = uri.match(/mongodb\+srv:\/\/([^:]+):([^@]+)@([^/]+)\/([^?]*)(?:\?(.*))?/);
+  if (!match) {
+    return uri;
+  }
+
+  const [, user, pass, host, db, query] = match;
+  if (!host) {
+    return uri;
+  }
+
+  try {
+    dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"]);
+    const srvRecords = await dns.promises.resolveSrv(`_mongodb._tcp.${host}`);
+    if (srvRecords && srvRecords.length > 0) {
+      const hostList = srvRecords.map((r) => `${r.name}:${r.port}`).join(",");
+      let txtParams = "";
+      try {
+        const txtRecords = await dns.promises.resolveTxt(host);
+        txtParams = txtRecords.flat().join("&");
+      } catch {}
+
+      const params = [query, txtParams, "ssl=true"].filter(Boolean).join("&");
+      return `mongodb://${user}:${pass}@${hostList}/${db}?${params}`;
+    }
+  } catch (srvErr) {
+    logger.warn({ host, err: (srvErr as Error).message }, "SRV resolution failed, falling back to direct replica set hosts");
+  }
+
+  // Guaranteed fallback for volcanic-1 cluster
+  if (host.includes("volcanic-1.soentmg.mongodb.net")) {
+    const params = [query, "authSource=admin", "replicaSet=atlas-byxx7s-shard-0", "ssl=true"].filter(Boolean).join("&");
+    return `mongodb://${user}:${pass}@${KNOWN_DIRECT_FALLBACK_HOSTS}/${db}?${params}`;
+  }
+
+  return uri;
+}
+
 // ── Connection Cache ───────────────────────────────────────────────────────────
 // In development, store the promise on the global object to survive HMR.
 declare global {
@@ -35,7 +85,7 @@ const MONGOOSE_OPTIONS: mongoose.ConnectOptions = {
   maxIdleTimeMS: 30_000,
 
   // Timeouts (fail fast in test mode when no local Mongo instance is running)
-  serverSelectionTimeoutMS: process.env.NODE_ENV === "test" ? 500 : 5_000,
+  serverSelectionTimeoutMS: process.env.NODE_ENV === "test" ? 500 : 8_000,
   socketTimeoutMS: process.env.NODE_ENV === "test" ? 2_000 : 45_000,
   connectTimeoutMS: process.env.NODE_ENV === "test" ? 1_000 : 10_000,
 
@@ -68,9 +118,15 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
 
 async function createConnection(): Promise<typeof mongoose> {
   try {
-    logger.info({ uri: env.MONGODB_URI.replace(/:\/\/[^@]+@/, "://<credentials>@") }, "Connecting to MongoDB");
+    try {
+      dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"]);
+    } catch {}
+
+    const resolvedUri = await resolveMongoUri(env.MONGODB_URI);
+
+    logger.info({ uri: resolvedUri.replace(/:\/\/[^@]+@/, "://<credentials>@") }, "Connecting to MongoDB");
     
-    await mongoose.connect(env.MONGODB_URI, MONGOOSE_OPTIONS);
+    await mongoose.connect(resolvedUri, MONGOOSE_OPTIONS);
 
     mongoose.connection.on("connected", () => {
       logger.info("MongoDB connection established");

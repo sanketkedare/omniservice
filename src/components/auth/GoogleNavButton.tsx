@@ -18,7 +18,7 @@ export function GoogleNavButton({ className, variant = "desktop" }: GoogleNavBut
   const handleGoogleClick = async () => {
     try {
       setLoading(true);
-      const loadId = toast.loading("Google Sign-In", "Connecting with Google...");
+      const loadId = toast.loading("Google Authentication", "Opening secure Google Sign-In...");
 
       let googleEmail = "";
       let googleName = "";
@@ -36,14 +36,14 @@ export function GoogleNavButton({ className, variant = "desktop" }: GoogleNavBut
         toast.dismiss(loadId);
         if (fbErr?.code === "auth/popup-closed-by-user") {
           setLoading(false);
-          toast.info("Cancelled", "Google sign-in popup was closed.");
+          toast.info("Google Sign-In Cancelled", "The sign-in popup was closed before completing.");
           return;
         }
 
         // Web profile fallback
-        console.warn("Firebase popup error, prompting for email:", fbErr?.message);
+        console.warn("Firebase popup encountered error, using fallback email bridge:", fbErr?.message);
         const promptEmail = prompt(
-          "Enter your Google Account email to sign in:",
+          "Enter your Google Account email to authenticate:",
           "volcanic.digitalsolutions@gmail.com"
         );
         if (!promptEmail) {
@@ -51,7 +51,7 @@ export function GoogleNavButton({ className, variant = "desktop" }: GoogleNavBut
           return;
         }
         googleEmail = promptEmail.trim();
-        googleName = prompt("Enter your name:", "Google User") || (googleEmail.split("@")[0] ?? "Google User");
+        googleName = prompt("Enter your Name:", "Google User") || (googleEmail.split("@")[0] ?? "Google User");
         googleUid = `google_${Date.now()}`;
       }
 
@@ -60,8 +60,8 @@ export function GoogleNavButton({ className, variant = "desktop" }: GoogleNavBut
         throw new Error("Unable to retrieve verified email from Google account");
       }
 
-      // Sync with MongoDB backend
-      const res = await fetch("/api/auth/google-one-tap", {
+      // Send to /api/auth/google — exactly matching GoogleOneTap component
+      const res = await fetch("/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -69,50 +69,64 @@ export function GoogleNavButton({ className, variant = "desktop" }: GoogleNavBut
           name: googleName,
           avatarUrl: googleAvatar,
           googleId: googleUid,
-          mode: "login",
+          role: "customer",
+          isRegistration: false,
         }),
       });
 
       const data = await res.json();
       toast.dismiss(loadId);
 
-      if (data.unregisteredUser && data.shiftToRegister) {
-        toast.info(
-          "Account Registration Pending",
-          "Welcome! Please select your role to complete setup."
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to authenticate with Google");
+      }
+
+      // If user is not yet registered, shift to registration page
+      if (data.registered === false) {
+        toast.warning(
+          "Registration Required",
+          "No account found with this Google email. Please complete your registration and select your role."
         );
-        const params = new URLSearchParams({
+
+        const registerParams = new URLSearchParams({
           google: "1",
-          email: data.googleUser?.email || googleEmail,
-          name: data.googleUser?.name || googleName,
-          avatar: data.googleUser?.avatarUrl || googleAvatar || "",
-          googleId: data.googleUser?.googleId || googleUid,
+          email: googleEmail,
+          name: googleName,
+          avatar: googleAvatar || "",
+          googleId: googleUid,
         });
-        router.push(`/register?${params.toString()}`);
+
+        router.push(`/register?${registerParams.toString()}`);
         return;
       }
 
-      if (data.success && data.user) {
-        toast.success("Signed in with Google", `Welcome back, ${data.user.name}!`);
-        try {
-          localStorage.setItem("omniservice_user", JSON.stringify(data.user));
-          document.cookie = `authjs.session-token=${data.token || "sess_" + data.user.id}; path=/; max-age=604800; SameSite=Lax`;
-          document.cookie = `omniservice-role=${data.user.role}; path=/; max-age=604800; SameSite=Lax`;
-          document.cookie = `omniservice-user=${encodeURIComponent(JSON.stringify(data.user))}; path=/; max-age=604800; SameSite=Lax`;
-        } catch {}
+      // User is registered — save session and navigate to dashboard
+      try {
+        localStorage.setItem("omniservice_user", JSON.stringify(data.user));
+      } catch {}
 
-        const target =
-          data.user.role === "admin"
-            ? "/admin/dashboard"
-            : data.user.role === "professional"
-            ? "/pro/dashboard"
-            : "/customer/dashboard";
-        router.push(target);
+      const maxAge = 604800; // 7 days
+      if (data.token) {
+        document.cookie = `authjs.session-token=${data.token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      }
+      document.cookie = `omniservice-role=${data.user.role}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      document.cookie = `omniservice-user=${encodeURIComponent(JSON.stringify(data.user))}; path=/; max-age=${maxAge}; SameSite=Lax`;
+
+      toast.success(
+        data.isNewRegistration ? "Registration Complete!" : "Welcome back!",
+        `Signed in as ${data.user.name}`
+      );
+
+      if (data.user.role === "admin") {
+        router.push("/admin/dashboard");
+      } else if (data.user.role === "professional") {
+        router.push("/pro/dashboard");
       } else {
-        throw new Error(data.error || "Failed to authenticate with Google.");
+        router.push("/customer/dashboard");
       }
     } catch (err: any) {
-      toast.error("Authentication Error", err.message || "Failed to sign in with Google.");
+      const msg = err?.message || "Google authentication encountered an error";
+      toast.error("Google Sign-In Error", msg);
     } finally {
       setLoading(false);
     }
@@ -124,7 +138,7 @@ export function GoogleNavButton({ className, variant = "desktop" }: GoogleNavBut
         type="button"
         onClick={handleGoogleClick}
         disabled={loading}
-        className={`w-full flex items-center justify-center gap-3 px-4 py-3 rounded-2xl bg-white border border-neutral-300 text-xs font-bold text-neutral-800 shadow-xs hover:bg-neutral-50 transition-all ${className || ""}`}
+        className={`w-full flex items-center justify-center gap-3 px-4 py-3 rounded-2xl bg-white border border-neutral-300 text-xs font-bold text-neutral-800 shadow-xs hover:bg-neutral-50 transition-all cursor-pointer ${className || ""}`}
       >
         <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
           <path
@@ -155,7 +169,7 @@ export function GoogleNavButton({ className, variant = "desktop" }: GoogleNavBut
       onClick={handleGoogleClick}
       disabled={loading}
       className={`inline-flex items-center gap-2 rounded-xl bg-white border border-neutral-200/90 px-3.5 py-2 text-xs font-bold text-neutral-800 shadow-2xs hover:bg-neutral-50 hover:border-neutral-300 hover:shadow-xs transition-all cursor-pointer ${className || ""}`}
-      title="Quick Sign In with Google"
+      title="Sign in with Google"
     >
       <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
         <path
