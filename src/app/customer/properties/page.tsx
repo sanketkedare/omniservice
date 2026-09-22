@@ -227,7 +227,7 @@ export default function PropertiesPage() {
 
           <Input
             label="Street Address"
-            placeholder="Ameerpet Main Road"
+            placeholder="Banjara Hills Main Road"
             value={street}
             onChange={(e) => setStreet(e.target.value)}
             required

@@ -209,7 +209,7 @@ export default function AdminDisputesPage() {
                       disabled={resolving}
                       onClick={() => handleResolve("resolved_for_professional")}
                     >
-                      Release Escrow to Pro (Reject Claim)
+                      Release Escrow to Provider (Reject Claim)
                     </Button>
                   </div>
                 </div>

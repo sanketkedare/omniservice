@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { User } from "@/models/user.model";
+import { signJwt } from "@/lib/crypto";
+
+const AUTH_SECRET =
+  process.env.AUTH_SECRET || "981d48acf799ab420d79178ad438ae9caf5fd060a3785f72e6b569ad2f758044";
 
 /**
  * Parses and decodes a base64url-encoded JWT token without external dependencies.
@@ -19,7 +23,7 @@ function decodeJwtPayload(token: string): any {
         .join("")
     );
     return JSON.parse(jsonPayload);
-  } catch (e) {
+  } catch {
     return null;
   }
 }
@@ -27,7 +31,7 @@ function decodeJwtPayload(token: string): any {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { credential, role = "customer" } = body;
+    const { credential, role = "customer", isRegistration = false } = body;
 
     if (!credential || typeof credential !== "string") {
       return NextResponse.json(
@@ -49,11 +53,10 @@ export async function POST(req: NextRequest) {
     const avatarUrl = payload.picture || null;
     const googleId = payload.sub || null;
 
+    let user: any = null;
     try {
       await connectToDatabase();
-
-      // Find or Upsert User in MongoDB
-      let user = await User.findOne({ email });
+      user = await User.findOne({ email });
 
       if (!user) {
         user = await User.create({
@@ -67,37 +70,72 @@ export async function POST(req: NextRequest) {
           emailVerified: new Date(),
         });
       } else {
-        // Update googleId and avatar if not set
         if (!user.googleId) user.googleId = googleId;
         if (!user.avatarUrl && avatarUrl) user.avatarUrl = avatarUrl;
         await user.save();
       }
-
-      return NextResponse.json({
-        success: true,
-        message: "Google One-Tap authenticated successfully",
-        user: {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          avatarUrl: user.avatarUrl,
-        },
-      });
     } catch (dbErr) {
-      // Fallback in disconnected/mock test environment
-      return NextResponse.json({
-        success: true,
-        message: "Google One-Tap authenticated successfully",
-        user: {
-          id: `goog_${Date.now()}`,
+      if (process.env.NODE_ENV === "test") {
+        user = {
+          _id: "test_google_user_id",
           name,
           email,
-          role,
           avatarUrl,
-        },
-      });
+          role: role === "professional" ? "professional" : "customer",
+          status: "active",
+        };
+      } else {
+        throw dbErr;
+      }
     }
+
+    const token = signJwt(
+      {
+        sub: user._id.toString(),
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        exp: Math.floor(Date.now() / 1000) + 7 * 86400,
+        iat: Math.floor(Date.now() / 1000),
+      },
+      AUTH_SECRET
+    );
+
+    const authenticatedUser = {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatarUrl: user.avatarUrl,
+    };
+
+    const response = NextResponse.json({
+      success: true,
+      registered: true,
+      message: "Google One-Tap authenticated successfully",
+      user: authenticatedUser,
+      token,
+    });
+
+    const cookieMaxAge = 7 * 86400;
+    response.cookies.set("authjs.session-token", token, {
+      path: "/",
+      maxAge: cookieMaxAge,
+      sameSite: "lax",
+    });
+    response.cookies.set("omniservice-role", user.role, {
+      path: "/",
+      maxAge: cookieMaxAge,
+      sameSite: "lax",
+    });
+    response.cookies.set("omniservice-user", encodeURIComponent(JSON.stringify(authenticatedUser)), {
+      path: "/",
+      maxAge: cookieMaxAge,
+      sameSite: "lax",
+    });
+
+    return response;
   } catch (error: any) {
     console.error("Google One-Tap error:", error);
     return NextResponse.json(
@@ -106,3 +144,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

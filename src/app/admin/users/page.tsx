@@ -18,22 +18,27 @@ interface AdminUser {
   totalBookings: number;
 }
 
-const DEMO_USERS: AdminUser[] = [
-  { id: "usr_01", name: "Ananya Rao", email: "ananya.rao@omniservice.world", phone: "+91 98200 12345", role: "customer", kycStatus: "verified", joinedDate: "Jan 12, 2026", totalBookings: 6 },
-  { id: "usr_02", name: "Suresh Kumar", email: "suresh.apex@volcanic.world", phone: "+91 98201 11223", role: "professional", kycStatus: "verified", joinedDate: "Nov 04, 2025", totalBookings: 28 },
-  { id: "usr_03", name: "Vikram Patil", email: "vikram.coolair@volcanic.world", phone: "+91 98202 33445", role: "professional", kycStatus: "verified", joinedDate: "Dec 18, 2025", totalBookings: 19 },
-  { id: "usr_04", name: "Priya Nair", email: "priya.nair@volcanic.world", phone: "+91 98203 55667", role: "customer", kycStatus: "verified", joinedDate: "Feb 01, 2026", totalBookings: 2 },
-  { id: "usr_05", name: "Rahul Deshmukh", email: "rahul.wire@volcanic.world", phone: "+91 98204 77889", role: "professional", kycStatus: "pending", joinedDate: "Mar 10, 2026", totalBookings: 0 },
-  { id: "usr_06", name: "Ananya Iyer", email: "ananya.iyer@volcanic.world", phone: "+91 98205 99001", role: "customer", kycStatus: "verified", joinedDate: "Jan 29, 2026", totalBookings: 5 },
-];
-
 export default function AdminUsersPage() {
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
-  const filtered = DEMO_USERS.filter((u) => {
+  React.useEffect(() => {
+    fetch("/api/admin/users")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.users)) {
+          setUsers(data.users);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = users.filter((u) => {
     if (roleFilter !== "all" && u.role !== roleFilter) return false;
-    if (search && !u.name.toLowerCase().includes(search.toLowerCase()) && !u.phone.includes(search)) return false;
+    if (search && !u.name.toLowerCase().includes(search.toLowerCase()) && !u.phone.includes(search) && !u.email.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
@@ -94,43 +99,57 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800/80">
-              {filtered.map((u) => (
-                <tr key={u.id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/40 transition">
-                  <td className="py-3 px-4">
-                    <div className="font-semibold text-neutral-900 dark:text-neutral-100">{u.name}</div>
-                    <div className="text-[10px] text-neutral-400 font-mono">{u.id}</div>
-                  </td>
-                  <td className="py-3 px-4 space-y-0.5">
-                    <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-300">
-                      <Phone className="h-3 w-3 text-neutral-400" />
-                      <span>{u.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-neutral-400 text-[10px]">
-                      <Mail className="h-3 w-3" />
-                      <span>{u.email}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Badge variant={u.role === "professional" ? "brand" : u.role === "admin" ? "destructive" : "outline"} size="sm">
-                      {u.role.toUpperCase()}
-                    </Badge>
-                  </td>
-                  <td className="py-3 px-4">
-                    <Badge variant={u.kycStatus === "verified" ? "success" : "warning"} size="sm">
-                      {u.kycStatus.toUpperCase()}
-                    </Badge>
-                  </td>
-                  <td className="py-3 px-4 font-mono font-medium">
-                    {u.totalBookings} Jobs
-                  </td>
-                  <td className="py-3 px-4 text-neutral-400">{u.joinedDate}</td>
-                  <td className="py-3 px-4 text-right">
-                    <Button variant="outline" size="sm">
-                      Inspect
-                    </Button>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-neutral-400">
+                    Loading registered platform users from MongoDB Atlas...
                   </td>
                 </tr>
-              ))}
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-neutral-400">
+                    No registered users match your search criteria.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((u) => (
+                  <tr key={u.id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/40 transition">
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-neutral-900 dark:text-neutral-100">{u.name}</div>
+                      <div className="text-[10px] text-neutral-400 font-mono">{u.id}</div>
+                    </td>
+                    <td className="py-3 px-4 space-y-0.5">
+                      <div className="flex items-center gap-1.5 text-neutral-600 dark:text-neutral-300">
+                        <Phone className="h-3 w-3 text-neutral-400" />
+                        <span>{u.phone}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-neutral-400 text-[10px]">
+                        <Mail className="h-3 w-3" />
+                        <span>{u.email}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge variant={u.role === "professional" ? "brand" : u.role === "admin" ? "destructive" : "outline"} size="sm">
+                        {u.role.toUpperCase()}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge variant={u.kycStatus === "verified" ? "success" : "warning"} size="sm">
+                        {u.kycStatus.toUpperCase()}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4 font-mono font-medium">
+                      {u.totalBookings} Jobs
+                    </td>
+                    <td className="py-3 px-4 text-neutral-400">{u.joinedDate}</td>
+                    <td className="py-3 px-4 text-right">
+                      <Button variant="outline" size="sm">
+                        Inspect
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </CardContent>

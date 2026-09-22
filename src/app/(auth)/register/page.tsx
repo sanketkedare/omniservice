@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   User,
   Briefcase,
@@ -27,11 +27,19 @@ import { toast } from "@/components/ui/Toast";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { coordinates, locality, isLoading: isLocating, detectLocation } = useGeolocation();
+  const searchParams = useSearchParams();
+
+  const isGoogleRedirect = searchParams.get("google") === "1";
+  const urlEmail = searchParams.get("email") || "";
+  const urlName = searchParams.get("name") || "";
+  const urlAvatar = searchParams.get("avatar") || "";
+  const urlGoogleId = searchParams.get("googleId") || "";
+
+  const { coordinates, locality, isLoading: isLocating, detectLocation, permissionDenied } = useGeolocation();
 
   const [role, setRole] = useState<"customer" | "professional">("customer");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [name, setName] = useState(urlName);
+  const [email, setEmail] = useState(urlEmail);
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -40,16 +48,52 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [gpsCaptured, setGpsCaptured] = useState(false);
+  const [isGoogleAccount, setIsGoogleAccount] = useState(isGoogleRedirect);
+  const [googleId, setGoogleId] = useState(urlGoogleId);
+  const [googleAvatar, setGoogleAvatar] = useState(urlAvatar);
+
+  useEffect(() => {
+    if (urlEmail) {
+      setEmail(urlEmail);
+      setIsGoogleAccount(true);
+    }
+    if (urlName) {
+      setName(urlName);
+    }
+    if (urlGoogleId) {
+      setGoogleId(urlGoogleId);
+    }
+    if (urlAvatar) {
+      setGoogleAvatar(urlAvatar);
+    }
+  }, [urlEmail, urlName, urlGoogleId, urlAvatar]);
 
   const handleCaptureLocation = async () => {
     toast.info("Acquiring GPS Coordinates...", "Requesting location permission from browser");
     const coords = await detectLocation();
     if (coords) {
       setGpsCaptured(true);
-      toast.success("Location Acquired", `${locality || "Ameerpet, Hyderabad"} (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`);
+      toast.success(
+        "Location Acquired",
+        `${locality || "Hyderabad, Telangana"} (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`
+      );
     } else {
-      toast.warning("Fallback Location Set", "Using default Ameerpet, Hyderabad coordinates");
+      toast.warning("Fallback Location Set", "Using default Hyderabad, Telangana coordinates");
     }
+  };
+
+  const handleGoogleData = (data: {
+    email: string;
+    name: string;
+    avatarUrl?: string | null;
+    googleId?: string | null;
+  }) => {
+    setEmail(data.email);
+    setName(data.name);
+    if (data.avatarUrl) setGoogleAvatar(data.avatarUrl);
+    if (data.googleId) setGoogleId(data.googleId);
+    setIsGoogleAccount(true);
+    toast.success("Google Account Linked", `Verified as ${data.email}. Select your role to complete setup.`);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,15 +108,19 @@ export default function RegisterPage() {
       toast.error("Contact Required", "Please provide a mobile number or email");
       return;
     }
-    if (!password || password.length < 6) {
-      setError("Password must be at least 6 characters long");
-      toast.error("Password Weak", "Password must be at least 6 characters long");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match. Please re-enter.");
-      toast.error("Password Mismatch", "Passwords do not match. Please verify.");
-      return;
+
+    // Password validation only mandatory for credential auth
+    if (!isGoogleAccount) {
+      if (!password || password.length < 6) {
+        setError("Password must be at least 6 characters long");
+        toast.error("Password Weak", "Password must be at least 6 characters long");
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError("Passwords do not match. Please re-enter.");
+        toast.error("Password Mismatch", "Passwords do not match. Please verify.");
+        return;
+      }
     }
 
     try {
@@ -87,7 +135,10 @@ export default function RegisterPage() {
           name: name.trim(),
           email: email.trim() || undefined,
           phone: phone.trim() || undefined,
-          password,
+          password: isGoogleAccount ? password || undefined : password,
+          authProvider: isGoogleAccount ? "google" : "credentials",
+          googleId: isGoogleAccount ? googleId || undefined : undefined,
+          avatarUrl: isGoogleAccount ? googleAvatar || undefined : undefined,
           role,
           trade: role === "professional" ? trade : undefined,
           coordinates: coordinates || undefined,
@@ -109,14 +160,18 @@ export default function RegisterPage() {
       }
 
       const maxAge = 604800; // 7 days
+      if (data.token) {
+        document.cookie = `authjs.session-token=${data.token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      }
       document.cookie = `omniservice-role=${data.user.role}; path=/; max-age=${maxAge}; SameSite=Lax`;
       document.cookie = `omniservice-user=${encodeURIComponent(JSON.stringify(data.user))}; path=/; max-age=${maxAge}; SameSite=Lax`;
-      document.cookie = `authjs.session-token=reg_sess_${data.user.role}_${Date.now()}; path=/; max-age=${maxAge}; SameSite=Lax`;
 
-      if (role === "customer") {
-        router.push("/customer/dashboard");
-      } else {
+      toast.success("Registration Complete!", `Welcome to OmniService, ${data.user.name}`);
+
+      if (data.user.role === "professional") {
         router.push("/pro/dashboard");
+      } else {
+        router.push("/customer/dashboard");
       }
     } catch (err: any) {
       const errMsg = err?.message || "Registration failed. Please try again.";
@@ -137,9 +192,21 @@ export default function RegisterPage() {
           Create OmniService Account
         </h1>
         <p className="mt-1 text-xs text-neutral-600">
-          Join the AI-governed local services ecosystem in Ameerpet, Hyderabad.
+          Join the AI-governed local services ecosystem in Hyderabad, Telangana.
         </p>
       </div>
+
+      {isGoogleAccount && (
+        <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50/70 p-4 flex items-start gap-3">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+          <div className="text-xs">
+            <p className="font-bold text-emerald-950">Google Account Connected</p>
+            <p className="text-emerald-800 text-[11px] mt-0.5">
+              Verified email: <strong>{email}</strong>. Select whether you are a Homeowner or Service Provider below to finish registration.
+            </p>
+          </div>
+        </div>
+      )}
 
       {error && (
         <Alert variant="destructive">
@@ -157,7 +224,7 @@ export default function RegisterPage() {
           }}
           className={`flex flex-col items-start gap-1 rounded-2xl border p-4 text-left transition-all ${
             role === "customer"
-              ? "border-[#f05a28] bg-orange-50/40 shadow-xs"
+              ? "border-[#f05a28] bg-orange-50/40 shadow-xs ring-2 ring-[#f05a28]/20"
               : "border-neutral-200 bg-white hover:border-neutral-300"
           }`}
         >
@@ -166,7 +233,7 @@ export default function RegisterPage() {
             <span className="text-xs font-bold text-[#2d130a]">Homeowner</span>
           </div>
           <p className="text-[11px] text-neutral-500">
-            Diagnose repairs, lock prices, and track HomePass.
+            Diagnose repairs, lock prices, and track HomePass in Hyderabad.
           </p>
         </button>
 
@@ -178,7 +245,7 @@ export default function RegisterPage() {
           }}
           className={`flex flex-col items-start gap-1 rounded-2xl border p-4 text-left transition-all ${
             role === "professional"
-              ? "border-[#f05a28] bg-orange-50/40 shadow-xs"
+              ? "border-[#f05a28] bg-orange-50/40 shadow-xs ring-2 ring-[#f05a28]/20"
               : "border-neutral-200 bg-white hover:border-neutral-300"
           }`}
         >
@@ -193,14 +260,25 @@ export default function RegisterPage() {
       </div>
 
       {/* Google 1-Tap Alternative */}
-      <GoogleOneTap role={role} />
+      {!isGoogleAccount && (
+        <>
+          <GoogleOneTap
+            role={role}
+            mode="register"
+            trade={role === "professional" ? trade : undefined}
+            phone={phone}
+            coordinates={coordinates || undefined}
+            onGoogleDataExtracted={handleGoogleData}
+          />
 
-      <div className="relative my-3 flex items-center justify-center">
-        <div className="w-full border-t border-neutral-200" />
-        <span className="absolute bg-white px-3 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-          Or register credentials
-        </span>
-      </div>
+          <div className="relative my-3 flex items-center justify-center">
+            <div className="w-full border-t border-neutral-200" />
+            <span className="absolute bg-white px-3 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+              Or register credentials
+            </span>
+          </div>
+        </>
+      )}
 
       {/* Registration Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -228,9 +306,11 @@ export default function RegisterPage() {
             type="email"
             placeholder="name@example.com"
             value={email}
+            disabled={isGoogleAccount}
             onChange={(e) => setEmail(e.target.value)}
             leftIcon={<Mail className="h-4 w-4 text-[#f05a28]" />}
-            helperText="For encrypted escrow invoices"
+            helperText={isGoogleAccount ? "Verified with Google" : "For encrypted invoices & account recovery"}
+            required={!isGoogleAccount}
           />
         </div>
 
@@ -259,7 +339,7 @@ export default function RegisterPage() {
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#2d130a] flex items-center gap-1.5">
               <MapPin className="h-3.5 w-3.5 text-[#f05a28]" />
-              Ameerpet, Hyderabad Service Geofence
+              Hyderabad Service Zone
             </span>
             <button
               type="button"
@@ -283,43 +363,51 @@ export default function RegisterPage() {
             </button>
           </div>
           <p className="text-[11px] text-neutral-500">
-            {locality
-              ? `Detected: ${locality} (${coordinates?.lat.toFixed(4)}, ${coordinates?.lng.toFixed(4)})`
-              : "Detect your location for automatic 15-minute SmartRoute technician dispatches."}
+            {permissionDenied ? (
+              <span className="text-amber-800 font-semibold">
+                ⚠️ Browser GPS permission denied. Defaulting to Hyderabad, Telangana. You can update this or enable location permissions anytime.
+              </span>
+            ) : locality ? (
+              `Detected: ${locality} (${coordinates?.lat.toFixed(4) || "17.3850"}, ${coordinates?.lng.toFixed(4) || "78.4867"})`
+            ) : (
+              "Detect your location for automatic 15-minute SmartRoute technician dispatches in Hyderabad."
+            )}
           </p>
         </div>
 
-        {/* Password Inputs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="relative">
+        {/* Password Inputs (only if not Google-authenticated) */}
+        {!isGoogleAccount && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="relative">
+              <Input
+                label="Password (min 6 chars)"
+                type={showPassword ? "text" : "password"}
+                placeholder="Create password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                leftIcon={<Lock className="h-4 w-4" />}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-[34px] text-neutral-400 hover:text-neutral-600"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+
             <Input
-              label="Password (min 6 chars)"
+              label="Confirm Password"
               type={showPassword ? "text" : "password"}
-              placeholder="Create password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Re-enter password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               leftIcon={<Lock className="h-4 w-4" />}
               required
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-[34px] text-neutral-400 hover:text-neutral-600"
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
           </div>
-
-          <Input
-            label="Confirm Password"
-            type={showPassword ? "text" : "password"}
-            placeholder="Re-enter password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            leftIcon={<Lock className="h-4 w-4" />}
-            required
-          />
-        </div>
+        )}
 
         <Button
           type="submit"
@@ -328,20 +416,9 @@ export default function RegisterPage() {
           isLoading={isLoading}
           rightIcon={<ArrowRight className="h-4 w-4" />}
         >
-          Complete Registration
+          {isGoogleAccount ? "Finalize Google Registration" : "Complete Registration"}
         </Button>
       </form>
-
-      {/* ── See Demo Navigation (Isolated Dummy Sandbox) ── */}
-      <div className="pt-2 border-t border-neutral-100">
-        <Link
-          href="/demo"
-          className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#f05a28]/40 bg-orange-50/40 px-4 py-3 text-xs font-bold text-[#f05a28] transition-all hover:bg-[#f05a28]/10 hover:border-[#f05a28]"
-        >
-          <Eye className="h-4 w-4" />
-          <span>See Demo (Explore All Dashboards with Dummy Data)</span>
-        </Link>
-      </div>
 
       <div className="text-center text-xs text-neutral-500 pt-1">
         Already have an account?{" "}

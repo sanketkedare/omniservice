@@ -37,12 +37,9 @@ export default function AuthLayout({
           </Link>
 
           <div className="flex items-center gap-3">
-            <Link
-              href="/demo"
-              className="inline-flex items-center gap-1.5 rounded-full border border-orange-300 bg-[#fff7ed] px-3.5 py-1 text-xs font-bold text-[#c2410c] hover:bg-orange-100 transition-colors shadow-2xs"
-            >
-              <span>See Demo (Sandbox)</span>
-            </Link>
+            <div className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-orange-200/90 bg-orange-50/70 px-3 py-1 text-xs font-semibold text-[#9a2c06] shadow-2xs">
+              <span>📍 Hyderabad, IN</span>
+            </div>
             <Link
               href="/"
               className="text-xs font-semibold text-[#2d130a] hover:text-[#f05a28] transition-colors"
@@ -66,7 +63,7 @@ export default function AuthLayout({
               <div className="space-y-2.5">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500/10 via-amber-500/15 to-orange-500/10 px-3.5 py-1 text-xs font-bold text-[#c2410c] border border-orange-200/80 shadow-2xs">
                   <Sparkles className="h-3.5 w-3.5 text-[#f05a28]" />
-                  Ameerpet, Hyderabad Service Network
+                  Hyderabad, Telangana Service Network
                 </span>
                 <h2 className="text-3xl xl:text-4xl font-extrabold text-[#2d130a] tracking-tight leading-snug">
                   Local Solutions. <br />
@@ -75,7 +72,7 @@ export default function AuthLayout({
                   </span>
                 </h2>
                 <p className="text-sm text-neutral-600 leading-relaxed">
-                  Connect directly to verified technicians, transparent algorithmic scopes, and protected escrow releases in Ameerpet &amp; Greater Hyderabad.
+                  Connect directly to verified technicians, transparent algorithmic scopes, and protected escrow releases in Greater Hyderabad.
                 </p>
               </div>
 
@@ -126,7 +123,7 @@ export default function AuthLayout({
                 <div className="flex items-center gap-2 pt-1 text-[11px]">
                   <span className="font-bold text-[#2d130a]">Dr. Rohit Sharma</span>
                   <span className="text-neutral-400">•</span>
-                  <span className="text-neutral-600">Ameerpet, Hyderabad Homeowner</span>
+                  <span className="text-neutral-600">Hyderabad Homeowner</span>
                 </div>
               </div>
             </div>
@@ -141,8 +138,8 @@ export default function AuthLayout({
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-3.5 w-3.5 text-[#f05a28]" />
-                <a href="mailto:support@omniservice.world" className="hover:text-[#f05a28] font-medium transition-colors">
-                  support@omniservice.world
+                <a href="mailto:volcanic.digitalsolutions@gmail.com" className="hover:text-[#f05a28] font-medium transition-colors">
+                  volcanic.digitalsolutions@gmail.com
                 </a>
               </div>
             </div>

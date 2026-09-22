@@ -32,9 +32,9 @@ export default function ProfessionalRoutePage() {
   const [isMarkingArrived, setIsMarkingArrived] = useState(false);
 
   const waypoints = [
-    { instruction: "Head east on Ameerpet Main Road toward Metro Station", distance: "0.5 km", time: "2 min" },
-    { instruction: "Turn right toward SR Nagar junction", distance: "0.9 km", time: "3 min" },
-    { instruction: "Turn left at Sea Green Apartments gate, Ameerpet (Code: 4819)", distance: "0.4 km", time: "1 min" },
+    { instruction: "Head east on Main Road toward Metro Station", distance: "0.5 km", time: "2 min" },
+    { instruction: "Turn right toward central junction", distance: "0.9 km", time: "3 min" },
+    { instruction: "Turn left at Sea Green Apartments gate (Code: 4819)", distance: "0.4 km", time: "1 min" },
   ];
 
   // Simulation tick
@@ -123,7 +123,7 @@ export default function ProfessionalRoutePage() {
                   {distanceRemaining} km
                 </span>
                 <span className="text-xs text-neutral-600 font-medium">
-                  {hasArrived ? "You have reached destination" : `${minutesRemaining} min ETA (Ameerpet, Hyderabad Traffic)`}
+                  {hasArrived ? "You have reached destination" : `${minutesRemaining} min ETA (Hyderabad Traffic)`}
                 </span>
               </div>
             </div>
@@ -145,7 +145,7 @@ export default function ProfessionalRoutePage() {
                 </span>
                 <p className="text-sm font-bold text-[#2d130a] leading-tight">
                   {hasArrived
-                    ? "Destination reached: Flat 402, Sea Green Apartments, Ameerpet."
+                    ? "Destination reached: Flat 402, Sea Green Apartments, Hyderabad."
                     : waypoints[currentStepIndex]?.instruction || ""}
                 </p>
               </div>
@@ -166,7 +166,7 @@ export default function ProfessionalRoutePage() {
                 Flat 402, Sea Green Apartments
               </p>
               <p className="text-xs text-neutral-500">
-                Main Road, Ameerpet, Hyderabad • Gate Code: 4819
+                Main Road, Hyderabad • Gate Code: 4819
               </p>
             </div>
 

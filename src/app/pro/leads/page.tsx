@@ -61,7 +61,7 @@ export default function ProfessionalLeadsPage() {
       description: "Customer uploaded 12s video showing compressor shudder and instant 16A MCB trip. Required parts: 45µF Dual Run Capacitor + connector cleaning.",
       category: "hvac",
       urgency: "urgent",
-      customerAddress: "Main Road, Ameerpet, Hyderabad",
+      customerAddress: "Main Road, Hyderabad",
       distanceKm: 1.8,
       estimatedArrivalMinutes: 6,
       lockedPricePaise: 280000,
@@ -176,7 +176,7 @@ export default function ProfessionalLeadsPage() {
         description="Instant job matching prioritized by your van's inventory, location, and verified skill tier."
         breadcrumbs={[
           { label: "Home", href: "/" },
-          { label: "Pro Dashboard", href: "/pro/dashboard" },
+          { label: "Provider Dashboard", href: "/pro/dashboard" },
           { label: "Dispatch Leads" },
         ]}
         actions={

@@ -56,7 +56,7 @@ export default function CustomerRequestsPage() {
       case "matching":
         return <Badge variant="warning" dot>SmartRoute Matching</Badge>;
       case "booked":
-        return <Badge variant="success">Pro Scheduled</Badge>;
+        return <Badge variant="success">Provider Scheduled</Badge>;
       case "completed":
         return <Badge variant="success">Completed</Badge>;
       default:
@@ -160,7 +160,7 @@ export default function CustomerRequestsPage() {
                 <div className="flex items-center gap-1.5 text-neutral-400">
                   <MapPin className="h-3.5 w-3.5" />
                   <span className="truncate max-w-[200px] sm:max-w-none">
-                    {req.propertyAddress || "Apartment 402, Ameerpet, Hyderabad"}
+                    {req.propertyAddress || "Apartment 402, Hyderabad"}
                   </span>
                 </div>
 

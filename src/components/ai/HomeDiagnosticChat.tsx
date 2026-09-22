@@ -205,7 +205,7 @@ export function HomeDiagnosticChat() {
               </span>
               <span className="block text-[10px] font-semibold text-[#c2410c]">
                 {isAuth
-                  ? "Unlimited Pro Access"
+                  ? "Unlimited Access"
                   : `${remaining} free diagnostic ${remaining === 1 ? "msg" : "msgs"}`}
               </span>
             </div>
@@ -233,7 +233,7 @@ export function HomeDiagnosticChat() {
                   </span>
                 </div>
                 <p className="text-[11px] text-neutral-500">
-                  Ameerpet &amp; Greater Hyderabad Diagnostics
+                  Greater Hyderabad Diagnostics
                 </p>
               </div>
             </div>

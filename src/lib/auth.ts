@@ -36,7 +36,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           ? { email: identifier.toLowerCase() }
           : { phone: identifier.replace(/\s+/g, "") };
 
-        // 1. Password-based authentication against MongoDB
+        // Password authentication against MongoDB Atlas
         if (password) {
           try {
             const dbUser = await User.findOne(query).select("+passwordHash +passwordSalt");
@@ -55,109 +55,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   image: dbUser.avatarUrl || "/images/OmniService_Icon.png",
                 };
               }
-              // Password provided but mismatch -> reject
               return null;
             }
           } catch (err) {
             console.error("Error verifying password against MongoDB:", err);
-          }
-        }
-
-        // 2. Demo / Instant Verification Bypass Accounts
-        if (
-          identifier === "demo@omniservice.world" ||
-          identifier === "customer@omniservice.world" ||
-          identifier === "9820012345"
-        ) {
-          try {
-            let demoCustomer = await User.findOne({ email: "customer@omniservice.world" });
-            if (!demoCustomer) {
-              demoCustomer = await User.create({
-                name: "OmniService Customer",
-                email: "customer@omniservice.world",
-                phone: "+91 98200 12345",
-                role: "customer",
-                status: "active",
-                authProvider: "credentials",
-              });
-            }
-            return {
-              id: demoCustomer._id.toString(),
-              name: demoCustomer.name,
-              email: demoCustomer.email ?? "customer@omniservice.world",
-              role: demoCustomer.role,
-              image: "/images/OmniService_Icon.png",
-            };
-          } catch {
-            return {
-              id: "65f01234567890abcdef0001",
-              name: "OmniService Customer",
-              email: "customer@omniservice.world",
-              phone: "+91 98200 12345",
-              role: "customer",
-              image: "/images/OmniService_Icon.png",
-            };
-          }
-        }
-
-        if (identifier === "pro@omniservice.world" || identifier === "pro@forgelocal.world") {
-          try {
-            let demoPro = await User.findOne({ email: "pro@omniservice.world" });
-            if (!demoPro) {
-              demoPro = await User.create({
-                name: "Verified Pro Specialist",
-                email: "pro@omniservice.world",
-                phone: "+91 98200 54321",
-                role: "professional",
-                status: "active",
-                authProvider: "credentials",
-              });
-            }
-            return {
-              id: demoPro._id.toString(),
-              name: demoPro.name,
-              email: demoPro.email ?? "pro@omniservice.world",
-              role: demoPro.role,
-              image: "/images/OmniService_Icon.png",
-            };
-          } catch {
-            return {
-              id: "65f01234567890abcdef0002",
-              name: "Verified Pro Specialist",
-              email: "pro@omniservice.world",
-              role: "professional",
-              image: "/images/OmniService_Icon.png",
-            };
-          }
-        }
-
-        if (identifier === "admin@omniservice.world" || identifier === "admin@forgelocal.world") {
-          try {
-            let demoAdmin = await User.findOne({ email: "admin@omniservice.world" });
-            if (!demoAdmin) {
-              demoAdmin = await User.create({
-                name: "OmniService Operations Admin",
-                email: "admin@omniservice.world",
-                role: "admin",
-                status: "active",
-                authProvider: "credentials",
-              });
-            }
-            return {
-              id: demoAdmin._id.toString(),
-              name: demoAdmin.name,
-              email: demoAdmin.email ?? "admin@omniservice.world",
-              role: demoAdmin.role,
-              image: "/images/OmniService_Icon.png",
-            };
-          } catch {
-            return {
-              id: "65f01234567890abcdef0003",
-              name: "OmniService Operations Admin",
-              email: "admin@omniservice.world",
-              role: "admin",
-              image: "/images/OmniService_Icon.png",
-            };
           }
         }
 

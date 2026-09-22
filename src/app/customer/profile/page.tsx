@@ -16,6 +16,8 @@ import {
   Save,
   X,
   AlertCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
@@ -38,6 +40,7 @@ export default function CustomerProfilePage() {
     phone: "",
     role: "customer",
     status: "active",
+    hasPassword: true,
     createdAt: "",
   });
 
@@ -46,6 +49,18 @@ export default function CustomerProfilePage() {
     email: "",
     phone: "",
   });
+
+  // Password Management State
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [passwordOtp, setPasswordOtp] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [passwordFeedback, setPasswordFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const [notifications, setNotifications] = useState({
     whatsapp: true,
@@ -67,6 +82,7 @@ export default function CustomerProfilePage() {
           email: u.email || "",
           phone: u.phone || "",
           role: u.role || "customer",
+          hasPassword: u.hasPassword ?? true,
         }));
         setFormValues({
           name: u.name || "",
@@ -88,6 +104,7 @@ export default function CustomerProfilePage() {
             phone: u.phone || "",
             role: u.role || "customer",
             status: u.status || "active",
+            hasPassword: Boolean(u.hasPassword),
             createdAt: u.createdAt || "",
           });
           setFormValues({
@@ -117,6 +134,91 @@ export default function CustomerProfilePage() {
       localStorage.removeItem("omniservice_user");
     } catch {}
     router.push("/login");
+  };
+
+  const handleSendPasswordOtp = async () => {
+    if (!userData.email) return;
+    setIsSendingOtp(true);
+    setPasswordFeedback(null);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "send_otp", email: userData.email }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to dispatch verification code.");
+      }
+      setOtpSent(true);
+      setPasswordFeedback({
+        type: "success",
+        message: `Verification code sent to ${userData.email}. Enter it below with your new password.`,
+      });
+    } catch (err: any) {
+      setPasswordFeedback({ type: "error", message: err.message || "Failed to send code." });
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleSavePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordFeedback(null);
+
+    const letters = (newPassword.match(/[a-zA-Z]/g) || []).length;
+    const numbers = (newPassword.match(/[0-9]/g) || []).length;
+    const symbols = (newPassword.match(/[^a-zA-Z0-9\s]/g) || []).length;
+
+    if (letters < 3) {
+      setPasswordFeedback({ type: "error", message: "Password must have at least 3 alphabets (letters)." });
+      return;
+    }
+    if (numbers < 2) {
+      setPasswordFeedback({ type: "error", message: "Password must have at least 2 numbers (digits)." });
+      return;
+    }
+    if (symbols < 1) {
+      setPasswordFeedback({ type: "error", message: "Password must have at least 1 symbol e.g. !@#$." });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordFeedback({ type: "error", message: "Passwords do not match." });
+      return;
+    }
+
+    setIsSavingPassword(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: userData.hasPassword ? "change" : "create_initial",
+          email: userData.email,
+          currentPassword: currentPassword || undefined,
+          otpCode: passwordOtp || undefined,
+          newPassword,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to update password.");
+      }
+
+      setUserData((prev) => ({ ...prev, hasPassword: true }));
+      setPasswordFeedback({ type: "success", message: "Password updated successfully!" });
+      setNewPassword("");
+      setConfirmPassword("");
+      setCurrentPassword("");
+      setPasswordOtp("");
+      setOtpSent(false);
+      setShowPasswordSection(false);
+    } catch (err: any) {
+      setPasswordFeedback({ type: "error", message: err.message || "Could not update password." });
+    } finally {
+      setIsSavingPassword(false);
+    }
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -161,12 +263,35 @@ export default function CustomerProfilePage() {
       {/* Header */}
       <PageHeader
         title="Account Profile & Settings"
-        description="Manage your verified contact details, HomePass membership, notification preferences, and saved addresses in Ameerpet."
+        description="Manage your verified contact details, HomePass membership, security password, and notifications across Hyderabad."
         breadcrumbs={[
           { label: "Home", href: "/" },
           { label: "Profile" },
         ]}
       />
+
+      {/* Security Alert: Prompt user to set a password if they don't have one */}
+      {!userData.hasPassword && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 text-neutral-900 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-[#f05a28] animate-ping" />
+              <h3 className="text-sm font-bold text-[#2d130a]">Security Setup: Create a Direct Password</h3>
+            </div>
+            <p className="text-xs text-neutral-600 max-w-2xl">
+              You registered using Google OAuth or Email OTP and do not have a password configured yet. Set up a secure password below so you can also log in directly with your email and password.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="brand"
+            onClick={() => setShowPasswordSection(true)}
+            className="shrink-0"
+          >
+            Create Password Now
+          </Button>
+        </div>
+      )}
 
       {feedback && (
         <div
@@ -199,7 +324,7 @@ export default function CustomerProfilePage() {
                   {userData.role === "admin"
                     ? "Admin Operator"
                     : userData.role === "professional"
-                    ? "Verified Pro"
+                    ? "Verified Provider"
                     : "HomePass Customer"}
                 </Badge>
                 <Badge variant="success" size="sm">
@@ -208,7 +333,7 @@ export default function CustomerProfilePage() {
               </div>
 
               <p className="text-xs text-neutral-500">
-                Member of OmniService Ameerpet Pilot • Strict RBAC Protected
+                OmniService Hyderabad Member • Strict RBAC Protected
               </p>
 
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-2 text-xs text-neutral-600 dark:text-neutral-300">
@@ -282,6 +407,187 @@ export default function CustomerProfilePage() {
                 </Button>
                 <Button type="submit" size="sm" variant="brand" disabled={isSaving} leftIcon={<Save className="h-3.5 w-3.5" />}>
                   {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Security & Password Credentials Card */}
+      <Card className="border-2 border-orange-200/90 shadow-xs">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-[#f05a28]" />
+              <CardTitle className="text-base font-bold text-[#2d130a]">
+                Security &amp; Direct Password
+              </CardTitle>
+            </div>
+            <Badge variant={userData.hasPassword ? "success" : "warning"} size="sm">
+              {userData.hasPassword ? "Password Active" : "No Password Set"}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#fffaf5] border border-orange-100">
+            <div>
+              <p className="text-xs font-bold text-[#2d130a]">
+                {userData.hasPassword
+                  ? "Direct Password Enabled"
+                  : "No Password Configured (Signed in via Google/Email OTP)"}
+              </p>
+              <p className="text-[11px] text-neutral-500 mt-0.5">
+                {userData.hasPassword
+                  ? "You can log in directly using your email and password, or change it anytime."
+                  : "Create a password to enable direct email & password authentication."}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant={showPasswordSection ? "secondary" : "brand"}
+              onClick={() => {
+                setShowPasswordSection(!showPasswordSection);
+                setPasswordFeedback(null);
+              }}
+            >
+              {showPasswordSection
+                ? "Close"
+                : userData.hasPassword
+                ? "Change Password"
+                : "Create Password"}
+            </Button>
+          </div>
+
+          {passwordFeedback && (
+            <div
+              className={`p-3.5 rounded-xl text-xs flex items-center gap-2 border ${
+                passwordFeedback.type === "success"
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                  : "bg-red-50 border-red-200 text-red-800"
+              }`}
+            >
+              {passwordFeedback.type === "success" ? (
+                <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+              ) : (
+                <AlertCircle className="h-4 w-4 text-red-600 shrink-0" />
+              )}
+              <span>{passwordFeedback.message}</span>
+            </div>
+          )}
+
+          {showPasswordSection && (
+            <form onSubmit={handleSavePassword} className="space-y-4 pt-2 border-t border-orange-100">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {userData.hasPassword ? (
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-700 mb-1">
+                      Current Password (or request Email OTP)
+                    </label>
+                    <Input
+                      type="password"
+                      placeholder="Current password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold text-neutral-700">
+                        Email OTP Code
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleSendPasswordOtp}
+                        disabled={isSendingOtp}
+                        className="text-[11px] font-bold text-[#f05a28] hover:underline cursor-pointer"
+                      >
+                        {isSendingOtp ? "Sending..." : otpSent ? "Resend OTP" : "Send Email OTP"}
+                      </button>
+                    </div>
+                    <Input
+                      type="text"
+                      maxLength={6}
+                      placeholder="6-digit OTP code"
+                      value={passwordOtp}
+                      onChange={(e) => setPasswordOtp(e.target.value.replace(/\D/g, ""))}
+                      required
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-bold text-neutral-700 mb-1">
+                    New Password
+                  </label>
+                  <div className="relative">
+                    <Input
+                      type={showNewPassword ? "text" : "password"}
+                      placeholder="Enter new password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-2.5 text-neutral-400 hover:text-neutral-600"
+                    >
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Format Checklist */}
+              <div className="p-3 rounded-xl bg-orange-50/70 border border-orange-200/80 space-y-1.5 text-[11px]">
+                <span className="font-bold text-[#c2410c] block">Required Password Security Format:</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-neutral-600">
+                  <span className={`flex items-center gap-1 ${((newPassword.match(/[a-zA-Z]/g) || []).length >= 3) ? "text-emerald-700 font-bold" : ""}`}>
+                    ✓ Min 3 Alphabets
+                  </span>
+                  <span className={`flex items-center gap-1 ${((newPassword.match(/[0-9]/g) || []).length >= 2) ? "text-emerald-700 font-bold" : ""}`}>
+                    ✓ Min 2 Numbers
+                  </span>
+                  <span className={`flex items-center gap-1 ${((newPassword.match(/[^a-zA-Z0-9\s]/g) || []).length >= 1) ? "text-emerald-700 font-bold" : ""}`}>
+                    ✓ Min 1 Symbol
+                  </span>
+                  <span className={`flex items-center gap-1 ${newPassword.length >= 6 ? "text-emerald-700 font-bold" : ""}`}>
+                    ✓ Min 6 Chars
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-700 mb-1">
+                  Confirm New Password
+                </label>
+                <Input
+                  type={showNewPassword ? "text" : "password"}
+                  placeholder="Re-enter new password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowPasswordSection(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  variant="brand"
+                  disabled={isSavingPassword || !newPassword || newPassword !== confirmPassword}
+                >
+                  {isSavingPassword ? "Saving..." : "Save Password"}
                 </Button>
               </div>
             </form>

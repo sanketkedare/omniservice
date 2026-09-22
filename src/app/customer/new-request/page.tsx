@@ -204,7 +204,7 @@ export default function NewServiceRequestPage() {
       {/* Header */}
       <PageHeader
         title="InspectAI Diagnostic Intake"
-        description="Show the problem with a video or photo. Our AI diagnoses failure modes, generates exact parts requirements, and computes fixed fair pricing for Ameerpet, Hyderabad."
+        description="Show the problem with a video or photo. Our AI diagnoses failure modes, generates exact parts requirements, and computes fixed fair pricing for Hyderabad, Telangana."
         breadcrumbs={[
           { label: "Home", href: "/" },
           { label: "Requests", href: "/customer/requests" },
@@ -366,7 +366,7 @@ export default function NewServiceRequestPage() {
                   <span className="font-bold text-neutral-900 block">
                     Apartment 402, Sea Green Heights
                   </span>
-                  <span className="text-neutral-500">Ameerpet, Hyderabad 500016</span>
+                  <span className="text-neutral-500">Hyderabad, Telangana 500001</span>
                 </div>
               </div>
               <Badge variant="brand" size="sm">HomePass Linked</Badge>

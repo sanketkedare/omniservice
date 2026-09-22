@@ -265,7 +265,7 @@ export default function RequestTrackingPage() {
                     {request.media?.[0]?.filename || "evidence_photo.jpg"}
                   </span>
                   <span className="text-[10px] text-neutral-300">
-                    Ameerpet, Hyderabad • GPS Geotagged
+                    Hyderabad, Telangana • GPS Geotagged
                   </span>
                 </div>
               </div>
@@ -284,7 +284,7 @@ export default function RequestTrackingPage() {
                   <CardTitle className="text-sm">TrustLock™ Escrow</CardTitle>
                 </div>
                 <Badge variant={isReleased ? "success" : "warning"} size="sm">
-                  {isReleased ? "Released to Pro" : "In Escrow"}
+                  {isReleased ? "Released to Provider" : "In Escrow"}
                 </Badge>
               </div>
             </CardHeader>

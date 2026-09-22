@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAnalytics, isSupported, Analytics } from "firebase/analytics";
+import { getAuth, GoogleAuthProvider, Auth } from "firebase/auth";
 
 // Firebase web app configuration for Volcanic.World
 export const firebaseConfig = {
@@ -17,6 +18,11 @@ export const app: FirebaseApp = !getApps().length
   ? initializeApp(firebaseConfig)
   : getApp();
 
+// Firebase Auth singleton & Google Provider
+export const auth: Auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: "select_account" });
+
 // Analytics singleton (browser-only)
 let analyticsInstance: Analytics | null = null;
 
@@ -31,3 +37,4 @@ export async function initFirebaseAnalytics(): Promise<Analytics | null> {
 }
 
 export { analyticsInstance as analytics };
+

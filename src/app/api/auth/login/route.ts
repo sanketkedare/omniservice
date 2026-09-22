@@ -52,11 +52,14 @@ export async function POST(req: NextRequest) {
     } catch {
       // In test runner environment without active Mongo socket
       if (process.env.NODE_ENV === "test") {
-        if (cleanId === "admin@omniservice.world" && password === "admin123") {
+        if (
+          (cleanId === "admin@omniservice.world" || cleanId === "volcanic.digitalsolutions@gmail.com") &&
+          password === "admin123"
+        ) {
           dbUser = {
             _id: "6ab2ba0542b6d11e2e2dd90a",
             name: "Platform Administrator",
-            email: "admin@omniservice.world",
+            email: "volcanic.digitalsolutions@gmail.com",
             phone: "9820000000",
             role: "admin",
             passwordHash: "test_hash",

@@ -22,6 +22,8 @@ import { ProviderSuggestionsCard } from "@/components/providers/ProviderSuggesti
 
 export default function CustomerDashboardPage() {
   const [userName, setUserName] = React.useState<string>("Customer");
+  const [requests, setRequests] = React.useState<any[]>([]);
+  const [loadingRequests, setLoadingRequests] = React.useState<boolean>(true);
 
   React.useEffect(() => {
     try {
@@ -40,6 +42,16 @@ export default function CustomerDashboardPage() {
         }
       })
       .catch(() => {});
+
+    fetch("/api/service-requests?status=active")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.data)) {
+          setRequests(data.data);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingRequests(false));
   }, []);
 
   return (
@@ -47,7 +59,7 @@ export default function CustomerDashboardPage() {
       {/* Header */}
       <PageHeader
         title={`Welcome back, ${userName}`}
-        description="Manage your home services, track active diagnostics, and access your HomePass digital passport in Ameerpet, Hyderabad."
+        description="Manage your home services, track active diagnostics, and access your HomePass digital passport in Greater Hyderabad."
         breadcrumbs={[
           { label: "Home", href: "/" },
           { label: "Customer Dashboard" },
@@ -76,7 +88,7 @@ export default function CustomerDashboardPage() {
             Have a problem at home? Show, don&apos;t guess.
           </h2>
           <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed">
-            Record a 15-second video or snap a few photos. Our AI analyzes root causes, specifies parts, generates an exact Scope of Work, and calculates transparent fair-market pricing for Ameerpet, Hyderabad.
+            Record a 15-second video or snap a few photos. Our AI analyzes root causes, specifies parts, generates an exact Scope of Work, and calculates transparent fair-market pricing for Greater Hyderabad.
           </p>
           <div className="pt-2">
             <Link href="/customer/new-request">
@@ -104,84 +116,67 @@ export default function CustomerDashboardPage() {
               href="/customer/requests"
               className="text-xs font-semibold text-[#f05a28] hover:underline flex items-center gap-1"
             >
-              View all (2) <ChevronRight className="h-3 w-3" />
+              View all ({requests.length}) <ChevronRight className="h-3 w-3" />
             </Link>
           </div>
 
-          <Card className="border-2 border-orange-100 shadow-xs">
-            <CardContent className="p-5 space-y-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-[#2d130a]">
-                      Kitchen Sink Waste Pipe Leak
-                    </span>
-                    <Badge variant="brand" size="sm">
-                      InspectAI In Progress
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-neutral-500 flex items-center gap-1.5">
-                    <MapPin className="h-3 w-3 text-[#f05a28]" />
-                    Ameerpet, Hyderabad • Added 18 mins ago
-                  </p>
-                </div>
-                <span className="font-mono text-xs font-bold text-[#2d130a]">
-                  ₹1,800 – ₹2,400 est.
-                </span>
+          {loadingRequests ? (
+            <div className="rounded-2xl border-2 border-orange-100 bg-white p-8 text-center">
+              <p className="text-xs text-neutral-500">Checking active service records...</p>
+            </div>
+          ) : requests.length > 0 ? (
+            <div className="space-y-3">
+              {requests.map((req) => (
+                <Card key={req._id || req.id} className="border-2 border-orange-100 shadow-xs">
+                  <CardContent className="p-5 space-y-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-[#2d130a]">
+                            {req.title}
+                          </span>
+                          <Badge variant="brand" size="sm">
+                            {req.status?.replace(/_/g, " ").toUpperCase() || "ACTIVE"}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-neutral-500 flex items-center gap-1.5">
+                          <MapPin className="h-3 w-3 text-[#f05a28]" />
+                          Hyderabad • {req.urgency?.toUpperCase() || "ROUTINE"}
+                        </p>
+                      </div>
+                      <Link href={`/customer/requests/${req._id || req.id}`}>
+                        <Button size="sm" variant="outline">
+                          View Scope
+                        </Button>
+                      </Link>
+                    </div>
+                    {req.description && (
+                      <p className="text-xs text-neutral-600 line-clamp-2">
+                        {req.description}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="border-2 border-dashed border-orange-200/80 bg-orange-50/20 p-8 text-center shadow-xs">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100 text-[#f05a28] mb-3">
+                <CheckCircle2 className="h-6 w-6" />
               </div>
-
-              <div className="rounded-xl bg-[#fffaf5] p-3 text-xs text-neutral-600 space-y-1 border border-orange-100">
-                <div className="flex items-center gap-1.5 font-medium text-[#2d130a]">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                  <span>AI Finding: P-trap compression gasket degradation</span>
-                </div>
-                <p className="text-neutral-500 pl-5">
-                  Matching 3 certified plumbing pros nearby with required 32mm PVC spares in stock.
-                </p>
+              <h4 className="text-sm font-bold text-[#2d130a]">No Active Service Requests</h4>
+              <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
+                All systems normal. Need a repair, AC service, or plumbing inspection in Hyderabad? Capture a 15-second video to begin.
+              </p>
+              <div className="pt-4">
+                <Link href="/customer/new-request">
+                  <Button variant="brand" size="sm" leftIcon={<Camera className="h-4 w-4" />}>
+                    Book New Diagnostic
+                  </Button>
+                </Link>
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-orange-100 shadow-xs">
-            <CardContent className="p-5 space-y-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-[#2d130a]">
-                      Master Bedroom AC Gas Charge & Service
-                    </span>
-                    <Badge variant="success" size="sm">
-                      Work In Progress
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-neutral-500 flex items-center gap-1.5">
-                    <Clock className="h-3 w-3 text-[#f05a28]" />
-                    Scheduled today • 2:00 PM
-                  </p>
-                </div>
-                <span className="font-mono text-xs font-bold text-emerald-600">
-                  ₹1,499 in Escrow
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between rounded-xl bg-[#fffaf5] p-3 border border-orange-100">
-                <div className="flex items-center gap-3">
-                  <Avatar name="CoolAir Tech" size="sm" status="online" />
-                  <div>
-                    <p className="text-xs font-semibold text-[#2d130a]">
-                      Assigned Pro (CoolAir Solutions Ameerpet)
-                    </p>
-                    <p className="text-[11px] text-neutral-500">
-                      4.9 ★ (142 jobs) • Arriving in 25 mins
-                    </p>
-                  </div>
-                </div>
-                <Button size="sm" variant="outline">
-                  Track Pro
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            </Card>
+          )}
         </div>
 
         {/* HomePass & Quick Stats (1 col) */}

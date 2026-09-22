@@ -62,11 +62,12 @@ export const URGENCY_MULTIPLIERS = {
 };
 
 export const REGIONAL_INDEX: Record<string, number> = {
-  mumbai_tier1: 1.15,      // South Mumbai / Bandra / BKC
-  mumbai_tier2: 1.0,       // Suburbs / Navi Mumbai / Thane
+  hyderabad: 1.0,          // Primary operating baseline hub (Ameerpet, Banjara Hills, Hitec City)
+  hyderabad_metro: 1.0,
   delhi_ncr: 1.05,
   bangalore: 1.10,
-  hyderabad: 0.95,
+  mumbai_tier1: 1.15,
+  mumbai_tier2: 1.0,
   pune: 0.95,
 };
 

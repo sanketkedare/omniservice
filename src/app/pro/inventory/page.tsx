@@ -153,7 +153,7 @@ export default function ProfessionalInventoryPage() {
         description="Mobile vehicle stock synchronized with SmartRoute for guaranteed first-trip fix dispatching."
         breadcrumbs={[
           { label: "Home", href: "/" },
-          { label: "Pro Dashboard", href: "/pro/dashboard" },
+          { label: "Provider Dashboard", href: "/pro/dashboard" },
           { label: "Van Inventory" },
         ]}
         actions={

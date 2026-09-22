@@ -94,7 +94,7 @@ export async function sendOtpEmail(
                   <tr>
                     <td style="padding:20px 36px;background-color:#fafaf9;border-top:1px solid #f5f5f4;text-align:center;">
                       <p style="margin:0;font-size:11px;color:#a8a29e;">
-                        OmniService AI • Ameerpet, Hyderabad Pilot • Volcanic.World
+                        OmniService AI • Hyderabad, Telangana • Volcanic Digital Solutions
                       </p>
                     </td>
                   </tr>

@@ -44,27 +44,17 @@ export async function GET(req: NextRequest) {
 
     const requests = await ServiceRequest.find(query).sort({ createdAt: -1 }).lean();
 
-    if (!requests || requests.length === 0) {
-      const allMocks = getAllMockRequests();
-      return NextResponse.json({
-        success: true,
-        data: allMocks,
-        count: allMocks.length,
-      });
-    }
-
     return NextResponse.json({
       success: true,
-      data: requests,
-      count: requests.length,
+      data: requests || [],
+      count: requests?.length || 0,
     });
   } catch (error) {
-    const allMocks = getAllMockRequests();
+    console.error("Error fetching service requests:", error);
     return NextResponse.json({
       success: true,
-      data: allMocks,
-      count: allMocks.length,
-      fallback: true,
+      data: [],
+      count: 0,
     });
   }
 }

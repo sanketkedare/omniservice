@@ -346,7 +346,7 @@ export default function ProJobEvidencePage() {
                     Auto Geotag & Time-Stamp Active
                   </div>
                   <div className="text-[11px] text-neutral-500">
-                    17.4375° N, 78.4482° E • Ameerpet, Hyderabad
+                    17.3850° N, 78.4867° E • Hyderabad, Telangana
                   </div>
                 </div>
 

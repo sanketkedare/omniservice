@@ -16,16 +16,19 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { useGeolocation } from "@/lib/geolocation";
 import type { ProviderSuggestion } from "@/app/api/providers/suggestions/route";
 
 export function ProviderSuggestionsCard() {
+  const { locality } = useGeolocation();
   const [selectedCategory, setSelectedCategory] = useState<string>("hvac");
   const [providers, setProviders] = useState<ProviderSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
-    fetch(`/api/providers/suggestions?category=${selectedCategory}&area=Ameerpet,+Hyderabad`)
+    const areaQuery = encodeURIComponent(locality || "Hyderabad, Telangana");
+    fetch(`/api/providers/suggestions?category=${selectedCategory}&area=${areaQuery}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.success && data.providers) {
@@ -34,7 +37,7 @@ export function ProviderSuggestionsCard() {
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
-  }, [selectedCategory]);
+  }, [selectedCategory, locality]);
 
   const categories = [
     { id: "hvac", label: "HVAC & AC" },
@@ -50,7 +53,7 @@ export function ProviderSuggestionsCard() {
         <div>
           <div className="inline-flex items-center gap-1.5 rounded-full bg-orange-100/70 px-2.5 py-0.5 text-xs font-bold text-[#c2410c] border border-orange-200">
             <Sparkles className="h-3.5 w-3.5 text-[#f05a28]" />
-            <span>AI Local Provider Discovery (Ameerpet, Hyderabad)</span>
+            <span>AI Local Provider Discovery ({locality || "Hyderabad, Telangana"})</span>
           </div>
           <h3 className="text-lg font-bold text-[#2d130a] mt-1">
             Top Service Specialists in Your Area

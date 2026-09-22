@@ -382,4 +382,50 @@ describe("OmniService AI — Enterprise Security & Authentication Tests", () => 
       expect(data.providers[0].priorityBadge).toContain("Registered Platform Provider");
     });
   });
+
+  describe("9. Unified Google Auth & Registration Shift Flow", () => {
+    it("shifts unregistered Google user attempting direct login to registration pending phase", async () => {
+      const { POST } = await import("@/app/api/auth/google/route");
+      const req = new Request("http://localhost:3012/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "unregistered.google@example.com",
+          name: "Unregistered User",
+          isRegistration: false, // Attempted direct login
+        }),
+      });
+
+      const res = await POST(req as any);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.registered).toBe(false);
+      expect(data.googleUser.email).toBe("unregistered.google@example.com");
+    });
+
+    it("registers new user via Google with selected role and issues HMAC-SHA256 JWT", async () => {
+      const { POST } = await import("@/app/api/auth/google/route");
+      const req = new Request("http://localhost:3012/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "new.google.user@example.com",
+          name: "New Google Customer",
+          role: "customer",
+          isRegistration: true, // Registering
+        }),
+      });
+
+      const res = await POST(req as any);
+      expect(res.status).toBe(201);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.registered).toBe(true);
+      expect(data.token).toBeDefined();
+      expect(data.user.email).toBe("new.google.user@example.com");
+      expect(data.user.role).toBe("customer");
+    });
+  });
 });
+

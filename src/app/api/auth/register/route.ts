@@ -12,7 +12,10 @@ const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(100),
   email: z.string().email("Invalid email format").optional().or(z.literal("")),
   phone: z.string().min(7, "Phone number must be at least 7 digits").optional().or(z.literal("")),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal("")),
+  authProvider: z.enum(["credentials", "google"]).default("credentials"),
+  googleId: z.string().optional(),
+  avatarUrl: z.string().optional(),
   // Strict RBAC: only customer or professional can self-register
   role: z.enum(["customer", "professional"]).default("customer"),
   trade: z.string().optional(),
@@ -40,14 +43,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, phone, password, role, trade, coordinates } = parsed.data;
+    const {
+      name,
+      email,
+      phone,
+      password,
+      authProvider,
+      googleId,
+      avatarUrl,
+      role,
+      trade,
+      coordinates,
+    } = parsed.data;
 
-    const cleanEmail = email && email.trim() ? email.toLowerCase().trim() : null;
-    const cleanPhone = phone && phone.trim() ? phone.trim() : null;
+    const cleanEmail = email && email.trim() ? email.toLowerCase().trim() : undefined;
+    const cleanPhone = phone && phone.trim() ? phone.trim() : undefined;
 
     if (!cleanEmail && !cleanPhone) {
       return NextResponse.json(
         { success: false, error: "Please provide either an email or mobile phone number" },
+        { status: 400 }
+      );
+    }
+
+    if (authProvider === "credentials" && (!password || password.length < 6)) {
+      return NextResponse.json(
+        { success: false, error: "Password must be at least 6 characters long for credential registration" },
         { status: 400 }
       );
     }
@@ -61,6 +82,65 @@ export async function POST(req: NextRequest) {
 
     const existingUser = await User.findOne({ $or: existingConditions });
     if (existingUser) {
+      // If registering with Google and user already exists, upgrade/link and authenticate
+      if (authProvider === "google") {
+        if (googleId && !existingUser.googleId) existingUser.googleId = googleId;
+        if (avatarUrl && !existingUser.avatarUrl) existingUser.avatarUrl = avatarUrl;
+        if (!existingUser.emailVerified) existingUser.emailVerified = new Date();
+        await existingUser.save();
+
+        const token = signJwt(
+          {
+            sub: existingUser._id.toString(),
+            name: existingUser.name,
+            email: existingUser.email,
+            phone: existingUser.phone,
+            role: existingUser.role,
+            exp: Math.floor(Date.now() / 1000) + 7 * 86400,
+            iat: Math.floor(Date.now() / 1000),
+          },
+          AUTH_SECRET
+        );
+
+        const authenticatedUser = {
+          id: existingUser._id.toString(),
+          name: existingUser.name,
+          email: existingUser.email,
+          phone: existingUser.phone,
+          role: existingUser.role,
+          avatarUrl: existingUser.avatarUrl,
+        };
+
+        const response = NextResponse.json(
+          {
+            success: true,
+            message: "Account already exists. Signed into existing profile.",
+            user: authenticatedUser,
+            token,
+          },
+          { status: 200 }
+        );
+
+        const cookieMaxAge = 7 * 86400;
+        response.cookies.set("authjs.session-token", token, {
+          path: "/",
+          maxAge: cookieMaxAge,
+          sameSite: "lax",
+        });
+        response.cookies.set("omniservice-role", existingUser.role, {
+          path: "/",
+          maxAge: cookieMaxAge,
+          sameSite: "lax",
+        });
+        response.cookies.set("omniservice-user", encodeURIComponent(JSON.stringify(authenticatedUser)), {
+          path: "/",
+          maxAge: cookieMaxAge,
+          sameSite: "lax",
+        });
+
+        return response;
+      }
+
       return NextResponse.json(
         {
           success: false,
@@ -73,10 +153,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Cryptographic Password Hashing (PBKDF2 SHA-512)
-    const { hash, salt } = hashPassword(password);
+    // Cryptographic Password Hashing (PBKDF2 SHA-512) for credentials
+    let hash: string | undefined = undefined;
+    let salt: string | undefined = undefined;
+    if (password) {
+      const pwData = hashPassword(password);
+      hash = pwData.hash;
+      salt = pwData.salt;
+    }
 
-    // Persist new User in MongoDB Atlas
+    // Persist new User in MongoDB Atlas (never store null for sparse indexed fields)
     const newUser = await User.create({
       name: name.trim(),
       email: cleanEmail,
@@ -85,9 +171,11 @@ export async function POST(req: NextRequest) {
       passwordSalt: salt,
       role,
       status: "active",
-      authProvider: "credentials",
+      authProvider,
+      googleId: googleId || undefined,
+      avatarUrl: avatarUrl || undefined,
       coordinates: coordinates ? { lat: coordinates.lat, lng: coordinates.lng } : undefined,
-      emailVerified: Boolean(cleanEmail),
+      emailVerified: cleanEmail ? new Date() : null,
       phoneVerified: Boolean(cleanPhone),
     });
 
@@ -99,7 +187,7 @@ export async function POST(req: NextRequest) {
           businessName: `${name} Services`,
           categorySlug: trade ? trade.toLowerCase() : "plumbing",
           phone: cleanPhone || "9820054321",
-          email: cleanEmail || "pro@omniservice.world",
+          email: cleanEmail || "volcanic.digitalsolutions@gmail.com",
           verificationStatus: "verified",
           apexCertifications: [
             {
@@ -107,7 +195,7 @@ export async function POST(req: NextRequest) {
               issuedAt: new Date(),
             },
           ],
-          coordinates: [coordinates?.lng || 78.4482, coordinates?.lat || 17.4375], // Ameerpet, Hyderabad
+          coordinates: [coordinates?.lng || 78.4867, coordinates?.lat || 17.3850], // Hyderabad, Telangana
           isAvailable: true,
         });
       } catch (proErr) {
@@ -135,6 +223,7 @@ export async function POST(req: NextRequest) {
       email: newUser.email,
       phone: newUser.phone,
       role: newUser.role,
+      avatarUrl: newUser.avatarUrl,
     };
 
     const response = NextResponse.json(

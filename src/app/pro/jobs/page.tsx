@@ -54,7 +54,7 @@ export default function ProfessionalJobsPage() {
         scopeOfWorkId: "65f01234567890abcdef3001",
         customerName: "K. Reddy",
         customerPhone: "+91 98200 12345",
-        customerAddress: "Flat 402, Sea Green Apts, Ameerpet, Hyderabad",
+        customerAddress: "Flat 402, Sea Green Apts, Hyderabad",
         problemTitle: "Split AC Compressor Tripping MCB",
         category: "hvac",
         status: "assigned",
@@ -104,10 +104,10 @@ export default function ProfessionalJobsPage() {
       {/* Header */}
       <PageHeader
         title="Active Jobs & Dispatches"
-        description="Track assigned customer orders, live arrival status, and Scope of Work line items in Ameerpet, Hyderabad."
+        description="Track assigned customer orders, live arrival status, and Scope of Work line items in Greater Hyderabad."
         breadcrumbs={[
           { label: "Home", href: "/" },
-          { label: "Pro Dashboard", href: "/pro/dashboard" },
+          { label: "Provider Dashboard", href: "/pro/dashboard" },
           { label: "Jobs" },
         ]}
         actions={

@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
   if (sessionUser.id && sessionUser.id.length === 24) {
     try {
       await connectToDatabase();
-      const dbUser = await User.findById(sessionUser.id).select("-passwordHash -passwordSalt");
+      const dbUser = await User.findById(sessionUser.id);
       if (dbUser) {
         return NextResponse.json({
           success: true,
@@ -70,6 +70,7 @@ export async function GET(req: NextRequest) {
             phone: dbUser.phone,
             role: dbUser.role,
             status: dbUser.status || "active",
+            hasPassword: Boolean(dbUser.passwordHash),
             createdAt: dbUser.createdAt,
           },
         });
@@ -82,7 +83,10 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     success: true,
     authenticated: true,
-    user: sessionUser,
+    user: {
+      ...sessionUser,
+      hasPassword: false,
+    },
   });
 }
 

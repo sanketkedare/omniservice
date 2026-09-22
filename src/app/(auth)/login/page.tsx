@@ -230,7 +230,7 @@ export default function LoginPage() {
 
       {/* ── Google One-Tap Authentication ── */}
       <div className="space-y-3">
-        <GoogleOneTap role="customer" />
+        <GoogleOneTap role="customer" mode="login" />
         <div className="relative flex items-center justify-center">
           <div className="border-t border-neutral-200 w-full" />
           <span className="bg-white px-3 text-[11px] uppercase tracking-wider text-neutral-400 font-semibold absolute">
@@ -307,17 +307,23 @@ export default function LoginPage() {
                 )}
               </button>
             </div>
-            <div className="flex justify-end mt-1.5">
+            <div className="flex items-center justify-between mt-2 text-xs">
               <button
                 type="button"
                 onClick={() => {
                   setLoginMode("otp");
                   setError("");
                 }}
-                className="text-xs text-[#f05a28] hover:underline"
+                className="text-neutral-500 hover:text-[#f05a28] transition-colors"
               >
-                Forgot password? Sign in with Email OTP
+                Sign in with Email OTP
               </button>
+              <Link
+                href="/forgot-password"
+                className="font-semibold text-[#f05a28] hover:underline"
+              >
+                Forgot Password?
+              </Link>
             </div>
           </div>
 

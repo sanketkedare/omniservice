@@ -92,7 +92,7 @@ const envSchema = z.object({
   SMTP_FROM: z.string().email().optional(),
 
   // Primary Support Contacts
-  NEXT_PUBLIC_SUPPORT_EMAIL: z.string().default("support@omniservice.world"),
+  NEXT_PUBLIC_SUPPORT_EMAIL: z.string().default("volcanic.digitalsolutions@gmail.com"),
   NEXT_PUBLIC_SUPPORT_PHONE: z.string().default("+91 98200 12345"),
 
   // Logging
@@ -120,7 +120,7 @@ function validateEnv() {
       FILEBASE_REGION: "us-east-1",
       AI_PROVIDER: "mock",
       GEMINI_MODEL: "gemini-2.0-flash",
-      NEXT_PUBLIC_SUPPORT_EMAIL: "support@omniservice.world",
+      NEXT_PUBLIC_SUPPORT_EMAIL: "volcanic.digitalsolutions@gmail.com",
       NEXT_PUBLIC_SUPPORT_PHONE: "+91 98200 12345",
       LOG_LEVEL: "info",
     } as z.infer<typeof envSchema>;

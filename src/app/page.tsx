@@ -12,11 +12,9 @@ import {
   CheckCircle2,
   Clock,
   ArrowRight,
-  Eye,
   Shield,
   Layers,
   MapPin,
-  Play,
   Wrench,
   Zap,
   Droplets,
@@ -24,150 +22,146 @@ import {
   Home,
   Check,
   ChevronRight,
-  ChevronLeft,
-  AlertCircle,
   Phone,
   Mail,
   Lock,
   User,
   LogOut,
-  Bot,
   Menu,
   X,
-  Activity,
   Briefcase,
+  ChevronDown,
+  Navigation,
+  ThumbsUp,
+  Award,
+  FileText,
 } from "lucide-react";
 import { HomeDiagnosticChat } from "@/components/ai/HomeDiagnosticChat";
+import { useGeolocation } from "@/lib/geolocation";
+import { LocationSelectorModal } from "@/components/layout/LocationSelectorModal";
+import { GoogleNavButton } from "@/components/auth/GoogleNavButton";
 
-// ── Interactive Simulation Data (Full-Width Flow Section) ──────────────────────
-const SIMULATION_STEPS = [
+// ── Interactive Flow Categories (Consumer-Friendly, No Dev Jargon) ────────────
+const HERO_FLOW_SHOWCASES = [
+  {
+    id: "hvac",
+    label: "Air Conditioning",
+    icon: Flame,
+    color: "#f05a28",
+    issue: "Inverter AC Fan Shudder & Cooling Loss",
+    diagnosedPart: "Dual-Run Motor Capacitor (OEM)",
+    partPrice: "₹750",
+    laborPrice: "₹2,050 (Coil Service & Terminal Clean)",
+    totalPrice: "₹2,800",
+    provider: "CoolAir Solutions (4.9★ • 420 jobs)",
+    arrivalEta: "12 mins",
+    vanStock: "Parts stocked on mobile van",
+    badge: "15-Sec Scan Verified",
+  },
+  {
+    id: "electrical",
+    label: "Electrical & Wiring",
+    icon: Zap,
+    color: "#eab308",
+    issue: "MCB Circuit Breaker Tripping on Load",
+    diagnosedPart: "32A Double-Pole Residual MCB",
+    partPrice: "₹480",
+    laborPrice: "₹970 (Terminal Rewire & Load Balance)",
+    totalPrice: "₹1,450",
+    provider: "VoltMaster Electric (5.0★ • 310 jobs)",
+    arrivalEta: "15 mins",
+    vanStock: "4 units in van inventory",
+    badge: "Load Safety Tested",
+  },
+  {
+    id: "plumbing",
+    label: "Plumbing & Leaks",
+    icon: Droplets,
+    color: "#0284c7",
+    issue: "Concealed Sink & P-Trap Joint Leak",
+    diagnosedPart: "EPDM Compression Gasket Kit",
+    partPrice: "₹350",
+    laborPrice: "₹1,500 (Pressure Hydro-Test & Seal)",
+    totalPrice: "₹1,850",
+    provider: "FlowCare Plumbers (4.8★ • 290 jobs)",
+    arrivalEta: "18 mins",
+    vanStock: "Couplers & sealants in van stock",
+    badge: "Pressure Calibrated",
+  },
+  {
+    id: "purifier",
+    label: "Water Purifier (RO)",
+    icon: Droplets,
+    color: "#0d9488",
+    issue: "High TDS Water & RO Pump Churn",
+    diagnosedPart: "Dow Filmtec 80 GPD RO Membrane",
+    partPrice: "₹850",
+    laborPrice: "₹649 (Chamber Sanitize & Calibration)",
+    totalPrice: "₹1,499",
+    provider: "AquaPure Technicians (4.9★ • 510 jobs)",
+    arrivalEta: "20 mins",
+    vanStock: "OEM filters stocked on van",
+    badge: "Water Lab Tested",
+  },
+];
+
+// ── 4 Consumer Trust Flow Steps ──────────────────────────────────────────────
+const TRUST_FLOW_STEPS = [
   {
     id: "intake",
     stepNumber: "01",
-    label: "1. Visual Intake",
-    tag: "Camera & Audio Scan",
-    title: "12-Second Multimodal Video Diagnostic",
-    description: "Customer records the appliance or fixture. InspectAI analyzes video frames and high-frequency audio signatures across Gemini models.",
-    data: {
-      scanStatus: "Analyzing audio frequency & motor shudder...",
-      detection: "Split AC Compressor Shudder @ 48Hz",
-      confidence: "98.7% Neural Match (Gemini 3.5 Flash)",
-      secondaryCheck: "Capacitance loss detected in dual-run hermetic terminal",
-    },
+    label: "1. Show the Problem",
+    tag: "15-Second Video",
+    title: "Snap a quick video or describe the repair issue",
+    description:
+      "No more trying to explain strange sounds or leaks over the phone. Simply record a short clip — our smart AI identifies the exact fault and parts needed in seconds.",
+    bullets: [
+      "Instant visual failure diagnosis",
+      "No physical teardown required",
+      "Exact OEM part identified upfront",
+    ],
   },
   {
-    id: "scope",
+    id: "pricing",
     stepNumber: "02",
-    label: "2. Locked SOW",
-    tag: "Fair-Market Pricing",
-    title: "Immutable Scope & Price Ceiling Guarantee",
-    description: "Required parts identified and fair labor locked before technician dispatch. No surprise on-site price renegotiation.",
-    data: {
-      part: "45μF Dual Run Motor Capacitor (OEM)",
-      partCost: "₹750",
-      labor: "Master HVAC Service & Terminal Cleaning (₹2,050)",
-      totalCeiling: "₹2,800 Locked",
-    },
+    label: "2. Locked Upfront Price",
+    tag: "Zero Hidden Fees",
+    title: "Transparent breakdown of parts & labor before you book",
+    description:
+      "Say goodbye to surprise estimates after arrival. You see the locked price ceiling upfront based on verified fair market rates in Hyderabad.",
+    bullets: [
+      "Genuine replacement parts catalog rates",
+      "Fair-market labor breakdown",
+      "Guaranteed price ceiling — no price gouging",
+    ],
   },
   {
-    id: "dispatch",
+    id: "provider",
     stepNumber: "03",
-    label: "3. SmartRoute",
-    tag: "Van Inventory Match",
-    title: "Verified Pro & Mobile Van Stock Dispatch",
-    description: "Matches nearby licensed technician who has the exact 45μF capacitor currently stocked on their mobile van inventory.",
-    data: {
-      pro: "CoolAir Solutions (4.9★ • 420 jobs)",
-      vanInventory: "45μF Capacitor: 2 units in stock",
-      distance: "1.2 km away • Ameerpet, Hyderabad",
-      eta: "12 mins to doorstep",
-    },
+    label: "3. Verified Provider Arrival",
+    tag: "Parts in Stock",
+    title: "Matched with top local experts who arrive ready to fix",
+    description:
+      "We dispatch verified, background-checked master technicians who already have the exact required replacement parts stocked in their mobile van.",
+    bullets: [
+      "Average arrival within 15–20 minutes",
+      "Technicians carry genuine spare parts on board",
+      "Verified licenses and criminal background checks",
+    ],
   },
   {
     id: "escrow",
     stepNumber: "04",
-    label: "4. TrustLock Escrow",
-    tag: "Photographic Proof",
-    title: "Payment Released Post-Verification Only",
-    description: "Pre-work and post-work photos pass AI verification before escrow funds release. Stamp permanently added to digital HomePass passport.",
-    data: {
-      escrowState: "₹2,800 Held Securely in Trustee Escrow",
-      proofStatus: "Pre vs Post Photo Similarity: 94%",
-      releaseStatus: "Released to Pro with 12% platform fee split",
-      homepass: "Added to Digital Property Record",
-    },
-  },
-];
-
-// ── Interactive Hero Terminal Previews ─────────────────────────────────────────
-const HERO_TERMINAL_PREVIEWS = [
-  {
-    id: "hvac",
-    label: "Split AC Shudder",
-    icon: Flame,
-    color: "#f05a28",
-    fault: "Compressor Vibration & Capacitance Drift",
-    frequency: "48Hz Motor Shudder",
-    confidence: "98.7% Neural Match",
-    model: "Gemini 3.5 Flash",
-    part: "45μF Dual Run Motor Capacitor (OEM)",
-    partCost: "₹750",
-    labor: "Master HVAC Service & Terminal Cleaning (₹2,050)",
-    totalCeiling: "₹2,800 Locked",
-    proName: "CoolAir Solutions (4.9★ • 420 jobs)",
-    vanStock: "45μF Capacitor: 2 units on mobile van",
-    eta: "12 mins to doorstep in Ameerpet",
-  },
-  {
-    id: "electrical",
-    label: "MCB Circuit Trip",
-    icon: Zap,
-    color: "#eab308",
-    fault: "Neutral Ground Short in Geyser Loop",
-    frequency: "50Hz Residual Leakage",
-    confidence: "96.4% Neural Match",
-    model: "Gemini 3.1 Flash Lite",
-    part: "32A Double-Pole Residual MCB",
-    partCost: "₹480",
-    labor: "Insulation Megger Testing & Terminal Rewire (₹970)",
-    totalCeiling: "₹1,450 Locked",
-    proName: "VoltMaster Electric (5.0★ • 310 jobs)",
-    vanStock: "32A DP MCB: 4 units on mobile van",
-    eta: "15 mins to doorstep in Ameerpet",
-  },
-  {
-    id: "plumbing",
-    label: "Concealed Pipe Leak",
-    icon: Droplets,
-    color: "#0284c7",
-    fault: "P-Trap Washer Fatigue & Joint Calcification",
-    frequency: "Acoustic Drip @ 2.4s interval",
-    confidence: "95.8% Neural Match",
-    model: "Gemini 3.5 Flash",
-    part: "EPDM Compression Gaskets & Brass Coupler",
-    partCost: "₹350",
-    labor: "Pressure Hydro-Test & P-Trap Overhaul (₹1,500)",
-    totalCeiling: "₹1,850 Locked",
-    proName: "FlowCare Plumbers (4.8★ • 290 jobs)",
-    vanStock: "EPDM Couplers: 6 units on mobile van",
-    eta: "18 mins to doorstep in Ameerpet",
-  },
-  {
-    id: "purifier",
-    label: "RO TDS Alert",
-    icon: Droplets,
-    color: "#0d9488",
-    fault: "RO Membrane Exhaustion & Pump Churn",
-    frequency: "High TDS & Pump Churn",
-    confidence: "97.2% Neural Match",
-    model: "Gemini 3.5 Flash",
-    part: "Dow Filmtec 80 GPD Membrane (OEM)",
-    partCost: "₹850",
-    labor: "Pressure Chamber Sanitize & Calibration (₹649)",
-    totalCeiling: "₹1,499 Locked",
-    proName: "AquaPure Technicians (4.9★ • 510 jobs)",
-    vanStock: "80 GPD Membrane: 3 units on mobile van",
-    eta: "20 mins to doorstep in Ameerpet",
+    label: "4. Release When Satisfied",
+    tag: "100% Protected",
+    title: "Your payment is safely held until you approve the work",
+    description:
+      "Payment is deposited in an encrypted TrustLock escrow vault. Funds release only after you and our photo verification confirm the repair is flawless.",
+    bullets: [
+      "Fiduciary escrow protection on every booking",
+      "Pre- and post-repair photographic proof",
+      "30-day workmanship guarantee & warranty",
+    ],
   },
 ];
 
@@ -178,7 +172,8 @@ const SERVICE_CATEGORIES = [
     name: "Air Conditioning & HVAC",
     icon: Flame,
     color: "#f05a28",
-    description: "Inverter AC diagnostics, compressor failures, gas leakage, coil replacement & seasonal deep cleaning.",
+    description:
+      "Inverter AC diagnostics, compressor failures, gas leakage, coil replacement & seasonal deep cleaning.",
     avgTime: "45 mins",
     priceRange: "₹499 – ₹3,200",
     jobsCount: "1,420+ completed",
@@ -188,27 +183,30 @@ const SERVICE_CATEGORIES = [
     name: "Electrical Systems & MCBs",
     icon: Zap,
     color: "#eab308",
-    description: "Short circuit detection, distribution boards, MCB tripping, wiring faults & heavy load automation.",
+    description:
+      "Short circuit detection, distribution boards, MCB tripping, wiring faults & heavy load automation.",
     avgTime: "30 mins",
     priceRange: "₹349 – ₹2,400",
     jobsCount: "980+ completed",
   },
   {
     id: "plumbing",
-    name: "Advanced Plumbing & Drainage",
+    name: "Plumbing & Drainage",
     icon: Droplets,
     color: "#0284c7",
-    description: "Concealed pipe leaks, motorized valves, pressure booster pumps, fixture replacements & drainage.",
+    description:
+      "Concealed pipe leaks, motorized valves, pressure booster pumps, fixture replacements & drainage.",
     avgTime: "40 mins",
     priceRange: "₹399 – ₹2,800",
     jobsCount: "1,150+ completed",
   },
   {
     id: "appliances",
-    name: "Heavy Kitchen Appliances",
+    name: "Kitchen & Home Appliances",
     icon: Wrench,
     color: "#16a34a",
-    description: "Front-load washing machines, microwave inverters, dishwashers, refrigerators & chimney motors.",
+    description:
+      "Front-load washing machines, microwave inverters, dishwashers, refrigerators & chimney motors.",
     avgTime: "60 mins",
     priceRange: "₹599 – ₹4,500",
     jobsCount: "820+ completed",
@@ -218,17 +216,19 @@ const SERVICE_CATEGORIES = [
     name: "Water Purifiers & RO Systems",
     icon: Droplets,
     color: "#0d9488",
-    description: "RO membrane replacement, booster pump pressure check, TDS adjustment & UV chamber servicing.",
+    description:
+      "RO membrane replacement, booster pump pressure check, TDS adjustment & UV chamber servicing.",
     avgTime: "35 mins",
     priceRange: "₹450 – ₹2,600",
     jobsCount: "670+ completed",
   },
   {
     id: "homepass",
-    name: "HomePass Asset Inspections",
+    name: "HomePass Property Inspections",
     icon: Home,
     color: "#9333ea",
-    description: "Full property digital health passporting, asset tag audits, electrical safety audits & warranty logs.",
+    description:
+      "Digital health passport for your home, appliance inventory audits, electrical safety checks & warranty logs.",
     avgTime: "90 mins",
     priceRange: "₹1,499 Flat",
     jobsCount: "410+ properties",
@@ -246,10 +246,12 @@ interface LoggedUser {
 export default function HomePage() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<LoggedUser | null>(null);
-  const [activeSimIndex, setActiveSimIndex] = useState(0);
-  const [simPlaying, setSimPlaying] = useState(true);
-  const [selectedTerminalId, setSelectedTerminalId] = useState("hvac");
+  const [activeStepIndex, setActiveStepIndex] = useState(0);
+  const [selectedShowcaseId, setSelectedShowcaseId] = useState("hvac");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+
+  const { locality } = useGeolocation();
 
   // Authenticated user recall via localStorage & /api/auth/me
   useEffect(() => {
@@ -289,15 +291,6 @@ export default function HomePage() {
     };
   }, [mobileMenuOpen]);
 
-  // Auto-cycle simulation steps silently (NO toasts)
-  useEffect(() => {
-    if (!simPlaying) return;
-    const interval = setInterval(() => {
-      setActiveSimIndex((prev) => (prev + 1) % SIMULATION_STEPS.length);
-    }, 5500);
-    return () => clearInterval(interval);
-  }, [simPlaying]);
-
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
@@ -311,17 +304,18 @@ export default function HomePage() {
     router.refresh();
   };
 
-  const currentStep = (SIMULATION_STEPS[activeSimIndex] ?? SIMULATION_STEPS[0])!;
-  const currentTerminal =
-    (HERO_TERMINAL_PREVIEWS.find((p) => p.id === selectedTerminalId) ||
-      HERO_TERMINAL_PREVIEWS[0])!;
+  const currentShowcase =
+    HERO_FLOW_SHOWCASES.find((p) => p.id === selectedShowcaseId) ||
+    HERO_FLOW_SHOWCASES[0]!;
+
+  const currentStep = TRUST_FLOW_STEPS[activeStepIndex] ?? TRUST_FLOW_STEPS[0]!;
 
   const getPortalLink = (role: string) => {
     switch (role) {
       case "admin":
         return { href: "/admin/dashboard", label: "Admin Console", badge: "Admin" };
       case "professional":
-        return { href: "/pro/dashboard", label: "Pro Operations", badge: "Verified Pro" };
+        return { href: "/pro/dashboard", label: "Provider Portal", badge: "Verified Provider" };
       default:
         return { href: "/customer/dashboard", label: "My Dashboard", badge: "Customer" };
     }
@@ -330,89 +324,71 @@ export default function HomePage() {
   const portal = currentUser ? getPortalLink(currentUser.role) : null;
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-neutral-900 font-sans selection:bg-[#f05a28]/15 selection:text-[#9a2c06]">
+    <div
+      className="min-h-screen bg-[#faf8f5] text-neutral-900 font-serif selection:bg-[#f05a28]/15 selection:text-[#9a2c06]"
+      style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
+    >
       {/* ═══════════════════════════════════════════════════════════════════ */}
       {/* 1. TOP NAVBAR                                                       */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      <header className="sticky top-0 z-40 w-full border-b border-orange-200/70 bg-[#fffbf7]/95 backdrop-blur-md shadow-xs">
-        <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 lg:px-10 h-20 flex items-center justify-between gap-4">
-          {/* Brand Logo & Ameerpet Hub Badge */}
-          <div className="flex items-center gap-3 sm:gap-4">
+      <header className="sticky top-0 z-40 w-full border-b border-orange-200/80 bg-[#fffbf7]/95 backdrop-blur-md shadow-xs">
+        <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 lg:px-12 h-20 flex items-center justify-between gap-4">
+          {/* Brand Logo & Dynamic Location Selector */}
+          <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center group" aria-label="OmniService AI Home">
               <Image
                 src="/images/OmniService_Logo.png"
                 alt="OmniService"
                 width={190}
                 height={48}
-                className="h-8 sm:h-10 w-auto rounded-xl object-contain transition-transform group-hover:scale-102"
+                className="h-9 sm:h-10 w-auto rounded-xl object-contain transition-transform group-hover:scale-102"
                 priority
               />
             </Link>
 
-            <span className="hidden xl:inline-flex items-center gap-1.5 rounded-full bg-orange-500/10 px-3 py-1 text-xs font-bold text-[#c2410c] border border-orange-200/80 shadow-2xs">
-              <ShieldCheck className="h-3.5 w-3.5 text-[#f05a28]" />
-              Ameerpet Hub
-            </span>
+            {/* Clickable Real-Time Location Pill */}
+            <button
+              type="button"
+              onClick={() => setLocationModalOpen(true)}
+              className="hidden sm:inline-flex items-center gap-2 rounded-full border border-orange-200/90 bg-orange-50/80 px-3.5 py-1.5 text-xs font-bold text-[#9a2c06] hover:bg-orange-100 hover:border-orange-300 transition-all shadow-2xs group cursor-pointer"
+              title="Click to detect or change your location"
+            >
+              <MapPin className="h-3.5 w-3.5 text-[#f05a28] group-hover:animate-bounce" />
+              <span className="max-w-[180px] truncate">{locality || "Hyderabad, IN"}</span>
+              <ChevronDown className="h-3 w-3 text-orange-400 group-hover:text-[#f05a28]" />
+            </button>
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-semibold text-[#431407]">
-            <Link href="#lifecycle-flow" className="transition-colors hover:text-[#f05a28]">
-              Lifecycle Flow
-            </Link>
+          <nav className="hidden lg:flex items-center gap-8 text-sm font-bold text-[#431407]">
             <Link href="#how-it-works" className="transition-colors hover:text-[#f05a28]">
               How It Works
             </Link>
             <Link href="#categories" className="transition-colors hover:text-[#f05a28]">
-              Trade Categories
+              Services
             </Link>
-            <Link href="#technology" className="transition-colors hover:text-[#f05a28]">
-              AI Technology
-            </Link>
-            <Link
-              href="/demo"
-              className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-[#f05a28]/70 bg-gradient-to-r from-orange-50 to-amber-50 px-3.5 py-1 text-xs font-bold text-[#c2410c] transition-all hover:bg-orange-100 hover:border-[#f05a28]"
-            >
-              <Eye className="h-3.5 w-3.5 text-[#f05a28]" />
-              <span>Sandbox Demo</span>
+            <Link href="#why-trust" className="transition-colors hover:text-[#f05a28]">
+              Trust &amp; Escrow
             </Link>
           </nav>
 
-          {/* Desktop Action CTAs: Authenticated vs Unauthenticated */}
+          {/* Desktop Actions */}
           <div className="hidden sm:flex items-center gap-3">
             {currentUser && portal ? (
               <div className="flex items-center gap-3">
-                {/* User Profile Pill */}
-                <div className="flex items-center gap-2 rounded-xl border border-orange-200/90 bg-white/90 px-3 py-1.5 shadow-2xs">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-[#f05a28] to-[#ea580c] text-white text-xs font-black">
-                    {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : "U"}
-                  </div>
-                  <div className="text-left">
-                    <span className="block text-xs font-bold text-[#2d130a] max-w-[110px] truncate leading-tight">
-                      {currentUser.name}
-                    </span>
-                    <span className="block text-[10px] font-semibold text-[#c2410c] capitalize">
-                      {portal.badge}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Direct Dashboard Link */}
                 <Link
                   href={portal.href}
-                  className="rounded-xl bg-gradient-to-r from-[#f05a28] to-[#ea580c] px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-sm shadow-orange-500/25 hover:from-[#ea580c] hover:to-[#c2410c] transition-all flex items-center gap-1.5"
+                  className="flex items-center gap-2 rounded-xl bg-orange-50 border border-orange-200 px-3.5 py-2 text-xs font-bold text-[#c2410c] hover:bg-orange-100 transition-colors shadow-2xs"
                 >
+                  <Briefcase className="h-3.5 w-3.5 text-[#f05a28]" />
                   <span>{portal.label}</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
 
-                {/* Sign Out Button */}
                 <button
                   type="button"
                   onClick={handleLogout}
-                  title="Sign Out"
-                  aria-label="Sign Out"
-                  className="rounded-xl border border-orange-200 bg-white p-2 text-neutral-500 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                  title="Sign out"
+                  className="rounded-xl p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                 >
                   <LogOut className="h-4 w-4" />
                 </button>
@@ -421,238 +397,127 @@ export default function HomePage() {
               <div className="flex items-center gap-2.5">
                 <Link
                   href="/login"
-                  className="rounded-xl border border-orange-200/90 bg-white px-4 py-2 text-xs sm:text-sm font-bold text-[#c2410c] hover:bg-orange-50/70 hover:border-orange-300 transition-colors shadow-2xs"
+                  className="rounded-xl px-4 py-2 text-xs font-bold text-[#431407] hover:text-[#f05a28] hover:bg-orange-50/70 transition-colors"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/register"
-                  className="rounded-xl bg-gradient-to-r from-[#f05a28] to-[#ea580c] px-4 sm:px-5 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm shadow-orange-500/25 hover:from-[#ea580c] hover:to-[#c2410c] transition-all hover:scale-102 flex items-center gap-1.5"
+                  className="rounded-xl bg-[#f05a28] px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/25 hover:bg-[#ea580c] transition-all"
                 >
-                  <span>Get Started</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  Get Started
                 </Link>
               </div>
             )}
           </div>
 
-          {/* Mobile Hamburger Button */}
-          <div className="flex lg:hidden items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(true)}
-              aria-label="Open mobile navigation menu"
-              className="rounded-xl border-2 border-orange-200 bg-white p-2 text-[#c2410c] hover:bg-orange-50 transition-colors shadow-xs"
-            >
-              <Menu className="h-6 w-6" />
-            </button>
-          </div>
+          {/* Mobile Hamburger Toggle */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            className="lg:hidden p-2 rounded-xl text-neutral-800 hover:bg-orange-50 hover:text-[#f05a28] transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
         </div>
       </header>
 
-      {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* MOBILE SLIDE-OUT SIDEBAR DRAWER (FOR SMALL SCREENS)                 */}
-      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/* ── Slide-Out Mobile Sidebar Drawer ── */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end lg:hidden">
-          {/* Backdrop Blur Overlay */}
+        <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
             onClick={() => setMobileMenuOpen(false)}
           />
 
-          {/* Slide-out Sidebar Content */}
-          <aside className="relative w-[85vw] max-w-[340px] h-full bg-[#fffbf7] border-l border-orange-200/90 shadow-2xl flex flex-col z-10 overflow-y-auto animate-in slide-in-from-right duration-200">
-            {/* Drawer Header */}
-            <div className="p-5 border-b border-orange-200/70 flex items-center justify-between bg-white/80">
-              <div className="flex items-center gap-2">
-                <Image
-                  src="/images/OmniService_Logo.png"
-                  alt="OmniService"
-                  width={150}
-                  height={38}
-                  className="h-7 w-auto object-contain"
-                />
-              </div>
+          <aside className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-[#fffaf5] border-l border-orange-200/80 shadow-2xl z-10 flex flex-col justify-between">
+            <div className="p-5 border-b border-orange-200/70 flex items-center justify-between">
+              <Image
+                src="/images/OmniService_Logo.png"
+                alt="OmniService"
+                width={150}
+                height={38}
+                className="h-8 w-auto object-contain"
+              />
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                aria-label="Close mobile menu"
-                className="rounded-xl border border-orange-200 p-2 text-neutral-500 hover:text-neutral-800 hover:bg-orange-50 transition-colors"
+                className="p-1.5 rounded-full text-neutral-500 hover:text-neutral-900 hover:bg-orange-100"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Authenticated User Status in Mobile Drawer */}
-            <div className="p-4 border-b border-orange-100 bg-gradient-to-r from-orange-50/50 to-amber-50/50">
-              {currentUser && portal ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#f05a28] to-[#ea580c] text-white font-bold text-sm shadow-sm">
-                      {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : "U"}
-                    </div>
-                    <div className="min-w-0">
-                      <span className="block font-bold text-sm text-[#2d130a] truncate">
-                        {currentUser.name}
-                      </span>
-                      <span className="block text-xs font-semibold text-[#c2410c] capitalize">
-                        {portal.badge} • Active
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 pt-1">
-                    <Link
-                      href={portal.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex-1 text-center rounded-xl bg-gradient-to-r from-[#f05a28] to-[#ea580c] py-2 text-xs font-bold text-white shadow-xs"
-                    >
-                      {portal.label}
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={handleLogout}
-                      className="rounded-xl border border-orange-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {/* Dynamic Location Button in Drawer */}
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setLocationModalOpen(true);
+                }}
+                className="w-full flex items-center justify-between p-3 rounded-2xl bg-orange-50 border border-orange-200 text-xs text-[#9a2c06] font-bold"
+              >
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-[#f05a28]" />
+                  <span className="truncate">{locality || "Hyderabad, IN"}</span>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  <span className="text-xs font-bold text-neutral-500 block uppercase tracking-wider">
-                    Welcome to OmniService
-                  </span>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Link
-                      href="/login"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="text-center rounded-xl border border-orange-200 bg-white py-2 text-xs font-bold text-[#c2410c] shadow-2xs hover:bg-orange-50"
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      href="/register"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="text-center rounded-xl bg-gradient-to-r from-[#f05a28] to-[#ea580c] py-2 text-xs font-bold text-white shadow-xs hover:from-[#ea580c] hover:to-[#c2410c]"
-                    >
-                      Get Started
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
+                <span className="text-[11px] underline">Change</span>
+              </button>
 
-            {/* Navigation Options List */}
-            <div className="p-4 space-y-1 flex-1">
-              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest px-3 block mb-1">
-                Explore Platform
-              </span>
-
-              <Link
-                href="#lifecycle-flow"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 hover:text-[#f05a28] transition-colors"
-              >
-                <Layers className="h-4 w-4 text-[#f05a28]" />
-                <span>Lifecycle Flow</span>
-              </Link>
-
-              <Link
-                href="#how-it-works"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 hover:text-[#f05a28] transition-colors"
-              >
-                <Clock className="h-4 w-4 text-[#f05a28]" />
-                <span>How It Works</span>
-              </Link>
-
-              <Link
-                href="#categories"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 hover:text-[#f05a28] transition-colors"
-              >
-                <Wrench className="h-4 w-4 text-[#f05a28]" />
-                <span>Trade Categories</span>
-              </Link>
-
-              <Link
-                href="#technology"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 hover:text-[#f05a28] transition-colors"
-              >
-                <Sparkles className="h-4 w-4 text-[#f05a28]" />
-                <span>AI Multi-Model Engine</span>
-              </Link>
-
-              <Link
-                href="/demo"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 hover:text-[#f05a28] transition-colors"
-              >
-                <span className="flex items-center gap-3">
-                  <Eye className="h-4 w-4 text-[#f05a28]" />
-                  <span>Sandbox Demo</span>
-                </span>
-                <span className="text-[10px] font-bold text-[#c2410c] bg-orange-100 px-2 py-0.5 rounded-full">
-                  Try Live
-                </span>
-              </Link>
-
-              <div className="pt-3 border-t border-orange-100 mt-2">
-                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest px-3 block mb-1">
-                  Actions &amp; Roles
-                </span>
-
+              <div className="space-y-1">
                 <Link
-                  href="/register"
+                  href="#how-it-works"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-[#c2410c] hover:bg-orange-100/60 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60"
                 >
-                  <Camera className="h-4 w-4 text-[#f05a28]" />
-                  <span>Book AI Diagnostic</span>
+                  <Layers className="h-4 w-4 text-[#f05a28]" />
+                  <span>How It Works</span>
                 </Link>
 
+                <Link
+                  href="#categories"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60"
+                >
+                  <Wrench className="h-4 w-4 text-[#f05a28]" />
+                  <span>Service Trades</span>
+                </Link>
+
+                <Link
+                  href="#why-trust"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60"
+                >
+                  <ShieldCheck className="h-4 w-4 text-[#f05a28]" />
+                  <span>Trust &amp; Escrow</span>
+                </Link>
+              </div>
+
+              <div className="pt-3 border-t border-orange-100 space-y-2">
+                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest px-3 block">
+                  Portals &amp; Join
+                </span>
                 <Link
                   href="/professional/register"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-[#c2410c] hover:bg-orange-100/60"
                 >
                   <Briefcase className="h-4 w-4 text-[#f05a28]" />
-                  <span>Join as Pro Partner</span>
+                  <span>Join as Provider</span>
                 </Link>
-
                 <Link
                   href="/customer/dashboard"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60"
                 >
                   <User className="h-4 w-4 text-[#f05a28]" />
-                  <span>Customer Portal</span>
-                </Link>
-
-                <Link
-                  href="/pro/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 transition-colors"
-                >
-                  <Truck className="h-4 w-4 text-[#f05a28]" />
-                  <span>Pro Operations</span>
-                </Link>
-
-                <Link
-                  href="/admin/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-800 hover:bg-orange-100/60 transition-colors"
-                >
-                  <ShieldCheck className="h-4 w-4 text-[#f05a28]" />
-                  <span>Governance Admin</span>
+                  <span>Customer Dashboard</span>
                 </Link>
               </div>
             </div>
 
-            {/* Mobile Drawer Footer Contacts */}
             <div className="p-4 border-t border-orange-200/70 bg-white space-y-2 text-xs text-neutral-600">
               <div className="flex items-center gap-2">
                 <Phone className="h-3.5 w-3.5 text-[#f05a28]" />
@@ -662,7 +527,7 @@ export default function HomePage() {
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5 text-[#f05a28]" />
-                <span className="truncate">Ameerpet, Hyderabad, 500016</span>
+                <span className="truncate">{locality || "Hyderabad, Telangana"}</span>
               </div>
             </div>
           </aside>
@@ -670,43 +535,85 @@ export default function HomePage() {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* 2. HERO SECTION (CENTERED • INTERACTIVE SHOWCASE TERMINAL • WOW UI) */}
+      {/* 2. HERO SECTION — WORLD-CLASS ARTISTIC FLOW & GEOMETRIC DESIGN      */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      <section className="relative w-full overflow-hidden border-b border-orange-200/70 bg-gradient-to-b from-[#fffbf7] via-[#fff5eb] to-[#feede0] py-14 sm:py-20 lg:py-24 emergent-mesh">
-        {/* Ambient Glowing Orbs */}
-        <div className="absolute -top-32 left-1/3 w-[600px] h-[600px] rounded-full bg-gradient-to-tr from-[#f05a28]/18 via-amber-400/15 to-transparent blur-3xl pointer-events-none" />
-        <div className="absolute top-1/2 -right-32 w-[500px] h-[500px] rounded-full bg-gradient-to-bl from-[#ea580c]/12 via-orange-300/15 to-transparent blur-3xl pointer-events-none" />
+      <section className="relative w-full overflow-hidden border-b border-orange-200/80 bg-gradient-to-b from-[#fffaf4] via-[#fff3e6] to-[#fdecdb] py-16 sm:py-24 lg:py-28">
+        {/* Artistic SVG Flow Ribbons & Geometric Contour Art */}
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none opacity-35"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1440 900"
+          fill="none"
+        >
+          <path
+            d="M-80,180 C280,80 480,420 880,260 C1280,120 1380,380 1560,320"
+            stroke="url(#heroFlow1)"
+            strokeWidth="2"
+            strokeDasharray="6 8"
+          />
+          <path
+            d="M-100,320 C240,200 580,520 960,390 C1320,280 1420,520 1580,460"
+            stroke="url(#heroFlow2)"
+            strokeWidth="2.5"
+          />
+          <path
+            d="M-60,480 C320,380 660,660 1060,480 C1360,360 1460,620 1580,560"
+            stroke="url(#heroFlow1)"
+            strokeWidth="1.5"
+            strokeOpacity="0.6"
+          />
+          <defs>
+            <linearGradient id="heroFlow1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f05a28" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#f05a28" stopOpacity="0.2" />
+            </linearGradient>
+            <linearGradient id="heroFlow2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ea580c" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.2" />
+            </linearGradient>
+          </defs>
+        </svg>
 
-        <div className="max-w-6xl mx-auto w-full px-4 sm:px-8 lg:px-12 flex flex-col items-center text-center relative z-10 space-y-8 sm:space-y-10">
-          {/* Centered Pill Capsule */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-orange-300/80 bg-gradient-to-r from-orange-500/10 via-amber-500/15 to-orange-500/10 px-4 py-1.5 text-xs font-bold text-[#c2410c] shadow-xs backdrop-blur-md">
+        {/* Floating Geometric Light Spheres */}
+        <div className="absolute -top-36 left-1/4 w-[520px] h-[520px] rounded-full bg-gradient-to-tr from-[#f05a28]/15 via-amber-300/15 to-transparent blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-36 right-1/4 w-[560px] h-[560px] rounded-full bg-gradient-to-bl from-amber-400/15 via-orange-300/10 to-transparent blur-3xl pointer-events-none" />
+        <div className="absolute top-1/3 left-6 w-64 h-64 rounded-full border border-orange-200/50 pointer-events-none opacity-30 -translate-y-1/2" />
+        <div className="absolute top-2/3 right-8 w-80 h-80 rounded-full border border-dashed border-orange-300/40 pointer-events-none opacity-25" />
+
+        <div className="max-w-6xl mx-auto w-full px-4 sm:px-8 lg:px-12 flex flex-col items-center text-center relative z-10 space-y-8">
+          {/* Active Area Badge Pill with 1-Click Change */}
+          <button
+            type="button"
+            onClick={() => setLocationModalOpen(true)}
+            className="inline-flex items-center gap-2.5 rounded-full border border-orange-300/90 bg-white/95 px-4 py-1.5 text-xs font-bold text-[#c2410c] shadow-sm hover:bg-orange-50 hover:border-orange-400 transition-all cursor-pointer backdrop-blur-md"
+          >
             <span className="flex h-2 w-2 rounded-full bg-[#f05a28] animate-ping" />
-            <span>Ameerpet, Hyderabad Hub</span>
+            <span>Serving: <strong>{locality || "Hyderabad, IN"}</strong></span>
             <span className="text-orange-300">•</span>
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-            <span className="text-emerald-800">TrustLock™ Protected Escrow</span>
-          </div>
+            <span className="text-[#f05a28] underline underline-offset-2">Change Area</span>
+          </button>
 
-          {/* Centered Grand Headline */}
+          {/* Grand Hero Headline in Times New Roman */}
           <div className="space-y-4 max-w-4xl">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#2d130a] leading-[1.08]">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[#2d130a] leading-[1.1]">
               Show the problem.{" "}
-              <span className="bg-gradient-to-r from-[#f05a28] via-[#ea580c] to-[#c2410c] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#f05a28] via-[#ea580c] to-[#c2410c] bg-clip-text text-transparent italic">
                 Let AI diagnose it.
               </span>{" "}
               Pay only when verified.
             </h1>
 
-            <p className="text-base sm:text-xl text-neutral-700 leading-relaxed max-w-3xl mx-auto font-normal">
-              OmniService AI replaces blind technician guesswork with 15-second video diagnostics, locked fair-market price ceilings, and verified mobile van dispatch across Ameerpet and Greater Hyderabad. Your money stays in escrow until pre- and post-work photos pass verified AI inspection.
+            <p className="text-base sm:text-xl text-neutral-700 leading-relaxed max-w-2xl mx-auto font-normal">
+              Record a 15-second video of your repair issue. Get locked upfront pricing, certified local providers with parts on board, and 100% escrow payment protection.
             </p>
           </div>
 
-          {/* Centered Action CTAs */}
-          <div className="flex flex-wrap items-center justify-center gap-3.5 pt-1">
+          {/* Action CTAs: Provider & Customer Focused */}
+          <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
             <Link
               href="/register"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f05a28] via-[#ea580c] to-[#d04618] px-7 py-4 text-sm sm:text-base font-bold text-white shadow-xl shadow-orange-500/30 hover:shadow-orange-500/40 transition-all hover:scale-102"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f05a28] via-[#ea580c] to-[#c2410c] px-8 py-4 text-base font-bold text-white shadow-xl shadow-orange-500/25 hover:shadow-orange-500/40 transition-all hover:scale-102"
             >
               <Camera className="h-5 w-5" />
               <span>Book AI Diagnostic</span>
@@ -714,188 +621,204 @@ export default function HomePage() {
             </Link>
 
             <Link
-              href="#lifecycle-flow"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-orange-300/80 bg-white/95 px-6 py-4 text-sm sm:text-base font-bold text-[#c2410c] hover:border-[#f05a28] hover:text-[#f05a28] hover:bg-orange-50/70 transition-all shadow-xs"
+              href="#how-it-works"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-orange-300/80 bg-white/95 px-6 py-4 text-base font-bold text-[#c2410c] hover:border-[#f05a28] hover:bg-orange-50/70 transition-all shadow-xs"
             >
               <Layers className="h-5 w-5 text-[#f05a28]" />
-              <span>View Lifecycle Flow</span>
+              <span>How It Works</span>
             </Link>
 
             <Link
               href="/professional/register"
-              className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-orange-200/80 bg-white/80 px-5 py-4 text-sm sm:text-base font-semibold text-[#7c2d12] hover:bg-white hover:border-orange-300 transition-colors"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-orange-200/80 bg-white/80 px-6 py-4 text-base font-semibold text-[#7c2d12] hover:bg-white hover:border-orange-300 transition-colors shadow-2xs"
             >
-              <span>Join as Pro</span>
+              <Briefcase className="h-4 w-4 text-[#f05a28]" />
+              <span>Join as Provider</span>
             </Link>
           </div>
 
-          {/* ── Interactive Centerpiece: InspectAI™ Live Diagnostic Terminal ── */}
-          <div className="w-full max-w-5xl rounded-3xl border-2 border-orange-200/90 bg-white/95 backdrop-blur-2xl shadow-2xl shadow-orange-950/15 overflow-hidden text-left p-5 sm:p-8">
-            {/* Terminal Window Chrome */}
-            <div className="flex flex-wrap items-center justify-between pb-4 border-b border-orange-100 gap-3">
-              <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-rose-400 inline-block" />
-                <span className="h-3 w-3 rounded-full bg-amber-400 inline-block" />
-                <span className="h-3 w-3 rounded-full bg-emerald-400 inline-block" />
-                <span className="ml-2 text-xs font-mono font-medium text-neutral-500 hidden sm:inline-block">
-                  omniservice.world/inspect-ai/live-hyderabad-session
-                </span>
+          {/* ── ARTISTIC GEOMETRIC FLOW SHOWCASE (Sculptural, fluid shape) ── */}
+          <div className="w-full max-w-5xl rounded-[32px] sm:rounded-[40px] border-2 border-orange-200/90 bg-white/95 backdrop-blur-2xl shadow-2xl shadow-orange-950/10 p-6 sm:p-10 relative overflow-hidden text-left space-y-6">
+            {/* Top Flow Ribbon (Step 1 -> Step 2 -> Step 3) */}
+            <div className="hidden sm:flex items-center justify-between px-4 py-2.5 rounded-2xl bg-orange-50/60 border border-orange-200/60 text-xs font-semibold text-neutral-600">
+              <div className="flex items-center gap-2 text-[#c2410c] font-bold">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#f05a28] text-white text-[10px]">1</span>
+                <span>15-Sec Video Intake</span>
               </div>
-
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800 border border-emerald-200">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                  {currentTerminal.model} Active • 0ms Failover
-                </span>
+              <ChevronRight className="h-4 w-4 text-orange-300" />
+              <div className="flex items-center gap-2 text-[#c2410c] font-bold">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#f05a28] text-white text-[10px]">2</span>
+                <span>Locked Price Ceiling</span>
+              </div>
+              <ChevronRight className="h-4 w-4 text-orange-300" />
+              <div className="flex items-center gap-2 text-emerald-800 font-bold">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-white text-[10px]">3</span>
+                <span>Verified Provider with Parts</span>
               </div>
             </div>
 
-            {/* Quick Interactive Trade Selector Tabs */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4 pb-6">
-              {HERO_TERMINAL_PREVIEWS.map((item) => {
-                const Icon = item.icon;
-                const isSelected = selectedTerminalId === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setSelectedTerminalId(item.id)}
-                    className={`flex items-center gap-2 p-3 rounded-xl border text-left transition-all ${
-                      isSelected
-                        ? "bg-gradient-to-r from-orange-50 to-amber-50 border-[#f05a28] shadow-xs text-[#c2410c] font-bold"
-                        : "bg-[#fffbf7] border-orange-100/80 text-neutral-600 hover:bg-orange-50/50"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" style={{ color: item.color }} />
-                    <span className="text-xs truncate">{item.label}</span>
-                  </button>
-                );
-              })}
+            {/* Header: Select Category Tabs */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-orange-100 gap-3">
+              <div>
+                <span className="text-xs font-bold text-[#f05a28] uppercase tracking-wider block">
+                  Interactive Live Diagnostic Preview
+                </span>
+                <h2 className="text-lg font-bold text-[#2d130a]">
+                  See How OmniService Solves Repairs in {locality.split(",")[0] || "Hyderabad"}
+                </h2>
+              </div>
+
+              {/* Service Tab Pills */}
+              <div className="flex flex-wrap gap-2">
+                {HERO_FLOW_SHOWCASES.map((item) => {
+                  const Icon = item.icon;
+                  const isSelected = selectedShowcaseId === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setSelectedShowcaseId(item.id)}
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        isSelected
+                          ? "bg-[#f05a28] text-white shadow-sm scale-102"
+                          : "bg-orange-50/60 border border-orange-100 text-neutral-700 hover:bg-orange-100/70"
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Terminal Body: Real-Time Diagnostic Stream & Locked Scope */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left Pane: Simulated Camera & Acoustic Stream */}
-              <div className="lg:col-span-6 rounded-2xl border border-orange-200/80 bg-gradient-to-br from-[#fff8f0] to-[#fff3e8] p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#c2410c] uppercase tracking-wider">
-                    <Activity className="h-4 w-4 text-[#f05a28] animate-pulse" />
-                    15-Sec Video &amp; Acoustic Stream
-                  </span>
-                  <span className="rounded-md bg-emerald-100 px-2.5 py-0.5 text-xs font-black text-emerald-800">
-                    {currentTerminal.confidence}
-                  </span>
-                </div>
-
-                {/* Viewfinder Frame with Audio Spectrogram */}
-                <div className="relative rounded-xl border border-orange-200 bg-white/90 p-4 space-y-3 shadow-inner">
-                  <div className="flex items-center justify-between text-xs text-neutral-500">
-                    <span className="font-mono text-[11px]">REC [00:12.4s]</span>
-                    <span className="font-bold text-[#2d130a]">{currentTerminal.fault}</span>
-                  </div>
-
-                  {/* Frequency Waveform Animation */}
-                  <div className="flex items-center justify-between gap-1 h-10 bg-neutral-900 rounded-lg px-4 text-white">
-                    <span className="text-[11px] font-mono text-emerald-400">
-                      {currentTerminal.frequency}
+            {/* 3-Stage Geometric Flow Canvas */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+              {/* Stage 1: Problem Diagnosis Card with Animated Waveform */}
+              <div className="lg:col-span-6 rounded-2xl border border-orange-200/80 bg-gradient-to-br from-[#fff9f2] to-[#fff3e6] p-6 flex flex-col justify-between space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-[#c2410c]">
+                      <Camera className="h-3.5 w-3.5 text-[#f05a28]" />
+                      Step 1 • Visual Diagnostic
                     </span>
-                    <div className="flex items-end gap-1.5 h-6">
-                      <span className="w-1 bg-[#f05a28] rounded-full h-3 animate-pulse" />
-                      <span className="w-1 bg-[#ea580c] rounded-full h-6 animate-pulse delay-75" />
-                      <span className="w-1 bg-amber-400 rounded-full h-4 animate-pulse delay-150" />
-                      <span className="w-1 bg-emerald-400 rounded-full h-2 animate-pulse delay-100" />
-                      <span className="w-1 bg-[#f05a28] rounded-full h-5 animate-pulse" />
-                      <span className="w-1 bg-amber-400 rounded-full h-3 animate-pulse delay-75" />
+
+                    {/* Animated Acoustic/Visual Waveform Indicator */}
+                    <div className="flex items-center gap-1 h-6 px-2.5 py-0.5 rounded-full bg-orange-100/80 border border-orange-200" title="Analyzing Video & Acoustic Vibrations">
+                      <span className="text-[10px] font-bold text-[#c2410c] mr-1">Scan</span>
+                      <div className="flex items-end gap-0.5 h-4">
+                        <span className="w-1 bg-[#f05a28] rounded-full animate-wave-1" />
+                        <span className="w-1 bg-amber-500 rounded-full animate-wave-2" />
+                        <span className="w-1 bg-[#f05a28] rounded-full animate-wave-3" />
+                        <span className="w-1 bg-amber-600 rounded-full animate-wave-4" />
+                        <span className="w-1 bg-[#f05a28] rounded-full animate-wave-5" />
+                        <span className="w-1 bg-amber-500 rounded-full animate-wave-6" />
+                      </div>
                     </div>
                   </div>
 
-                  <p className="text-xs text-neutral-600 leading-relaxed">
-                    InspectAI visual frame decomposition and acoustic vibration matching confirmed primary root failure mode without physical tool disassembly.
-                  </p>
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 block">
+                      Identified Failure Mode
+                    </span>
+                    <h3 className="text-base sm:text-lg font-bold text-[#2d130a] mt-0.5">
+                      {currentShowcase.issue}
+                    </h3>
+                  </div>
+
+                  <div className="rounded-xl border border-orange-200/90 bg-white p-3.5 text-xs space-y-2">
+                    <div className="flex items-center justify-between text-neutral-600">
+                      <span>Required OEM Part:</span>
+                      <strong className="text-neutral-900">{currentShowcase.diagnosedPart}</strong>
+                    </div>
+                    <div className="flex items-center justify-between text-neutral-600">
+                      <span>Estimated Arrival:</span>
+                      <strong className="text-emerald-700">{currentShowcase.arrivalEta} to your doorstep</strong>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Direct Scan Trigger */}
                 <Link
                   href="/register"
-                  className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-[#f05a28] to-[#ea580c] py-3 text-xs font-bold text-white shadow-xs hover:from-[#ea580c] hover:to-[#c2410c] transition-all"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#f05a28] to-[#ea580c] py-3 text-xs font-bold text-white shadow-xs hover:from-[#ea580c] hover:to-[#c2410c] transition-all"
                 >
                   <Camera className="h-4 w-4" />
-                  <span>Start 15-Sec Video Diagnostic Scan</span>
+                  <span>Start 15-Sec Video Scan</span>
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
 
-              {/* Right Pane: Locked SOW & SmartRoute Dispatch */}
-              <div className="lg:col-span-6 rounded-2xl border border-orange-200/80 bg-white p-5 space-y-4 flex flex-col justify-between">
-                <div>
+              {/* Stage 2 & 3: Transparent Price & Matched Provider Card */}
+              <div className="lg:col-span-6 rounded-2xl border border-orange-200/80 bg-white p-6 flex flex-col justify-between space-y-4">
+                <div className="space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-orange-100">
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                      Immutable Scope of Work (SOW)
+                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#c2410c] uppercase tracking-wider">
+                      <Lock className="h-3.5 w-3.5 text-emerald-600" />
+                      Step 2 &amp; 3 • Locked Price &amp; Provider
                     </span>
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                      <Lock className="h-3 w-3" /> Price Ceiling Locked
+                    <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
+                      Price Ceiling Guarantee
                     </span>
                   </div>
 
-                  <div className="space-y-2.5 pt-3 text-xs">
-                    <div className="flex items-center justify-between text-neutral-700">
-                      <span className="text-neutral-500">Diagnosed OEM Part:</span>
-                      <span className="font-bold text-[#2d130a]">{currentTerminal.part}</span>
+                  {/* Price Breakdown */}
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center justify-between text-neutral-600">
+                      <span>Genuine OEM Component:</span>
+                      <span className="font-bold text-neutral-900">{currentShowcase.partPrice}</span>
                     </div>
-
-                    <div className="flex items-center justify-between text-neutral-700">
-                      <span className="text-neutral-500">Component Cost:</span>
-                      <span className="font-bold text-neutral-800">{currentTerminal.partCost}</span>
+                    <div className="flex items-center justify-between text-neutral-600">
+                      <span>Fair-Market Labor:</span>
+                      <span className="font-bold text-neutral-900">{currentShowcase.laborPrice}</span>
                     </div>
-
-                    <div className="flex items-center justify-between text-neutral-700">
-                      <span className="text-neutral-500">Fair-Market Labor:</span>
-                      <span className="font-bold text-neutral-800">{currentTerminal.labor}</span>
-                    </div>
-
-                    <div className="pt-2 border-t border-orange-100 flex items-center justify-between">
-                      <span className="font-bold text-[#2d130a]">Total Price Ceiling:</span>
-                      <span className="text-lg font-black text-[#f05a28]">
-                        {currentTerminal.totalCeiling}
+                    <div className="pt-2 border-t border-orange-100 flex items-center justify-between text-sm">
+                      <span className="font-bold text-[#2d130a]">Total Locked Ceiling:</span>
+                      <span className="text-xl font-black text-[#f05a28]">
+                        {currentShowcase.totalPrice}
                       </span>
+                    </div>
+                  </div>
+
+                  {/* Matched Provider Detail */}
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 space-y-1 text-xs">
+                    <div className="flex items-center justify-between text-emerald-950 font-bold">
+                      <span className="flex items-center gap-1.5">
+                        <Truck className="h-4 w-4 text-emerald-700" />
+                        Matched Verified Provider
+                      </span>
+                      <span className="text-[11px] text-emerald-700 font-bold">In Stock</span>
+                    </div>
+                    <div className="text-neutral-800 font-bold">{currentShowcase.provider}</div>
+                    <div className="text-[11px] text-emerald-800 font-medium">
+                      ✓ {currentShowcase.vanStock}
                     </div>
                   </div>
                 </div>
 
-                {/* SmartRoute & Van Inventory Match */}
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3.5 space-y-1.5 text-xs">
-                  <div className="flex items-center justify-between text-emerald-900 font-bold">
-                    <span className="flex items-center gap-1.5">
-                      <Truck className="h-4 w-4 text-emerald-700" />
-                      SmartRoute Mobile Van Match
-                    </span>
-                    <span className="text-xs text-emerald-800 font-black">{currentTerminal.eta}</span>
-                  </div>
-                  <div className="text-neutral-700 font-medium">{currentTerminal.proName}</div>
-                  <div className="text-[11px] text-emerald-800 font-semibold">
-                    ✓ {currentTerminal.vanStock}
-                  </div>
+                <div className="pt-2 text-[11px] text-neutral-500 flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>Your payment is held in escrow until work is completed and verified.</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Centered Framed Trust Metrics Row */}
-          <div className="w-full max-w-4xl rounded-2xl border border-orange-200/80 bg-white/90 backdrop-blur-md p-6 shadow-sm shadow-orange-950/5 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+          {/* Centered Trust Metrics Row */}
+          <div className="w-full max-w-4xl rounded-2xl border border-orange-200/80 bg-white/95 backdrop-blur-md p-6 shadow-sm grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             <div className="space-y-1">
-              <span className="text-2xl sm:text-3xl font-black text-[#2d130a] block">₹14.8L+</span>
+              <span className="text-2xl sm:text-3xl font-bold text-[#2d130a] block">₹14.8L+</span>
               <span className="text-xs text-neutral-600 font-medium">Escrow Protected</span>
             </div>
             <div className="space-y-1">
-              <span className="text-2xl sm:text-3xl font-black text-emerald-700 block">0.12%</span>
+              <span className="text-2xl sm:text-3xl font-bold text-emerald-700 block">0.12%</span>
               <span className="text-xs text-neutral-600 font-medium">Dispute Rate</span>
             </div>
             <div className="space-y-1">
-              <span className="text-2xl sm:text-3xl font-black text-[#2d130a] block">15 Sec</span>
+              <span className="text-2xl sm:text-3xl font-bold text-[#2d130a] block">15 Sec</span>
               <span className="text-xs text-neutral-600 font-medium">Video Intake</span>
             </div>
             <div className="space-y-1">
-              <span className="text-2xl sm:text-3xl font-black text-[#f05a28] block">100%</span>
+              <span className="text-2xl sm:text-3xl font-bold text-[#f05a28] block">100%</span>
               <span className="text-xs text-neutral-600 font-medium">Locked Price Ceiling</span>
             </div>
           </div>
@@ -903,369 +826,94 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* 3. DEDICATED FULL-WIDTH SECTION: INTERACTIVE LIFECYCLE FLOW         */}
+      {/* 3. THE 4-STEP VERIFIED TRUST LIFECYCLE (CONCISE & CONSUMER-FRIENDLY) */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       <section
-        id="lifecycle-flow"
+        id="how-it-works"
         className="w-full px-5 sm:px-10 lg:px-16 py-16 lg:py-24 border-b border-orange-200/70 bg-[#fffdfa]"
       >
         <div className="max-w-7xl mx-auto w-full space-y-10">
-          {/* Section Header */}
           <div className="text-center space-y-3 max-w-3xl mx-auto">
-            <span className="inline-block rounded-full bg-gradient-to-r from-orange-500/10 to-amber-500/15 px-3.5 py-1 text-xs font-bold text-[#c2410c] uppercase tracking-wider border border-orange-200/80 shadow-2xs">
-              Interactive Trust Flow
+            <span className="inline-block rounded-full bg-gradient-to-r from-orange-500/10 to-amber-500/15 px-4 py-1 text-xs font-bold text-[#c2410c] uppercase tracking-wider border border-orange-200/80 shadow-2xs">
+              Simple 4-Step Process
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#2d130a]">
-              The OmniService Verified Trust Lifecycle
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#2d130a]">
+              How OmniService Protects Every Repair
             </h2>
             <p className="text-sm sm:text-base text-neutral-600 leading-relaxed">
-              Experience the end-to-end verification flow from instant 15-second video diagnosis to mobile van stock dispatch and TrustLock biometric escrow release.
+              From instant video diagnosis to mobile provider dispatch and verified escrow payment releases.
             </p>
           </div>
 
-          {/* 4-Step Horizontal Timeline Stepper */}
-          <div className="relative">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {SIMULATION_STEPS.map((s, idx) => {
-                const isActive = activeSimIndex === idx;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => {
-                      setActiveSimIndex(idx);
-                      setSimPlaying(false);
-                    }}
-                    className={`relative rounded-2xl p-4 text-left border-2 transition-all ${
-                      isActive
-                        ? "border-[#f05a28] bg-white shadow-md shadow-orange-950/10 scale-102"
-                        : "border-orange-100 bg-white/70 hover:bg-white hover:border-orange-200"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span
-                        className={`text-xs font-black ${
-                          isActive ? "text-[#f05a28]" : "text-neutral-400"
-                        }`}
-                      >
-                        STEP {s.stepNumber}
-                      </span>
-                      <span
-                        className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                          isActive
-                            ? "bg-[#f05a28]/10 text-[#c2410c]"
-                            : "bg-neutral-100 text-neutral-600"
-                        }`}
-                      >
-                        {s.tag}
-                      </span>
-                    </div>
-                    <h3
-                      className={`text-sm font-bold truncate ${
-                        isActive ? "text-[#2d130a]" : "text-neutral-700"
+          {/* Stepper Tabs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {TRUST_FLOW_STEPS.map((s, idx) => {
+              const isActive = activeStepIndex === idx;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setActiveStepIndex(idx)}
+                  className={`rounded-2xl p-4 text-left border-2 transition-all cursor-pointer ${
+                    isActive
+                      ? "border-[#f05a28] bg-white shadow-md scale-102"
+                      : "border-orange-100 bg-white/70 hover:bg-white hover:border-orange-200"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-xs font-bold ${isActive ? "text-[#f05a28]" : "text-neutral-400"}`}>
+                      STEP {s.stepNumber}
+                    </span>
+                    <span
+                      className={`text-[10px] font-bold rounded-full px-2 py-0.5 ${
+                        isActive ? "bg-[#f05a28]/10 text-[#c2410c]" : "bg-neutral-100 text-neutral-600"
                       }`}
                     >
-                      {s.label}
-                    </h3>
-                  </button>
-                );
-              })}
-            </div>
+                      {s.tag}
+                    </span>
+                  </div>
+                  <h3 className={`text-sm font-bold truncate ${isActive ? "text-[#2d130a]" : "text-neutral-700"}`}>
+                    {s.label}
+                  </h3>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Stepper Detail Showcase Card */}
+          {/* Step Detail Card */}
           <div className="rounded-3xl border-2 border-orange-200/90 bg-white p-6 sm:p-10 shadow-xl shadow-orange-950/5 relative overflow-hidden">
-            {/* Header Controls */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-orange-100 gap-4">
-              <div>
-                <span className="inline-block rounded-full bg-[#f05a28]/10 px-3 py-1 text-xs font-bold text-[#c2410c] uppercase tracking-wider mb-1.5">
-                  Stage {activeSimIndex + 1} of 4: {currentStep.tag}
+            <div className="max-w-3xl space-y-6">
+              <div className="space-y-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#f05a28]">
+                  Step {currentStep.stepNumber} Overview
                 </span>
-                <h3 className="text-xl sm:text-2xl font-black text-[#2d130a]">
+                <h3 className="text-2xl sm:text-3xl font-bold text-[#2d130a]">
                   {currentStep.title}
                 </h3>
-                <p className="text-sm text-neutral-600 mt-1 max-w-2xl">
+                <p className="text-sm sm:text-base text-neutral-600 leading-relaxed">
                   {currentStep.description}
                 </p>
               </div>
 
-              {/* Auto-Play Toggle */}
-              <button
-                type="button"
-                onClick={() => setSimPlaying(!simPlaying)}
-                className="self-start sm:self-center rounded-xl border border-orange-200 bg-[#fff7ed] px-3.5 py-1.5 text-xs font-bold text-[#c2410c] hover:bg-orange-100 transition-colors flex items-center gap-1.5 shrink-0"
-              >
-                <Play className={`h-3.5 w-3.5 ${simPlaying ? "text-emerald-600" : "text-neutral-400"}`} />
-                <span>{simPlaying ? "Auto-Cycling Active" : "Cycle Paused"}</span>
-              </button>
-            </div>
-
-            {/* Interactive Step Data Breakdown */}
-            <div className="py-6">
-              {currentStep.id === "intake" && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="rounded-2xl border border-orange-100 bg-[#fffbf7] p-5 space-y-2">
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                      Multimodal Video Stream
-                    </span>
-                    <div className="text-base font-bold text-[#2d130a]">
-                      12.4s Audio + Video Analyzed
+              <div className="space-y-2.5 pt-2">
+                {currentStep.bullets.map((b, i) => (
+                  <div key={i} className="flex items-center gap-3 text-xs sm:text-sm text-neutral-700">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                      <Check className="h-3 w-3" />
                     </div>
-                    <p className="text-xs text-neutral-600">
-                      Synchronous video frame decomposition matching 48Hz compressor shudder.
-                    </p>
+                    <span>{b}</span>
                   </div>
-                  <div className="rounded-2xl border border-orange-100 bg-[#fffbf7] p-5 space-y-2">
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                      Neural Confidence
-                    </span>
-                    <div className="text-base font-bold text-emerald-700">
-                      {currentStep.data.confidence}
-                    </div>
-                    <p className="text-xs text-neutral-600">
-                      Evaluated through Gemini multi-model failover engine with 0ms downtime.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-orange-100 bg-[#fffbf7] p-5 space-y-2">
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                      Secondary Verification
-                    </span>
-                    <div className="text-base font-bold text-[#f05a28]">
-                      OEM Capacitor Drift
-                    </div>
-                    <p className="text-xs text-neutral-600">
-                      {currentStep.data.secondaryCheck}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {currentStep.id === "scope" && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="rounded-2xl border border-orange-100 bg-[#fffbf7] p-5 space-y-2">
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                      Required Component
-                    </span>
-                    <div className="text-base font-bold text-[#2d130a]">
-                      {currentStep.data.part}
-                    </div>
-                    <p className="text-xs text-emerald-700 font-bold">
-                      OEM Part Cost: {currentStep.data.partCost}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-orange-100 bg-[#fffbf7] p-5 space-y-2">
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                      Master Labor Schedule
-                    </span>
-                    <div className="text-base font-bold text-neutral-800">
-                      {currentStep.data.labor}
-                    </div>
-                    <p className="text-xs text-neutral-600">
-                      Standardized rates across Ameerpet and Greater Hyderabad.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 p-5 space-y-2">
-                    <span className="text-xs font-bold text-[#c2410c] uppercase tracking-wider">
-                      Guaranteed Ceiling
-                    </span>
-                    <div className="text-2xl font-black text-[#f05a28]">
-                      {currentStep.data.totalCeiling}
-                    </div>
-                    <p className="text-xs text-[#7c2d12]">
-                      100% price lock guarantee before technician dispatch.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {currentStep.id === "dispatch" && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="rounded-2xl border border-orange-100 bg-[#fffbf7] p-5 space-y-2">
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                      Matched Professional
-                    </span>
-                    <div className="text-base font-bold text-[#2d130a]">
-                      {currentStep.data.pro}
-                    </div>
-                    <p className="text-xs text-neutral-600">
-                      Police-verified, background checked, and certified master technician.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-orange-100 bg-[#fffbf7] p-5 space-y-2">
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                      Mobile Van Stock Match
-                    </span>
-                    <div className="text-base font-bold text-emerald-700">
-                      {currentStep.data.vanInventory}
-                    </div>
-                    <p className="text-xs text-neutral-600">
-                      Real-time inventory lookup avoids return trips for parts.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-orange-100 bg-[#fffbf7] p-5 space-y-2">
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                      Geotargeted ETA
-                    </span>
-                    <div className="text-2xl font-black text-emerald-700">
-                      {currentStep.data.eta}
-                    </div>
-                    <p className="text-xs text-neutral-600">
-                      {currentStep.data.distance}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {currentStep.id === "escrow" && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="rounded-2xl border border-orange-100 bg-[#fffbf7] p-5 space-y-2">
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                      TrustLock™ Escrow
-                    </span>
-                    <div className="text-base font-bold text-[#2d130a]">
-                      {currentStep.data.escrowState}
-                    </div>
-                    <p className="text-xs text-neutral-600">
-                      Customer funds are locked in trustee account until job verification.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-orange-100 bg-[#fffbf7] p-5 space-y-2">
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                      Visual AI Proof Verification
-                    </span>
-                    <div className="text-base font-bold text-emerald-700">
-                      {currentStep.data.proofStatus}
-                    </div>
-                    <p className="text-xs text-neutral-600">
-                      Cryptographic matching between pre-work and post-work photos.
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-orange-100 bg-[#fffbf7] p-5 space-y-2">
-                    <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
-                      HomePass™ Passport
-                    </span>
-                    <div className="text-base font-bold text-amber-700">
-                      {currentStep.data.homepass}
-                    </div>
-                    <p className="text-xs text-neutral-600">
-                      12-month digital warranty permanently logged into your asset passport.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Stepper Navigation Buttons */}
-            <div className="pt-4 border-t border-orange-100 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => {
-                  const prev = (activeSimIndex - 1 + SIMULATION_STEPS.length) % SIMULATION_STEPS.length;
-                  setActiveSimIndex(prev);
-                  setSimPlaying(false);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-orange-200 bg-white px-4 py-2 text-xs font-bold text-neutral-700 hover:bg-orange-50 transition-colors"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span>Previous Step</span>
-              </button>
-
-              <div className="text-xs text-neutral-400 font-medium">
-                Step {activeSimIndex + 1} of {SIMULATION_STEPS.length}
+                ))}
               </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  const next = (activeSimIndex + 1) % SIMULATION_STEPS.length;
-                  setActiveSimIndex(next);
-                  setSimPlaying(false);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#f05a28] to-[#ea580c] px-4 py-2 text-xs font-bold text-white hover:from-[#ea580c] hover:to-[#c2410c] transition-all shadow-sm"
-              >
-                <span>Next Lifecycle Step</span>
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* 4. HOW IT WORKS (THE 4 PILLARS)                                     */}
-      {/* ═══════════════════════════════════════════════════════════════════ */}
-      <section id="how-it-works" className="w-full px-5 sm:px-10 lg:px-16 xl:px-24 py-16 lg:py-24 border-b border-orange-200/70 bg-[#fffdfa]">
-        <div className="max-w-7xl mx-auto w-full space-y-12">
-          <div className="text-center space-y-3 max-w-3xl mx-auto">
-            <span className="inline-block rounded-full bg-gradient-to-r from-orange-500/10 to-amber-500/15 px-3.5 py-1 text-xs font-bold text-[#c2410c] uppercase tracking-wider border border-orange-200/80 shadow-2xs">
-              End-To-End Architecture
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#2d130a]">
-              How OmniService AI Works
-            </h2>
-            <p className="text-sm sm:text-base text-neutral-600 leading-relaxed">
-              Every job follows a verified 4-step trust lifecycle — eliminating price disputes, multiple trips for parts, and unverified workmanship across Ameerpet and Greater Hyderabad.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Pillar 1 */}
-            <div className="rounded-2xl border-2 border-orange-100 bg-white p-6 space-y-4 hover:border-orange-300 hover:shadow-lg hover:shadow-orange-950/5 transition-all shadow-xs">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500/15 to-amber-500/20 text-[#c2410c] font-black text-sm">
-                01
-              </div>
-              <h3 className="text-base font-bold text-[#2d130a]">15-Sec Video Intake</h3>
-              <p className="text-xs text-neutral-600 leading-relaxed">
-                Record a brief video of your malfunctioning fixture or appliance. InspectAI analyzes video frames and audio signatures to diagnose the root issue before anyone is dispatched.
-              </p>
-              <div className="pt-2 border-t border-orange-100 flex items-center gap-1.5 text-[11px] font-bold text-[#c2410c]">
-                <Camera className="h-3.5 w-3.5 text-[#f05a28]" />
-                <span>Multimodal Vision Triage</span>
-              </div>
-            </div>
-
-            {/* Pillar 2 */}
-            <div className="rounded-2xl border-2 border-orange-100 bg-white p-6 space-y-4 hover:border-orange-300 hover:shadow-lg hover:shadow-orange-950/5 transition-all shadow-xs">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500/15 to-amber-500/20 text-[#c2410c] font-black text-sm">
-                02
-              </div>
-              <h3 className="text-base font-bold text-[#2d130a]">Locked Scope &amp; Price</h3>
-              <p className="text-xs text-neutral-600 leading-relaxed">
-                Fair-market price ceiling locked cryptographically before arrival. No surprise bills, no bait-and-switch, and zero on-site renegotiation.
-              </p>
-              <div className="pt-2 border-t border-orange-100 flex items-center gap-1.5 text-[11px] font-bold text-[#c2410c]">
-                <Shield className="h-3.5 w-3.5 text-[#f05a28]" />
-                <span>Zero Renegotiation</span>
-              </div>
-            </div>
-
-            {/* Pillar 3 */}
-            <div className="rounded-2xl border-2 border-orange-100 bg-white p-6 space-y-4 hover:border-orange-300 hover:shadow-lg hover:shadow-orange-950/5 transition-all shadow-xs">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500/15 to-amber-500/20 text-[#c2410c] font-black text-sm">
-                03
-              </div>
-              <h3 className="text-base font-bold text-[#2d130a]">SmartRoute Dispatch</h3>
-              <p className="text-xs text-neutral-600 leading-relaxed">
-                We match only verified pros who already carry the diagnosed OEM replacement part on their mobile van inventory. First-time fix guaranteed.
-              </p>
-              <div className="pt-2 border-t border-orange-100 flex items-center gap-1.5 text-[11px] font-bold text-[#c2410c]">
-                <Truck className="h-3.5 w-3.5 text-[#f05a28]" />
-                <span>Single-Trip Resolution</span>
-              </div>
-            </div>
-
-            {/* Pillar 4 */}
-            <div className="rounded-2xl border-2 border-orange-100 bg-white p-6 space-y-4 hover:border-orange-300 hover:shadow-lg hover:shadow-orange-950/5 transition-all shadow-xs">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500/15 to-amber-500/20 text-[#c2410c] font-black text-sm">
-                04
-              </div>
-              <h3 className="text-base font-bold text-[#2d130a]">TrustLock™ Escrow</h3>
-              <p className="text-xs text-neutral-600 leading-relaxed">
-                Your payment sits protected in escrow. Funds release to the technician only after pre-work and post-work photos pass verified AI inspection.
-              </p>
-              <div className="pt-2 border-t border-orange-100 flex items-center gap-1.5 text-[11px] font-bold text-[#c2410c]">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                <span>Post-Inspection Release</span>
+              <div className="pt-4">
+                <Link
+                  href="/register"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#f05a28] px-6 py-3 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-[#ea580c] transition-colors"
+                >
+                  <span>Experience This Step Live</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
             </div>
           </div>
@@ -1273,19 +921,19 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* 5. SERVICE CATEGORIES (GRID VIEW)                                   */}
+      {/* 4. SERVICE CATEGORIES                                               */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       <section id="categories" className="w-full px-5 sm:px-10 lg:px-16 xl:px-24 py-16 lg:py-24 border-b border-orange-200/70 bg-[#faf8f5]">
         <div className="max-w-7xl mx-auto w-full space-y-12">
           <div className="text-center space-y-3 max-w-3xl mx-auto">
-            <span className="inline-block rounded-full bg-gradient-to-r from-orange-500/10 to-amber-500/15 px-3.5 py-1 text-xs font-bold text-[#c2410c] uppercase tracking-wider border border-orange-200/80 shadow-2xs">
+            <span className="inline-block rounded-full bg-gradient-to-r from-orange-500/10 to-amber-500/15 px-4 py-1 text-xs font-bold text-[#c2410c] uppercase tracking-wider border border-orange-200/80 shadow-2xs">
               Specialized Trades
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#2d130a]">
-              Certified Trades in Ameerpet &amp; Hyderabad
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#2d130a]">
+              Certified Services in {locality.split(",")[0] || "Hyderabad"}
             </h2>
             <p className="text-sm sm:text-base text-neutral-600 leading-relaxed">
-              Every trade is handled by verified specialists equipped with calibrated instruments and genuine OEM spare parts.
+              Every job is handled by background-checked master technicians equipped with calibrated tools and genuine OEM spare parts.
             </p>
           </div>
 
@@ -1295,45 +943,49 @@ export default function HomePage() {
               return (
                 <div
                   key={cat.id}
-                  className="rounded-2xl border-2 border-orange-100 bg-white p-6 space-y-4 hover:border-orange-300 hover:shadow-lg transition-all"
+                  className="rounded-2xl border-2 border-orange-100 bg-white p-6 space-y-4 hover:border-orange-300 hover:shadow-lg transition-all flex flex-col justify-between"
                 >
-                  <div className="flex items-center justify-between">
-                    <div
-                      className="flex h-12 w-12 items-center justify-center rounded-2xl shadow-xs"
-                      style={{ backgroundColor: `${cat.color}15`, color: cat.color }}
-                    >
-                      <Icon className="h-6 w-6" />
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div
+                        className="flex h-12 w-12 items-center justify-center rounded-2xl shadow-xs"
+                        style={{ backgroundColor: `${cat.color}15`, color: cat.color }}
+                      >
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <span className="text-[11px] font-semibold text-neutral-500">
+                        {cat.jobsCount}
+                      </span>
                     </div>
-                    <span className="text-[11px] font-semibold text-neutral-500">
-                      {cat.jobsCount}
-                    </span>
-                  </div>
 
-                  <div>
-                    <h3 className="text-lg font-bold text-[#2d130a]">{cat.name}</h3>
-                    <p className="text-xs text-neutral-600 mt-1 leading-relaxed">
-                      {cat.description}
-                    </p>
-                  </div>
-
-                  <div className="pt-3 border-t border-orange-100 flex items-center justify-between text-xs">
                     <div>
-                      <span className="text-[10px] text-neutral-400 block">Avg Response</span>
-                      <span className="font-bold text-neutral-800">{cat.avgTime}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[10px] text-neutral-400 block">Price Range</span>
-                      <span className="font-bold text-[#f05a28]">{cat.priceRange}</span>
+                      <h3 className="text-lg font-bold text-[#2d130a]">{cat.name}</h3>
+                      <p className="text-xs text-neutral-600 mt-1 leading-relaxed">
+                        {cat.description}
+                      </p>
                     </div>
                   </div>
 
-                  <Link
-                    href={`/register?category=${cat.id}`}
-                    className="inline-flex items-center justify-center gap-1.5 w-full rounded-xl border border-orange-200 bg-[#fffbf7] py-2 text-xs font-bold text-[#c2410c] hover:bg-orange-100 hover:border-orange-300 transition-colors"
-                  >
-                    <span>Book AI Diagnostic</span>
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
+                  <div className="space-y-3 pt-3 border-t border-orange-100">
+                    <div className="flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-[10px] text-neutral-400 block">Avg Response</span>
+                        <span className="font-bold text-neutral-800">{cat.avgTime}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-neutral-400 block">Price Range</span>
+                        <span className="font-bold text-[#f05a28]">{cat.priceRange}</span>
+                      </div>
+                    </div>
+
+                    <Link
+                      href={`/register?category=${cat.id}`}
+                      className="inline-flex items-center justify-center gap-1.5 w-full rounded-xl border border-orange-200 bg-[#fffbf7] py-2.5 text-xs font-bold text-[#c2410c] hover:bg-orange-100 hover:border-orange-300 transition-colors"
+                    >
+                      <span>Book in {locality.split(",")[0] || "Hyderabad"}</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
                 </div>
               );
             })}
@@ -1342,106 +994,94 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* 6. AI TECHNOLOGY SPOTLIGHT                                          */}
+      {/* 5. WHY CHOOSE OMNISERVICE — 4 PILLARS OF GUARANTEED TRUST           */}
+      {/* (Clean, Human, No Developer Jargon or Latency Logs)                  */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      <section id="technology" className="w-full px-5 sm:px-10 lg:px-16 xl:px-24 py-16 lg:py-24 border-b border-orange-200/70 bg-gradient-to-b from-white to-[#fff8f0]">
-        <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-6 space-y-6">
-            <span className="inline-block rounded-full bg-orange-500/10 px-3.5 py-1 text-xs font-bold text-[#c2410c] uppercase tracking-wider border border-orange-200/80">
-              Multi-Model AI Engine
+      <section id="why-trust" className="w-full px-5 sm:px-10 lg:px-16 xl:px-24 py-16 lg:py-24 border-b border-orange-200/70 bg-white">
+        <div className="max-w-7xl mx-auto w-full space-y-12">
+          <div className="text-center space-y-3 max-w-3xl mx-auto">
+            <span className="inline-block rounded-full bg-orange-500/10 px-4 py-1 text-xs font-bold text-[#c2410c] uppercase tracking-wider border border-orange-200/80">
+              The OmniService Promise
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#2d130a]">
-              Intelligent Forensic AI Without Single-Model Bottlenecks
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#2d130a]">
+              Why Hyderabad Homeowners Trust OmniService
             </h2>
-            <p className="text-sm sm:text-base text-neutral-700 leading-relaxed">
-              OmniService InspectAI dynamically orchestrates between Google Gemini 3.5 Flash, Gemini 3.1 Flash Lite, and multimodal vision engines. If any model experiences quota limits or demand spikes, our failover pipeline instantaneously switches models in real time without downtime.
+            <p className="text-sm sm:text-base text-neutral-600 leading-relaxed">
+              Home repairs should never be a stressful guessing game. We have rebuilt the entire experience around certainty, safety, and guaranteed quality.
             </p>
-
-            <div className="space-y-3 pt-2 text-xs">
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-orange-200/70 shadow-2xs">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-neutral-900 block font-bold">Dynamic Model Failover</strong>
-                  <span className="text-neutral-600">Zero single-point-of-failure with automatic rotation across modern Gemini models.</span>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-orange-200/70 shadow-2xs">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-neutral-900 block font-bold">Acoustic &amp; Visual Anomaly Matching</strong>
-                  <span className="text-neutral-600">Spectrogram audio frequency and video frame analysis pinpoint failure modes accurately.</span>
-                </div>
-              </div>
-              <div className="flex items-start gap-3 p-3 rounded-xl bg-white border border-orange-200/70 shadow-2xs">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-neutral-900 block font-bold">Immutable Price Ceiling Cryptography</strong>
-                  <span className="text-neutral-600">Scopes of Work are cryptographically locked, preventing post-arrival price gouging.</span>
-                </div>
-              </div>
-            </div>
           </div>
 
-          <div className="lg:col-span-6">
-            <div className="rounded-3xl border-2 border-orange-200 bg-white p-8 shadow-xl shadow-orange-950/5 space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-orange-100">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f05a28]/10 text-[#f05a28]">
-                    <Bot className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-[#2d130a]">InspectAI Active Engine Status</h3>
-                    <p className="text-[11px] text-neutral-500">Live Health Across Generative AI Endpoints</p>
-                  </div>
-                </div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
-                  <Check className="h-3 w-3" /> Operational
-                </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Pillar 1 */}
+            <div className="rounded-2xl border-2 border-orange-100 bg-[#fffbf7] p-6 space-y-3 hover:border-orange-300 hover:shadow-md transition-all">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100 text-[#f05a28]">
+                <Camera className="h-6 w-6" />
               </div>
+              <h3 className="text-base font-bold text-[#2d130a]">Accurate Diagnosis</h3>
+              <p className="text-xs text-neutral-600 leading-relaxed">
+                Show the problem with a 15-second video. Our intelligent system pinpoints the root failure before a technician touches a single tool.
+              </p>
+            </div>
 
-              <div className="space-y-3 text-xs">
-                <div className="flex items-center justify-between p-3 rounded-xl bg-[#fffbf7] border border-orange-100">
-                  <span className="font-semibold text-neutral-800">Primary Inference: Gemini 3.5 Flash</span>
-                  <span className="text-emerald-700 font-bold">Active (0ms latency)</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-[#fffbf7] border border-orange-100">
-                  <span className="font-semibold text-neutral-800">Low-Latency Fallback: Gemini 3.1 Flash Lite</span>
-                  <span className="text-emerald-700 font-bold">Standby Ready</span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-xl bg-[#fffbf7] border border-orange-100">
-                  <span className="font-semibold text-neutral-800">Triage Engine: InspectAI Diagnostic Stream</span>
-                  <span className="text-emerald-700 font-bold">Connected</span>
-                </div>
+            {/* Pillar 2 */}
+            <div className="rounded-2xl border-2 border-orange-100 bg-[#fffbf7] p-6 space-y-3 hover:border-orange-300 hover:shadow-md transition-all">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+                <Lock className="h-6 w-6" />
               </div>
+              <h3 className="text-base font-bold text-[#2d130a]">Locked Price Ceilings</h3>
+              <p className="text-xs text-neutral-600 leading-relaxed">
+                See exact component costs and fair labor upfront. The price is locked before booking — you never face on-site renegotiation or hidden fees.
+              </p>
+            </div>
 
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 border border-orange-200 text-xs text-[#7c2d12]">
-                💬 <strong>Try the free AI Diagnostic Assistant</strong> using the floating button in the bottom right corner. Get 5 free diagnostic triage messages on your device without signing in.
+            {/* Pillar 3 */}
+            <div className="rounded-2xl border-2 border-orange-100 bg-[#fffbf7] p-6 space-y-3 hover:border-orange-300 hover:shadow-md transition-all">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
+                <Truck className="h-6 w-6" />
               </div>
+              <h3 className="text-base font-bold text-[#2d130a]">Parts on the Van</h3>
+              <p className="text-xs text-neutral-600 leading-relaxed">
+                We match local certified providers who already have the exact genuine replacement parts stocked on their mobile van for first-visit completion.
+              </p>
+            </div>
+
+            {/* Pillar 4 */}
+            <div className="rounded-2xl border-2 border-orange-100 bg-[#fffbf7] p-6 space-y-3 hover:border-orange-300 hover:shadow-md transition-all">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
+                <ShieldCheck className="h-6 w-6" />
+              </div>
+              <h3 className="text-base font-bold text-[#2d130a]">Escrow Protected</h3>
+              <p className="text-xs text-neutral-600 leading-relaxed">
+                Your payment stays safely locked in escrow until the job is completed, inspected, and verified with before-and-after photos.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* 7. FOOTER                                                           */}
+      {/* 6. FOOTER — CRISP ILLUMINATED LOGO & HYDERABAD HUB DETAILS          */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       <footer className="w-full bg-[#1c0d08] text-neutral-300 py-16 px-5 sm:px-10 lg:px-16 border-t border-orange-950">
         <div className="max-w-7xl mx-auto w-full space-y-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="space-y-4">
+              {/* CRISP ILLUMINATED LOGO CONTAINER (Resolves Image 2 contrast issue) */}
               <Link href="/" className="inline-block">
-                <Image
-                  src="/images/OmniService_Logo.png"
-                  alt="OmniService AI"
-                  width={180}
-                  height={45}
-                  className="h-9 w-auto brightness-200 contrast-125 rounded-lg"
-                />
+                <div className="inline-flex items-center gap-2 rounded-2xl bg-white px-4 py-2 shadow-lg shadow-black/40 border border-white/20">
+                  <Image
+                    src="/images/OmniService_Logo.png"
+                    alt="OmniService AI"
+                    width={160}
+                    height={38}
+                    className="h-8 w-auto object-contain"
+                  />
+                </div>
               </Link>
               <p className="text-xs text-neutral-400 leading-relaxed">
-                The trusted home services platform across Ameerpet and Greater Hyderabad. AI diagnostics, locked price ceilings, and verified escrow protection.
+                The trusted home services platform across {locality || "Greater Hyderabad, Telangana"}. AI diagnostics, locked price ceilings, and verified escrow release.
               </p>
-              <div className="space-y-1.5 text-xs text-neutral-400">
+              <div className="space-y-2 text-xs text-neutral-400">
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-[#f05a28]" />
                   <a href="tel:+918624851910" className="hover:text-white transition-colors">
@@ -1456,7 +1096,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-[#f05a28]" />
-                  <span>Ameerpet, Hyderabad, Telangana 500016</span>
+                  <span>{locality || "Hyderabad, Telangana 500001"}</span>
                 </div>
               </div>
             </div>
@@ -1464,10 +1104,9 @@ export default function HomePage() {
             <div className="space-y-3">
               <h4 className="text-xs font-bold text-white uppercase tracking-wider">Platform</h4>
               <ul className="space-y-2 text-xs">
-                <li><Link href="#lifecycle-flow" className="hover:text-[#f05a28] transition-colors">Lifecycle Flow</Link></li>
                 <li><Link href="#how-it-works" className="hover:text-[#f05a28] transition-colors">How It Works</Link></li>
-                <li><Link href="#categories" className="hover:text-[#f05a28] transition-colors">Trade Categories</Link></li>
-                <li><Link href="/demo" className="hover:text-[#f05a28] transition-colors">Sandbox Demo</Link></li>
+                <li><Link href="#categories" className="hover:text-[#f05a28] transition-colors">Specialized Services</Link></li>
+                <li><Link href="#why-trust" className="hover:text-[#f05a28] transition-colors">Why Choose Us</Link></li>
                 <li><Link href="/register" className="hover:text-[#f05a28] transition-colors">Book AI Diagnostic</Link></li>
               </ul>
             </div>
@@ -1476,9 +1115,9 @@ export default function HomePage() {
               <h4 className="text-xs font-bold text-white uppercase tracking-wider">Portals</h4>
               <ul className="space-y-2 text-xs">
                 <li><Link href="/customer/dashboard" className="hover:text-[#f05a28] transition-colors">Customer Portal</Link></li>
-                <li><Link href="/pro/dashboard" className="hover:text-[#f05a28] transition-colors">Pro Operations</Link></li>
+                <li><Link href="/pro/dashboard" className="hover:text-[#f05a28] transition-colors">Provider Portal</Link></li>
                 <li><Link href="/admin/dashboard" className="hover:text-[#f05a28] transition-colors">Governance Admin</Link></li>
-                <li><Link href="/professional/register" className="hover:text-[#f05a28] transition-colors">Join as Pro Partner</Link></li>
+                <li><Link href="/professional/register" className="hover:text-[#f05a28] transition-colors">Join as Provider Partner</Link></li>
               </ul>
             </div>
 
@@ -1518,8 +1157,14 @@ export default function HomePage() {
         </div>
       </footer>
 
-      {/* Floating 5-Message AI Diagnostic Chat Option */}
+      {/* Floating 5-Message AI Diagnostic Assistant */}
       <HomeDiagnosticChat />
+
+      {/* Interactive Service Area & Location Modal */}
+      <LocationSelectorModal
+        isOpen={locationModalOpen}
+        onClose={() => setLocationModalOpen(false)}
+      />
     </div>
   );
 }

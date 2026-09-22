@@ -142,7 +142,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const category = (searchParams.get("category") || "hvac").toLowerCase();
-    const area = searchParams.get("area") || "Ameerpet, Hyderabad";
+    const area = searchParams.get("area") || "Hyderabad, Telangana";
 
     const registeredProviders: ProviderSuggestion[] = [];
 
@@ -166,8 +166,8 @@ export async function GET(req: NextRequest) {
           rating: pro.rating || 4.9,
           reviewCount: pro.jobsCompleted ? pro.jobsCompleted * 2 + 10 : 74,
           distanceKm: 1.2,
-          area: "Ameerpet, Hyderabad",
-          address: "OmniService Ameerpet Rapid Hub, Hyderabad 500016",
+          area: area || "Hyderabad, Telangana",
+          address: "OmniService Central Dispatch Hub, Hyderabad 500001",
           phone: pro.phone || "+91 98200 54321",
           isRegistered: true,
           priorityBadge: "⚡ Registered Platform Provider",

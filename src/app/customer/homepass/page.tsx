@@ -117,7 +117,7 @@ export default function HomePassPage() {
       const res = await fetch(`/api/homepass/${propertyId}/transfer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipientName: "Ameerpet Resident / Prospective Buyer" }),
+        body: JSON.stringify({ recipientName: "Hyderabad Resident / Prospective Buyer" }),
       });
       const data = await res.json();
       if (data.success) {
@@ -152,7 +152,7 @@ export default function HomePassPage() {
       {/* Header */}
       <PageHeader
         title="HomePass™ Digital Property Passport"
-        description="Immutable lifecycle maintenance and warranty passport for Ameerpet Luxury Residence, Hyderabad."
+        description="Immutable lifecycle maintenance and warranty passport for Luxury Residence, Hyderabad."
         breadcrumbs={[
           { label: "Home", href: "/" },
           { label: "Properties", href: "/customer/properties" },
