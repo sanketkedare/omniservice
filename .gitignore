@@ -37,7 +37,7 @@ yarn-error.log*
 # .env.example is intentionally NOT ignored — it should be committed
 
 # Logs
-logs/
+/logs/
 *.log
 
 # IDE
