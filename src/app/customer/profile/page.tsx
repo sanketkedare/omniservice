@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   User,
   Phone,
@@ -11,10 +12,10 @@ import {
   Copy,
   Check,
   LogOut,
-  Building,
-  CreditCard,
-  Globe,
-  Lock,
+  Edit2,
+  Save,
+  X,
+  AlertCircle,
 } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
@@ -24,7 +25,28 @@ import { Input } from "@/components/ui/Input";
 import { Avatar } from "@/components/ui/Avatar";
 
 export default function CustomerProfilePage() {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const [userData, setUserData] = useState({
+    id: "",
+    name: "Customer Account",
+    email: "",
+    phone: "",
+    role: "customer",
+    status: "active",
+    createdAt: "",
+  });
+
+  const [formValues, setFormValues] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
+
   const [notifications, setNotifications] = useState({
     whatsapp: true,
     sms: true,
@@ -32,10 +54,106 @@ export default function CustomerProfilePage() {
     email: false,
   });
 
+  // Load real user data on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("omniservice_user");
+      if (stored) {
+        const u = JSON.parse(stored);
+        setUserData((prev) => ({
+          ...prev,
+          id: u.id || "",
+          name: u.name || "Customer Account",
+          email: u.email || "",
+          phone: u.phone || "",
+          role: u.role || "customer",
+        }));
+        setFormValues({
+          name: u.name || "",
+          email: u.email || "",
+          phone: u.phone || "",
+        });
+      }
+    } catch {}
+
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.user) {
+          const u = data.user;
+          setUserData({
+            id: u.id || "",
+            name: u.name || "Customer Account",
+            email: u.email || "",
+            phone: u.phone || "",
+            role: u.role || "customer",
+            status: u.status || "active",
+            createdAt: u.createdAt || "",
+          });
+          setFormValues({
+            name: u.name || "",
+            email: u.email || "",
+            phone: u.phone || "",
+          });
+          try {
+            localStorage.setItem("omniservice_user", JSON.stringify(u));
+          } catch {}
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const handleCopyReferral = () => {
     navigator.clipboard.writeText("FORGE-HYD-2026");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {}
+    try {
+      localStorage.removeItem("omniservice_user");
+    } catch {}
+    router.push("/login");
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+    setFeedback(null);
+
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formValues),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to update profile");
+      }
+
+      setUserData((prev) => ({
+        ...prev,
+        name: data.user.name,
+        email: data.user.email,
+        phone: data.user.phone,
+      }));
+
+      try {
+        localStorage.setItem("omniservice_user", JSON.stringify(data.user));
+      } catch {}
+
+      setFeedback({ type: "success", message: "Profile updated successfully!" });
+      setIsEditing(false);
+    } catch (err: any) {
+      setFeedback({ type: "error", message: err.message || "Could not save profile" });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -43,50 +161,131 @@ export default function CustomerProfilePage() {
       {/* Header */}
       <PageHeader
         title="Account Profile & Settings"
-        description="Manage your contact details, HomePass membership, notification preferences, and saved addresses."
+        description="Manage your verified contact details, HomePass membership, notification preferences, and saved addresses in Ameerpet."
         breadcrumbs={[
           { label: "Home", href: "/" },
           { label: "Profile" },
         ]}
       />
 
+      {feedback && (
+        <div
+          className={`p-4 rounded-xl text-sm flex items-center gap-3 border ${
+            feedback.type === "success"
+              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+              : "bg-red-50 border-red-200 text-red-800"
+          }`}
+        >
+          {feedback.type === "success" ? (
+            <Check className="h-4 w-4 text-emerald-600" />
+          ) : (
+            <AlertCircle className="h-4 w-4 text-red-600" />
+          )}
+          <span>{feedback.message}</span>
+        </div>
+      )}
+
       {/* Profile Overview Card */}
       <Card>
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
-            <Avatar name="Sanket Kedare" size="xl" status="online" />
+            <Avatar name={userData.name || "Customer"} size="xl" status="online" />
             <div className="space-y-1.5 flex-1">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                 <h2 className="text-xl font-bold text-neutral-900 dark:text-neutral-50">
-                  Sanket Kedare
+                  {userData.name}
                 </h2>
                 <Badge variant="brand" size="sm">
-                  HomePass Prime
+                  {userData.role === "admin"
+                    ? "Admin Operator"
+                    : userData.role === "professional"
+                    ? "Verified Pro"
+                    : "HomePass Customer"}
                 </Badge>
                 <Badge variant="success" size="sm">
-                  Phone Verified
+                  Verified Account
                 </Badge>
               </div>
+
               <p className="text-xs text-neutral-500">
-                Customer member since January 2024 • 6 TrustLock verified services
+                Member of OmniService Ameerpet Pilot • Strict RBAC Protected
               </p>
+
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-2 text-xs text-neutral-600 dark:text-neutral-300">
                 <span className="flex items-center gap-1.5">
                   <Phone className="h-3.5 w-3.5 text-[#f05a28]" />
-                  +91 98XXX XXXXX
+                  {userData.phone || "No phone linked"}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Mail className="h-3.5 w-3.5 text-blue-500" />
-                  volcanic.digitalsolutions@gmail.com
+                  {userData.email || "No email linked"}
                 </span>
               </div>
             </div>
-            <Link href="/login">
-              <Button size="sm" variant="outline" leftIcon={<LogOut className="h-3.5 w-3.5" />}>
+
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant={isEditing ? "secondary" : "outline"}
+                leftIcon={isEditing ? <X className="h-3.5 w-3.5" /> : <Edit2 className="h-3.5 w-3.5" />}
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                {isEditing ? "Cancel" : "Edit Profile"}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                leftIcon={<LogOut className="h-3.5 w-3.5" />}
+                onClick={handleSignOut}
+              >
                 Sign Out
               </Button>
-            </Link>
+            </div>
           </div>
+
+          {/* Edit Form */}
+          {isEditing && (
+            <form onSubmit={handleSaveProfile} className="mt-6 pt-6 border-t border-neutral-200 dark:border-neutral-800 space-y-4">
+              <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Update Profile Details</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">Full Name</label>
+                  <Input
+                    value={formValues.name}
+                    onChange={(e) => setFormValues({ ...formValues, name: e.target.value })}
+                    placeholder="Enter your name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">Email Address</label>
+                  <Input
+                    type="email"
+                    value={formValues.email}
+                    onChange={(e) => setFormValues({ ...formValues, email: e.target.value })}
+                    placeholder="Enter your email"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">Phone Number</label>
+                  <Input
+                    type="tel"
+                    value={formValues.phone}
+                    onChange={(e) => setFormValues({ ...formValues, phone: e.target.value })}
+                    placeholder="+91 98XXX XXXXX"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button type="button" size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" size="sm" variant="brand" disabled={isSaving} leftIcon={<Save className="h-3.5 w-3.5" />}>
+                  {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </form>
+          )}
         </CardContent>
       </Card>
 

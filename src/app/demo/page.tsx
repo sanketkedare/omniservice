@@ -256,7 +256,7 @@ export default function DemoPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-orange-100 pb-5">
                 <div>
                   <h3 className="text-lg font-bold text-[#2d130a]">
-                    Welcome back, Sanket Kedare
+                    Welcome back, OmniService Homeowner
                   </h3>
                   <p className="text-xs text-neutral-500 flex items-center gap-1.5 mt-0.5">
                     <MapPin className="h-3.5 w-3.5 text-[#f05a28]" />

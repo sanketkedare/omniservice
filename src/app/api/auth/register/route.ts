@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
           userId: newUser._id,
           businessName: `${name} Services`,
           categorySlug: trade ? trade.toLowerCase() : "plumbing",
-          phone: cleanPhone || "8624851910",
+          phone: cleanPhone || "9820054321",
           email: cleanEmail || "pro@omniservice.world",
           verificationStatus: "verified",
           apexCertifications: [

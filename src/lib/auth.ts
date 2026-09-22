@@ -65,25 +65,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // 2. Demo / Instant Verification Bypass Accounts
         if (
-          identifier === "volcanic.digitalsolutions@gmail.com" ||
-          identifier === "8624851910" ||
-          identifier === "+918624851910" ||
-          identifier === "+91 86248 51910" ||
           identifier === "demo@omniservice.world" ||
-          identifier === "customer@omniservice.world"
+          identifier === "customer@omniservice.world" ||
+          identifier === "9820012345"
         ) {
           try {
-            let demoCustomer = await User.findOne({
-              $or: [
-                { email: "volcanic.digitalsolutions@gmail.com" },
-                { phone: "+91 86248 51910" },
-              ],
-            });
+            let demoCustomer = await User.findOne({ email: "customer@omniservice.world" });
             if (!demoCustomer) {
               demoCustomer = await User.create({
-                name: "Sanket Kedare",
-                email: "volcanic.digitalsolutions@gmail.com",
-                phone: "+91 86248 51910",
+                name: "OmniService Customer",
+                email: "customer@omniservice.world",
+                phone: "+91 98200 12345",
                 role: "customer",
                 status: "active",
                 authProvider: "credentials",
@@ -92,16 +84,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return {
               id: demoCustomer._id.toString(),
               name: demoCustomer.name,
-              email: demoCustomer.email ?? "volcanic.digitalsolutions@gmail.com",
+              email: demoCustomer.email ?? "customer@omniservice.world",
               role: demoCustomer.role,
               image: "/images/OmniService_Icon.png",
             };
           } catch {
             return {
               id: "65f01234567890abcdef0001",
-              name: "Sanket Kedare",
-              email: "volcanic.digitalsolutions@gmail.com",
-              phone: "+91 86248 51910",
+              name: "OmniService Customer",
+              email: "customer@omniservice.world",
+              phone: "+91 98200 12345",
               role: "customer",
               image: "/images/OmniService_Icon.png",
             };
@@ -113,9 +105,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             let demoPro = await User.findOne({ email: "pro@omniservice.world" });
             if (!demoPro) {
               demoPro = await User.create({
-                name: "Rajesh Kumar (CoolAir)",
+                name: "Verified Pro Specialist",
                 email: "pro@omniservice.world",
-                phone: "+91 86248 51910",
+                phone: "+91 98200 54321",
                 role: "professional",
                 status: "active",
                 authProvider: "credentials",
@@ -131,7 +123,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           } catch {
             return {
               id: "65f01234567890abcdef0002",
-              name: "Rajesh Kumar (CoolAir)",
+              name: "Verified Pro Specialist",
               email: "pro@omniservice.world",
               role: "professional",
               image: "/images/OmniService_Icon.png",

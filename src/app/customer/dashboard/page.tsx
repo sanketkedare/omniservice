@@ -20,11 +20,32 @@ import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 
 export default function CustomerDashboardPage() {
+  const [userName, setUserName] = React.useState<string>("Customer");
+
+  React.useEffect(() => {
+    try {
+      const stored = localStorage.getItem("omniservice_user");
+      if (stored) {
+        const u = JSON.parse(stored);
+        if (u.name) setUserName(u.name.split(" ")[0]);
+      }
+    } catch {}
+
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.user?.name) {
+          setUserName(data.user.name.split(" ")[0]);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="max-w-7xl mx-auto w-full px-6 sm:px-10 lg:px-12 py-6 sm:py-8 space-y-8">
       {/* Header */}
       <PageHeader
-        title="Welcome back, Sanket"
+        title={`Welcome back, ${userName}`}
         description="Manage your home services, track active diagnostics, and access your HomePass digital passport in Ameerpet, Hyderabad."
         breadcrumbs={[
           { label: "Home", href: "/" },
@@ -144,10 +165,10 @@ export default function CustomerDashboardPage() {
 
               <div className="flex items-center justify-between rounded-xl bg-[#fffaf5] p-3 border border-orange-100">
                 <div className="flex items-center gap-3">
-                  <Avatar name="Rajesh Kumar" size="sm" status="online" />
+                  <Avatar name="CoolAir Tech" size="sm" status="online" />
                   <div>
                     <p className="text-xs font-semibold text-[#2d130a]">
-                      Rajesh Kumar (CoolAir Solutions Ameerpet)
+                      Assigned Pro (CoolAir Solutions Ameerpet)
                     </p>
                     <p className="text-[11px] text-neutral-500">
                       4.9 ★ (142 jobs) • Arriving in 25 mins

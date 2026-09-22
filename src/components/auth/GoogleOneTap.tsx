@@ -22,13 +22,15 @@ export function GoogleOneTap({ role = "customer", onSuccess }: GoogleOneTapProps
       // Generate simulated Google ID Token with user profile claims
       const timestamp = Date.now();
       const mockGoogleHeader = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+      const userEmail = role === "professional" ? "pro.specialist@omniservice.world" : "user.google@omniservice.world";
+      const userName = role === "professional" ? "Professional Specialist" : "Google Account User";
       const mockGooglePayload = btoa(
         JSON.stringify({
           iss: "https://accounts.google.com",
           sub: `google_user_${timestamp}`,
-          email: "volcanic.digitalsolutions@gmail.com",
+          email: userEmail,
           email_verified: true,
-          name: "Sanket Kedare",
+          name: userName,
           picture: "/images/OmniService_Icon.png",
           iat: Math.floor(timestamp / 1000),
           exp: Math.floor(timestamp / 1000) + 3600,

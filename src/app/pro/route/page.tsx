@@ -171,14 +171,14 @@ export default function ProfessionalRoutePage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <a href="tel:+918624851910">
+              <a href="tel:+919820012345">
                 <Button
                   size="sm"
                   variant="outline"
                   leftIcon={<Phone className="h-3.5 w-3.5" />}
                   className="border-neutral-200 bg-white text-neutral-800 text-xs hover:bg-neutral-100 shadow-xs"
                 >
-                  Call Sanket
+                  Call Customer
                 </Button>
               </a>
               <Button

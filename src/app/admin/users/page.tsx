@@ -19,7 +19,7 @@ interface AdminUser {
 }
 
 const DEMO_USERS: AdminUser[] = [
-  { id: "usr_01", name: "Sanket Kedare", email: "volcanic.digitalsolutions@gmail.com", phone: "+91 86248 51910", role: "customer", kycStatus: "verified", joinedDate: "Jan 12, 2026", totalBookings: 6 },
+  { id: "usr_01", name: "Ananya Rao", email: "ananya.rao@omniservice.world", phone: "+91 98200 12345", role: "customer", kycStatus: "verified", joinedDate: "Jan 12, 2026", totalBookings: 6 },
   { id: "usr_02", name: "Suresh Kumar", email: "suresh.apex@volcanic.world", phone: "+91 98201 11223", role: "professional", kycStatus: "verified", joinedDate: "Nov 04, 2025", totalBookings: 28 },
   { id: "usr_03", name: "Vikram Patil", email: "vikram.coolair@volcanic.world", phone: "+91 98202 33445", role: "professional", kycStatus: "verified", joinedDate: "Dec 18, 2025", totalBookings: 19 },
   { id: "usr_04", name: "Priya Nair", email: "priya.nair@volcanic.world", phone: "+91 98203 55667", role: "customer", kycStatus: "verified", joinedDate: "Feb 01, 2026", totalBookings: 2 },

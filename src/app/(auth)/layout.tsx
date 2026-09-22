@@ -135,14 +135,14 @@ export default function AuthLayout({
             <div className="pt-8 border-t border-orange-200/70 text-xs text-neutral-600 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Phone className="h-3.5 w-3.5 text-[#f05a28]" />
-                <a href="tel:8624851910" className="hover:text-[#f05a28] font-medium transition-colors">
-                  +91 86248 51910
+                <a href="tel:9820012345" className="hover:text-[#f05a28] font-medium transition-colors">
+                  +91 98200 12345
                 </a>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-3.5 w-3.5 text-[#f05a28]" />
-                <a href="mailto:volcanic.digitalsolutions@gmail.com" className="hover:text-[#f05a28] font-medium transition-colors">
-                  volcanic.digitalsolutions@gmail.com
+                <a href="mailto:support@omniservice.world" className="hover:text-[#f05a28] font-medium transition-colors">
+                  support@omniservice.world
                 </a>
               </div>
             </div>

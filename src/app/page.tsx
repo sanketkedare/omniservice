@@ -796,14 +796,14 @@ export default function HomePage() {
               <div className="space-y-2 pt-2 text-xs text-neutral-200">
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-[#f05a28]" />
-                  <a href="tel:8624851910" className="hover:text-white font-medium transition-colors">
-                    +91 86248 51910
+                  <a href="tel:9820012345" className="hover:text-white font-medium transition-colors">
+                    +91 98200 12345
                   </a>
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-[#f05a28]" />
-                  <a href="mailto:volcanic.digitalsolutions@gmail.com" className="hover:text-white font-medium transition-colors">
-                    volcanic.digitalsolutions@gmail.com
+                  <a href="mailto:support@omniservice.world" className="hover:text-white font-medium transition-colors">
+                    support@omniservice.world
                   </a>
                 </div>
                 <div className="flex items-center gap-2">

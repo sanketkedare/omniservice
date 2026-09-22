@@ -190,8 +190,10 @@ export default function LoginPage() {
         determinedRole === "admin"
           ? "Platform Administrator"
           : determinedRole === "professional"
-          ? "Rajesh Kumar (Pro)"
-          : "Sanket Kedare (Customer)",
+          ? "Service Professional"
+          : identifier.includes("@")
+          ? identifier.split("@")[0] || "Customer"
+          : `Customer (${identifier.slice(-4)})`,
       phone: identifier,
       role: determinedRole as "customer" | "professional" | "admin",
     };
@@ -224,8 +226,8 @@ export default function LoginPage() {
     }
 
     const mockNames = {
-      customer: "Sanket Kedare (Customer)",
-      professional: "Rajesh Kumar (Pro)",
+      customer: "Customer Account",
+      professional: "Service Professional",
       admin: "Platform Administrator",
     };
     completeLogin(

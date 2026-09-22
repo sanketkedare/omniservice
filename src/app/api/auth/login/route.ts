@@ -21,7 +21,7 @@ const DEMO_ACCOUNTS = [
   },
   {
     id: "user_pro_001",
-    name: "Rajesh Kumar (Pro)",
+    name: "Service Professional",
     email: "pro@omniservice.world",
     phone: "9820054321",
     role: "professional" as const,
@@ -29,7 +29,7 @@ const DEMO_ACCOUNTS = [
   },
   {
     id: "user_cust_001",
-    name: "Sanket Kedare (Customer)",
+    name: "Customer Member",
     email: "customer@omniservice.world",
     phone: "9820012345",
     role: "customer" as const,
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     if (!authenticatedUser) {
       const match = DEMO_ACCOUNTS.find(
         (a) =>
-          (a.email.toLowerCase() === cleanId || a.phone === identifier.trim() || cleanId.includes(a.role)) &&
+          (a.email.toLowerCase() === cleanId || a.phone === identifier.trim() || cleanId === a.role) &&
           (a.passwords.includes(password) || password === "123456" || password === "password")
       );
 

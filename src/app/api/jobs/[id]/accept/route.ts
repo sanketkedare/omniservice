@@ -36,8 +36,8 @@ export async function POST(
       scopeOfWorkId: body.sowId || "65f01234567890abcdef3001",
       professionalId: pro.id,
       customerId: "65f01234567890abcdef0001",
-      customerName: body.customerName || "Sanket Kedare",
-      customerPhone: body.customerPhone || "+91 86248 51910",
+      customerName: body.customerName || "Verified Customer",
+      customerPhone: body.customerPhone || "+91 98200 12345",
       customerAddress:
         body.customerAddress || "Flat 402, Sea Green Apts, Ameerpet, Hyderabad",
       problemTitle: body.title || "Split AC Compressor Tripping MCB",
