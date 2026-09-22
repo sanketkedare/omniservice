@@ -1,0 +1,256 @@
+/* =============================================================================
+   ForgeLocal — Global Design System
+   Volcanic.World | forgelocal.volcanic.world
+   ============================================================================= */
+
+@import "tailwindcss";
+
+/* ── Google Fonts ────────────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:wght@400;500;600&display=swap");
+
+/* ── Design Tokens ──────────────────────────────────────────────────────────── */
+@theme {
+  /* Typography */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  /* ── Color Palette ── */
+  /* Graphite (primary neutrals) */
+  --color-graphite-950: #0d0d0d;
+  --color-graphite-900: #1a1a1a;
+  --color-graphite-800: #2d2d2d;
+  --color-graphite-700: #404040;
+  --color-graphite-600: #525252;
+  --color-graphite-500: #737373;
+  --color-graphite-400: #a3a3a3;
+  --color-graphite-300: #c4c4c4;
+  --color-graphite-200: #d4d4d4;
+  --color-graphite-100: #e5e5e5;
+  --color-graphite-50:  #f5f5f5;
+  --color-graphite-25:  #fafafa;
+
+  /* Volcanic Orange (brand accent — use sparingly) */
+  --color-volcanic-700: #92300e;
+  --color-volcanic-600: #c44a1e;
+  --color-volcanic-500: #f05a28;
+  --color-volcanic-400: #f47a4f;
+  --color-volcanic-300: #f8a48c;
+  --color-volcanic-200: #fcd4c8;
+  --color-volcanic-100: #fef0ec;
+  --color-volcanic-50:  #fff8f6;
+
+  /* Amber (secondary accent) */
+  --color-amber-500: #d97706;
+  --color-amber-400: #f59e0b;
+  --color-amber-300: #fbbf24;
+  --color-amber-100: #fef3c7;
+  --color-amber-50:  #fffbeb;
+
+  /* Semantic */
+  --color-success-600: #16a34a;
+  --color-success-500: #22c55e;
+  --color-success-100: #dcfce7;
+  --color-success-50:  #f0fdf4;
+
+  --color-warning-600: #d97706;
+  --color-warning-500: #f59e0b;
+  --color-warning-100: #fef3c7;
+
+  --color-error-600: #dc2626;
+  --color-error-500: #ef4444;
+  --color-error-100: #fee2e2;
+  --color-error-50:  #fef2f2;
+
+  --color-info-600: #2563eb;
+  --color-info-500: #3b82f6;
+  --color-info-100: #dbeafe;
+
+  /* ── Spacing ── */
+  --spacing-px: 1px;
+  --spacing-0: 0;
+  --spacing-0-5: 0.125rem;
+  --spacing-1: 0.25rem;
+  --spacing-1-5: 0.375rem;
+  --spacing-2: 0.5rem;
+  --spacing-2-5: 0.625rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-7: 1.75rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  --spacing-24: 6rem;
+
+  /* ── Border Radius ── */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.06);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.2);
+  --shadow-card: 0 1px 4px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.04);
+
+  /* Volcanic glow (rare, dramatic) */
+  --shadow-volcanic: 0 0 0 1px rgb(240 90 40 / 0.15), 0 4px 16px rgb(240 90 40 / 0.12);
+
+  /* ── Animation ── */
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 350ms;
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* ── Base Styles ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-graphite-900);
+  background-color: var(--color-graphite-25);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+}
+
+/* ── Scrollbar (subtle, premium) ────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-graphite-200);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-graphite-300);
+}
+
+/* ── Focus Styles ────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-volcanic-500);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Selection ───────────────────────────────────────────────────────────────── */
+::selection {
+  background-color: var(--color-volcanic-200);
+  color: var(--color-volcanic-700);
+}
+
+/* ── Typography Scale ────────────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--color-graphite-950);
+}
+
+h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); }
+h2 { font-size: clamp(1.375rem, 3vw, 1.875rem); }
+h3 { font-size: clamp(1.125rem, 2.5vw, 1.375rem); }
+h4 { font-size: 1.125rem; }
+h5 { font-size: 1rem; }
+h6 { font-size: 0.875rem; }
+
+/* ── Reduced Motion ──────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Mobile Safe Areas ───────────────────────────────────────────────────────── */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* ── Bottom Navigation Container ─────────────────────────────────────────────── */
+.bottom-nav-padding {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+}
+
+/* ── Page Container ─────────────────────────────────────────────────────────── */
+.page-container {
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .page-container {
+    max-width: 100%;
+  }
+}
+
+/* ── Glass Effect ────────────────────────────────────────────────────────────── */
+.glass {
+  background: rgb(255 255 255 / 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgb(255 255 255 / 0.6);
+}
+
+/* ── Skeleton Loading ────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-graphite-100) 25%,
+    var(--color-graphite-50) 50%,
+    var(--color-graphite-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ── ForgeLocal Status Colors ────────────────────────────────────────────────── */
+.status-analyzing    { color: var(--color-info-600); }
+.status-matched      { color: var(--color-amber-500); }
+.status-confirmed    { color: var(--color-success-600); }
+.status-in-progress  { color: var(--color-volcanic-500); }
+.status-verified     { color: var(--color-success-600); }
+.status-completed    { color: var(--color-graphite-600); }
+.status-disputed     { color: var(--color-error-600); }
+.status-cancelled    { color: var(--color-graphite-400); }
