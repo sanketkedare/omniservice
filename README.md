@@ -136,8 +136,8 @@ ForgeLocal/
 
 ### 2. Installation
 ```bash
-git clone https://github.com/volcanic-world/forgelocal.git
-cd ForgeLocal
+git clone https://github.com/sanketkedare/omniservice.git
+cd omniservice
 npm install
 ```
 
