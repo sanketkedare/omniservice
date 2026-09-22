@@ -138,6 +138,21 @@ export function proxy(request: NextRequest) {
     }
   }
 
+  // D. Redirect Logged-In Users from Login / Register Pages
+  if (pathname === "/login" || pathname === "/register") {
+    const fallbackRole = cookies?.get("omniservice-role")?.value as "customer" | "professional" | "admin" | undefined;
+    const effectiveRole = userRole || (fallbackRole && ["customer", "professional", "admin"].includes(fallbackRole) ? fallbackRole : null);
+    if (isAuthenticated || effectiveRole) {
+      const targetDashboard =
+        effectiveRole === "admin"
+          ? "/admin/dashboard"
+          : effectiveRole === "professional"
+          ? "/pro/dashboard"
+          : "/customer/dashboard";
+      return NextResponse.redirect(new URL(targetDashboard, request.url));
+    }
+  }
+
   // D. Admin API Guard (/api/admin/*)
   if (pathname.startsWith("/api/admin")) {
     if (!isAuthenticated) {

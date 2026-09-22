@@ -15,8 +15,7 @@ import {
   Loader2,
   Phone,
   Mail,
-  Sparkles,
-  ShieldCheck,
+  Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -24,6 +23,22 @@ import { Alert } from "@/components/ui/Alert";
 import { GoogleOneTap } from "@/components/auth/GoogleOneTap";
 import { useGeolocation } from "@/lib/geolocation";
 import { toast } from "@/components/ui/Toast";
+
+const TRADE_CATEGORIES = [
+  "Air Conditioning & HVAC",
+  "Electrical Systems & MCBs",
+  "Advanced Plumbing & Drainage",
+  "Kitchen & Home Appliances",
+  "Water Purifiers & RO Systems",
+  "Painting & Waterproofing",
+  "Solar & Inverter Power Systems",
+  "Masonry, Tile & Flooring",
+  "Deep Cleaning & Pest Control",
+  "CCTV, Security & Smart Home",
+  "Carpentry, Furniture & Woodwork",
+  "General Handyman & Property Repair",
+  "Other (Specify Specialty)",
+];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -34,10 +49,13 @@ export default function RegisterPage() {
   const urlName = searchParams.get("name") || "";
   const urlAvatar = searchParams.get("avatar") || "";
   const urlGoogleId = searchParams.get("googleId") || "";
+  const urlRole = searchParams.get("role");
 
   const { coordinates, locality, isLoading: isLocating, detectLocation, permissionDenied } = useGeolocation();
 
-  const [role, setRole] = useState<"customer" | "professional">("customer");
+  const [role, setRole] = useState<"customer" | "professional">(
+    urlRole === "professional" ? "professional" : "customer"
+  );
   const [name, setName] = useState(urlName);
   const [email, setEmail] = useState(urlEmail);
   const [phone, setPhone] = useState("");
@@ -45,12 +63,48 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [trade, setTrade] = useState("Air Conditioning & HVAC");
+  const [customTrade, setCustomTrade] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [gpsCaptured, setGpsCaptured] = useState(false);
   const [isGoogleAccount, setIsGoogleAccount] = useState(isGoogleRedirect);
   const [googleId, setGoogleId] = useState(urlGoogleId);
   const [googleAvatar, setGoogleAvatar] = useState(urlAvatar);
+
+  // ── Block Logged-In Users from Accessing Register Page ──────────────────
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("omniservice_user");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed?.role) {
+          const target =
+            parsed.role === "admin"
+              ? "/admin/dashboard"
+              : parsed.role === "professional"
+              ? "/pro/dashboard"
+              : "/customer/dashboard";
+          router.replace(target);
+          return;
+        }
+      }
+    } catch {}
+
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.authenticated && data.user?.role) {
+          const target =
+            data.user.role === "admin"
+              ? "/admin/dashboard"
+              : data.user.role === "professional"
+              ? "/pro/dashboard"
+              : "/customer/dashboard";
+          router.replace(target);
+        }
+      })
+      .catch(() => {});
+  }, [router]);
 
   useEffect(() => {
     if (urlEmail) {
@@ -69,16 +123,15 @@ export default function RegisterPage() {
   }, [urlEmail, urlName, urlGoogleId, urlAvatar]);
 
   const handleCaptureLocation = async () => {
-    toast.info("Acquiring GPS Coordinates...", "Requesting location permission from browser");
     const coords = await detectLocation();
     if (coords) {
       setGpsCaptured(true);
       toast.success(
-        "Location Acquired",
-        `${locality || "Hyderabad, Telangana"} (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`
+        "Location Detected",
+        `${locality || "Hyderabad, Telangana"}`
       );
     } else {
-      toast.warning("Fallback Location Set", "Using default Hyderabad, Telangana coordinates");
+      toast.warning("Hyderabad Default", "Using Hyderabad, Telangana as default location");
     }
   };
 
@@ -93,40 +146,46 @@ export default function RegisterPage() {
     if (data.avatarUrl) setGoogleAvatar(data.avatarUrl);
     if (data.googleId) setGoogleId(data.googleId);
     setIsGoogleAccount(true);
-    toast.success("Google Account Linked", `Verified as ${data.email}. Select your role to complete setup.`);
+    toast.success("Google Linked", `Verified as ${data.email}. Select role to complete.`);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError("Please enter your full name");
-      toast.error("Name Required", "Please enter your legal or business name");
+      setError("Please enter your name");
+      toast.error("Required Field", "Please enter your name");
       return;
     }
     if (!phone.trim() && !email.trim()) {
-      setError("Please provide at least a mobile number or email address");
-      toast.error("Contact Required", "Please provide a mobile number or email");
+      setError("Please provide an email address or mobile number");
+      toast.error("Contact Required", "Please provide email or phone");
       return;
     }
 
-    // Password validation only mandatory for credential auth
     if (!isGoogleAccount) {
       if (!password || password.length < 6) {
-        setError("Password must be at least 6 characters long");
-        toast.error("Password Weak", "Password must be at least 6 characters long");
+        setError("Password must be at least 6 characters");
+        toast.error("Password Too Short", "Password must be at least 6 characters");
         return;
       }
       if (password !== confirmPassword) {
-        setError("Passwords do not match. Please re-enter.");
-        toast.error("Password Mismatch", "Passwords do not match. Please verify.");
+        setError("Passwords do not match");
+        toast.error("Mismatch", "Passwords do not match");
         return;
       }
     }
+
+    const effectiveTrade =
+      role === "professional"
+        ? trade === "Other (Specify Specialty)"
+          ? customTrade.trim() || "Specialized Handyman & Repair"
+          : trade
+        : undefined;
 
     try {
       setError("");
       setIsLoading(true);
-      const loadId = toast.loading("Creating account...", "Securing account and provisioning profile");
+      const loadId = toast.loading("Creating account...", "Registering your profile");
 
       const res = await fetch("/api/auth/register", {
         method: "POST",
@@ -140,7 +199,7 @@ export default function RegisterPage() {
           googleId: isGoogleAccount ? googleId || undefined : undefined,
           avatarUrl: isGoogleAccount ? googleAvatar || undefined : undefined,
           role,
-          trade: role === "professional" ? trade : undefined,
+          trade: effectiveTrade,
           coordinates: coordinates || undefined,
         }),
       });
@@ -152,114 +211,88 @@ export default function RegisterPage() {
         throw new Error(data.error || "Failed to create account");
       }
 
-      // Remember user across browser sessions
       try {
         localStorage.setItem("omniservice_user", JSON.stringify(data.user));
-      } catch {
-        // Ignore localStorage error
-      }
+      } catch {}
 
-      const maxAge = 604800; // 7 days
+      const maxAge = 604800;
+      document.cookie = `omniservice-role=${data.user.role}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      document.cookie = `omniservice-user=${encodeURIComponent(JSON.stringify(data.user))}; path=/; max-age=${maxAge}; SameSite=Lax`;
       if (data.token) {
         document.cookie = `authjs.session-token=${data.token}; path=/; max-age=${maxAge}; SameSite=Lax`;
       }
-      document.cookie = `omniservice-role=${data.user.role}; path=/; max-age=${maxAge}; SameSite=Lax`;
-      document.cookie = `omniservice-user=${encodeURIComponent(JSON.stringify(data.user))}; path=/; max-age=${maxAge}; SameSite=Lax`;
 
-      toast.success("Registration Complete!", `Welcome to OmniService, ${data.user.name}`);
+      toast.success("Account Created", `Welcome, ${data.user.name}!`);
 
-      if (data.user.role === "professional") {
+      if (data.user.role === "admin") {
+        router.push("/admin/dashboard");
+      } else if (data.user.role === "professional") {
         router.push("/pro/dashboard");
       } else {
         router.push("/customer/dashboard");
       }
     } catch (err: any) {
-      const errMsg = err?.message || "Registration failed. Please try again.";
-      setError(errMsg);
-      toast.error("Registration Failed", errMsg);
+      setError(err.message || "An error occurred during registration");
+      toast.error("Registration Error", err.message || "Registration failed");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div
-      className="rounded-3xl border-2 border-orange-200/80 bg-white p-6 sm:p-10 shadow-xl shadow-orange-950/5 space-y-6 font-serif"
-      style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
-    >
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-[#2d130a]">
-          Create OmniService Account
+    <div className="rounded-3xl border-2 border-orange-200/90 bg-white p-6 sm:p-8 shadow-xl shadow-orange-950/5 space-y-6">
+      {/* Title */}
+      <div className="text-center space-y-1">
+        <h1 className="text-2xl sm:text-3xl font-bold font-serif text-[#2d130a]">
+          Create Account
         </h1>
-        <p className="mt-1 text-xs text-neutral-600">
-          Join the AI-governed local services ecosystem in Hyderabad, Telangana.
+        <p className="text-xs text-neutral-500">
+          Sign up as a customer or service provider
         </p>
       </div>
 
-      {isGoogleAccount && (
-        <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50/70 p-4 flex items-start gap-3">
-          <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
-          <div className="text-xs">
-            <p className="font-bold text-emerald-950">Google Account Connected</p>
-            <p className="text-emerald-800 text-[11px] mt-0.5">
-              Verified email: <strong>{email}</strong>. Select whether you are a Homeowner or Service Provider below to finish registration.
-            </p>
-          </div>
-        </div>
-      )}
-
       {error && (
-        <Alert variant="destructive">
-          <p className="text-xs">{error}</p>
+        <Alert variant="destructive" title="Notice">
+          {error}
         </Alert>
       )}
 
-      {/* Role Picker */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* ── Role Selector ── */}
+      <div className="grid grid-cols-2 gap-2.5">
         <button
           type="button"
-          onClick={() => {
-            setRole("customer");
-            toast.info("Selected Account Type", "Customer / Homeowner Experience");
-          }}
-          className={`flex flex-col items-start gap-1 rounded-2xl border p-4 text-left transition-all ${
+          onClick={() => setRole("customer")}
+          className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer ${
             role === "customer"
-              ? "border-[#f05a28] bg-orange-50/40 shadow-xs ring-2 ring-[#f05a28]/20"
-              : "border-neutral-200 bg-white hover:border-neutral-300"
+              ? "border-[#f05a28] bg-orange-50/60 shadow-xs"
+              : "border-neutral-200 bg-white hover:bg-neutral-50"
           }`}
         >
           <div className="flex items-center gap-2">
             <User className={`h-4 w-4 ${role === "customer" ? "text-[#f05a28]" : "text-neutral-500"}`} />
-            <span className="text-xs font-bold text-[#2d130a]">Homeowner</span>
+            <span className="text-xs font-bold text-[#2d130a]">Customer</span>
           </div>
-          <p className="text-[11px] text-neutral-500">
-            Diagnose repairs, lock prices, and track HomePass in Hyderabad.
-          </p>
+          <p className="text-[11px] text-neutral-500 mt-1">Book home services</p>
         </button>
 
         <button
           type="button"
-          onClick={() => {
-            setRole("professional");
-            toast.info("Selected Account Type", "Verified Professional Partner");
-          }}
-          className={`flex flex-col items-start gap-1 rounded-2xl border p-4 text-left transition-all ${
+          onClick={() => setRole("professional")}
+          className={`p-3 rounded-2xl border-2 text-left transition-all cursor-pointer ${
             role === "professional"
-              ? "border-[#f05a28] bg-orange-50/40 shadow-xs ring-2 ring-[#f05a28]/20"
-              : "border-neutral-200 bg-white hover:border-neutral-300"
+              ? "border-[#f05a28] bg-orange-50/60 shadow-xs"
+              : "border-neutral-200 bg-white hover:bg-neutral-50"
           }`}
         >
           <div className="flex items-center gap-2">
             <Briefcase className={`h-4 w-4 ${role === "professional" ? "text-[#f05a28]" : "text-neutral-500"}`} />
-            <span className="text-xs font-bold text-[#2d130a]">Service Pro</span>
+            <span className="text-xs font-bold text-[#2d130a]">Provider</span>
           </div>
-          <p className="text-[11px] text-neutral-500">
-            Receive matched dispatch leads with van inventory lock.
-          </p>
+          <p className="text-[11px] text-neutral-500 mt-1">Offer trade services</p>
         </button>
       </div>
 
-      {/* Google 1-Tap Alternative */}
+      {/* ── Google One-Tap ── */}
       {!isGoogleAccount && (
         <>
           <GoogleOneTap
@@ -271,7 +304,7 @@ export default function RegisterPage() {
             onGoogleDataExtracted={handleGoogleData}
           />
 
-          <div className="relative my-3 flex items-center justify-center">
+          <div className="relative my-2 flex items-center justify-center">
             <div className="w-full border-t border-neutral-200" />
             <span className="absolute bg-white px-3 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
               Or register credentials
@@ -280,11 +313,11 @@ export default function RegisterPage() {
         </>
       )}
 
-      {/* Registration Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* ── Form ── */}
+      <form onSubmit={handleSubmit} className="space-y-3.5">
         <Input
-          label="Full Legal / Business Name"
-          placeholder="e.g. Rajesh Kumar"
+          label="Full Name"
+          placeholder="Rajesh Kumar"
           value={name}
           onChange={(e) => setName(e.target.value)}
           leftIcon={<User className="h-4 w-4 text-[#f05a28]" />}
@@ -298,7 +331,6 @@ export default function RegisterPage() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             leftIcon={<Phone className="h-4 w-4 text-[#f05a28]" />}
-            helperText="Enter 10-digit mobile number"
           />
 
           <Input
@@ -309,92 +341,85 @@ export default function RegisterPage() {
             disabled={isGoogleAccount}
             onChange={(e) => setEmail(e.target.value)}
             leftIcon={<Mail className="h-4 w-4 text-[#f05a28]" />}
-            helperText={isGoogleAccount ? "Verified with Google" : "For encrypted invoices & account recovery"}
             required={!isGoogleAccount}
           />
         </div>
 
+        {/* Trade Specialization (If Provider) */}
         {role === "professional" && (
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-neutral-700">
-              Primary Trade Specialization
+          <div className="space-y-2 p-3 rounded-2xl bg-orange-50/70 border border-orange-200/80">
+            <label className="text-xs font-bold text-[#2d130a] flex items-center gap-1.5">
+              <Wrench className="h-3.5 w-3.5 text-[#f05a28]" />
+              Trade Specialization
             </label>
             <select
               value={trade}
               onChange={(e) => setTrade(e.target.value)}
-              className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-800 focus:border-[#f05a28] focus:outline-none"
+              className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-xs font-semibold text-neutral-800 focus:border-[#f05a28] focus:outline-hidden cursor-pointer"
             >
-              <option value="Air Conditioning & HVAC">Air Conditioning &amp; HVAC</option>
-              <option value="Electrical Systems & MCBs">Electrical Systems &amp; MCBs</option>
-              <option value="Advanced Plumbing & Drainage">Advanced Plumbing &amp; Drainage</option>
-              <option value="Kitchen & Home Appliances">Kitchen &amp; Home Appliances</option>
-              <option value="Water Purifiers & RO Systems">Water Purifiers &amp; RO Systems</option>
-              <option value="Carpentry & Renovation">Carpentry &amp; Renovation</option>
+              {TRADE_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
             </select>
+
+            {/* Custom Trade Input when "Other" is chosen */}
+            {trade === "Other (Specify Specialty)" && (
+              <div className="pt-1">
+                <Input
+                  label="Specify Your Specialty / Trade"
+                  placeholder="e.g. Glass & Aluminum, False Ceiling, Solar..."
+                  value={customTrade}
+                  onChange={(e) => setCustomTrade(e.target.value)}
+                  leftIcon={<Wrench className="h-4 w-4 text-[#f05a28]" />}
+                  required
+                />
+              </div>
+            )}
           </div>
         )}
 
-        {/* GPS Geolocation Capture */}
-        <div className="rounded-2xl border border-orange-200/70 bg-[#fffaf5] p-3.5 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#2d130a] flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5 text-[#f05a28]" />
-              Hyderabad Service Zone
+        {/* GPS Geolocation Pill */}
+        <div className="rounded-xl border border-orange-200/80 bg-orange-50/50 p-3 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-[#f05a28]" />
+            <span className="text-neutral-700 font-semibold truncate max-w-[200px]">
+              {locality || "Hyderabad, Telangana"}
             </span>
-            <button
-              type="button"
-              onClick={handleCaptureLocation}
-              disabled={isLocating}
-              className="text-xs font-bold text-[#f05a28] hover:underline flex items-center gap-1"
-            >
-              {isLocating ? (
-                <>
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  <span>Locating...</span>
-                </>
-              ) : gpsCaptured ? (
-                <>
-                  <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                  <span>Update GPS</span>
-                </>
-              ) : (
-                <span>Auto-Detect GPS</span>
-              )}
-            </button>
           </div>
-          <p className="text-[11px] text-neutral-500">
-            {permissionDenied ? (
-              <span className="text-amber-800 font-semibold">
-                ⚠️ Browser GPS permission denied. Defaulting to Hyderabad, Telangana. You can update this or enable location permissions anytime.
-              </span>
-            ) : locality ? (
-              `Detected: ${locality} (${coordinates?.lat.toFixed(4) || "17.3850"}, ${coordinates?.lng.toFixed(4) || "78.4867"})`
-            ) : (
-              "Detect your location for automatic 15-minute SmartRoute technician dispatches in Hyderabad."
-            )}
-          </p>
+          <button
+            type="button"
+            onClick={handleCaptureLocation}
+            disabled={isLocating}
+            className="font-bold text-[#f05a28] hover:underline cursor-pointer"
+          >
+            {isLocating ? "Locating..." : gpsCaptured ? "Updated" : "Detect GPS"}
+          </button>
         </div>
 
-        {/* Password Inputs (only if not Google-authenticated) */}
+        {/* Password Inputs */}
         {!isGoogleAccount && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="relative">
-              <Input
-                label="Password (min 6 chars)"
-                type={showPassword ? "text" : "password"}
-                placeholder="Create password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                leftIcon={<Lock className="h-4 w-4" />}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-[34px] text-neutral-400 hover:text-neutral-600"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+            <div>
+              <div className="relative">
+                <Input
+                  label="Password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Min 6 chars"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  leftIcon={<Lock className="h-4 w-4 text-[#f05a28]" />}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-8.5 text-neutral-400 hover:text-neutral-600 focus:outline-hidden cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
 
             <Input
@@ -403,7 +428,7 @@ export default function RegisterPage() {
               placeholder="Re-enter password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              leftIcon={<Lock className="h-4 w-4" />}
+              leftIcon={<Lock className="h-4 w-4 text-[#f05a28]" />}
               required
             />
           </div>
@@ -416,14 +441,15 @@ export default function RegisterPage() {
           isLoading={isLoading}
           rightIcon={<ArrowRight className="h-4 w-4" />}
         >
-          {isGoogleAccount ? "Finalize Google Registration" : "Complete Registration"}
+          {role === "professional" ? "Register as Provider" : "Create Customer Account"}
         </Button>
       </form>
 
-      <div className="text-center text-xs text-neutral-500 pt-1">
+      {/* ── Footer Link ── */}
+      <div className="text-center text-xs text-neutral-500 pt-3 border-t border-neutral-100">
         Already have an account?{" "}
         <Link href="/login" className="font-bold text-[#f05a28] hover:underline">
-          Sign in here
+          Sign In
         </Link>
       </div>
     </div>

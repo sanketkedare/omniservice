@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -10,8 +10,6 @@ import {
   EyeOff,
   ArrowRight,
   CheckCircle2,
-  Sparkles,
-  ShieldCheck,
   KeyRound,
   RotateCcw,
 } from "lucide-react";
@@ -48,18 +46,49 @@ export default function LoginPage() {
       : ""
   );
 
+  // ── Block Logged-In Users from Accessing Login Page ──────────────────────
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("omniservice_user");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed?.role) {
+          const target =
+            parsed.role === "admin"
+              ? "/admin/dashboard"
+              : parsed.role === "professional"
+              ? "/pro/dashboard"
+              : "/customer/dashboard";
+          router.replace(target);
+          return;
+        }
+      }
+    } catch {}
+
+    fetch("/api/auth/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.authenticated && data.user?.role) {
+          const target =
+            data.user.role === "admin"
+              ? "/admin/dashboard"
+              : data.user.role === "professional"
+              ? "/pro/dashboard"
+              : "/customer/dashboard";
+          router.replace(target);
+        }
+      })
+      .catch(() => {});
+  }, [router]);
+
   const completeLogin = (
     user: { id: string; name: string; email?: string | null; phone?: string | null; role: string },
     token?: string
   ) => {
-    // 1. Remember user in localStorage across browser restarts
     try {
       localStorage.setItem("omniservice_user", JSON.stringify(user));
-    } catch {
-      // localStorage may fail in private mode
-    }
+    } catch {}
 
-    // 2. Set 7-day persistence cookies for edge proxy
     const maxAge = 604800; // 7 days
     document.cookie = `omniservice-role=${user.role}; path=/; max-age=${maxAge}; SameSite=Lax`;
     document.cookie = `omniservice-user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${maxAge}; SameSite=Lax`;
@@ -69,7 +98,6 @@ export default function LoginPage() {
 
     toast.success("Welcome back!", `Signed in as ${user.name}`);
 
-    // 3. Strict route redirection based on authentic database role
     if (callbackUrl) {
       router.push(callbackUrl);
     } else if (user.role === "admin") {
@@ -159,7 +187,6 @@ export default function LoginPage() {
       toast.success("Verification Code Sent", `A 6-digit OTP code has been sent to ${email}`);
     } catch (err: any) {
       toast.dismiss(loadId);
-      // Still allow code entry (fallback demo code 123456 is supported)
       setOtpSent(true);
       toast.info("Verification Code Dispatched", "Check your email inbox for the 6-digit code");
     } finally {
@@ -209,51 +236,52 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold font-serif text-[#2d130a]">
-          Sign in to your account
+    <div className="rounded-3xl border-2 border-orange-200/90 bg-white p-7 sm:p-9 shadow-xl shadow-orange-950/5 space-y-6">
+      {/* Title */}
+      <div className="text-center space-y-1">
+        <h1 className="text-2xl sm:text-3xl font-bold font-serif text-[#2d130a]">
+          Sign In
         </h1>
-        <p className="text-xs text-neutral-500 mt-1">
-          Access your personalized dashboard, active services, and verified home records.
+        <p className="text-xs text-neutral-500">
+          Enter your credentials to access your account
         </p>
       </div>
 
       {error && (
         <Alert
           variant={error.includes("Denied") || error.includes("Required") ? "warning" : "destructive"}
-          title="Authentication Notice"
+          title="Notice"
         >
           {error}
         </Alert>
       )}
 
-      {/* ── Google One-Tap Authentication ── */}
+      {/* ── Google Authentication ── */}
       <div className="space-y-3">
         <GoogleOneTap role="customer" mode="login" />
         <div className="relative flex items-center justify-center">
           <div className="border-t border-neutral-200 w-full" />
-          <span className="bg-white px-3 text-[11px] uppercase tracking-wider text-neutral-400 font-semibold absolute">
+          <span className="bg-white px-3 text-[10px] uppercase font-bold tracking-wider text-neutral-400 absolute">
             or sign in with email
           </span>
         </div>
       </div>
 
-      {/* ── Mode Switcher: Password vs Email OTP ── */}
-      <div className="flex rounded-xl bg-neutral-100 p-1">
+      {/* ── Login Mode Switcher ── */}
+      <div className="flex rounded-xl bg-orange-50/80 p-1 border border-orange-100">
         <button
           type="button"
           onClick={() => {
             setLoginMode("password");
             setError("");
           }}
-          className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${
+          className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-all cursor-pointer ${
             loginMode === "password"
-              ? "bg-white text-neutral-900 shadow-xs"
-              : "text-neutral-500 hover:text-neutral-900"
+              ? "bg-white text-[#c2410c] shadow-xs"
+              : "text-neutral-600 hover:text-neutral-900"
           }`}
         >
-          Password Login
+          Password
         </button>
         <button
           type="button"
@@ -261,17 +289,17 @@ export default function LoginPage() {
             setLoginMode("otp");
             setError("");
           }}
-          className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${
+          className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-all cursor-pointer ${
             loginMode === "otp"
-              ? "bg-white text-neutral-900 shadow-xs"
-              : "text-neutral-500 hover:text-neutral-900"
+              ? "bg-white text-[#c2410c] shadow-xs"
+              : "text-neutral-600 hover:text-neutral-900"
           }`}
         >
-          Email OTP Login
+          Email OTP
         </button>
       </div>
 
-      {/* ── Form: Password Login ── */}
+      {/* ── Password Mode ── */}
       {loginMode === "password" ? (
         <form onSubmit={handlePasswordLogin} className="space-y-4">
           <Input
@@ -298,7 +326,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-8.5 text-neutral-400 hover:text-neutral-600 focus:outline-hidden"
+                className="absolute right-3 top-8.5 text-neutral-400 hover:text-neutral-600 focus:outline-hidden cursor-pointer"
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4" />
@@ -314,13 +342,13 @@ export default function LoginPage() {
                   setLoginMode("otp");
                   setError("");
                 }}
-                className="text-neutral-500 hover:text-[#f05a28] transition-colors"
+                className="text-neutral-500 hover:text-[#f05a28] transition-colors cursor-pointer"
               >
-                Sign in with Email OTP
+                Use Email OTP
               </button>
               <Link
                 href="/forgot-password"
-                className="font-semibold text-[#f05a28] hover:underline"
+                className="font-bold text-[#f05a28] hover:underline"
               >
                 Forgot Password?
               </Link>
@@ -338,16 +366,15 @@ export default function LoginPage() {
           </Button>
         </form>
       ) : !otpSent ? (
-        /* ── Form: Email OTP Input ── */
+        /* ── Email OTP Request ── */
         <form onSubmit={handleSendEmailOtp} className="space-y-4">
           <Input
-            label="Email Address for OTP Verification"
+            label="Email Address"
             type="email"
             placeholder="name@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             leftIcon={<Mail className="h-4 w-4 text-neutral-400" />}
-            helperText="We will send a 6-digit security code via Google App Password SMTP"
             required
           />
 
@@ -362,19 +389,17 @@ export default function LoginPage() {
           </Button>
         </form>
       ) : (
-        /* ── Form: Email OTP Verify ── */
+        /* ── Email OTP Verification ── */
         <form onSubmit={handleVerifyEmailOtp} className="space-y-4">
-          <div className="rounded-xl bg-orange-50/60 border border-orange-200/80 p-3 text-xs text-neutral-700 flex items-center justify-between">
+          <div className="rounded-xl bg-orange-50 border border-orange-200 p-3 text-xs text-neutral-700 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-[#f05a28]" />
-              <span>
-                Code sent to <strong>{email}</strong>
-              </span>
+              <span>Code sent to <strong>{email}</strong></span>
             </div>
             <button
               type="button"
               onClick={() => setOtpSent(false)}
-              className="text-[#f05a28] hover:underline font-semibold text-[11px]"
+              className="text-[#f05a28] hover:underline font-bold text-[11px] cursor-pointer"
             >
               Change
             </button>
@@ -387,7 +412,6 @@ export default function LoginPage() {
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
             leftIcon={<KeyRound className="h-4 w-4 text-neutral-400" />}
-            helperText="Check your email inbox or spam folder for your one-time code"
             required
           />
 
@@ -398,7 +422,7 @@ export default function LoginPage() {
             isLoading={isLoading}
             rightIcon={<CheckCircle2 className="h-4 w-4" />}
           >
-            Verify &amp; Enter Dashboard
+            Verify &amp; Sign In
           </Button>
 
           <div className="text-center pt-1">
@@ -406,20 +430,20 @@ export default function LoginPage() {
               type="button"
               onClick={handleSendEmailOtp}
               disabled={isLoading}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-neutral-800"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-neutral-800 cursor-pointer"
             >
               <RotateCcw className="h-3 w-3" />
-              <span>Resend verification code</span>
+              <span>Resend code</span>
             </button>
           </div>
         </form>
       )}
 
-      {/* ── Direct Link to Register ── */}
-      <div className="text-center text-xs text-neutral-500 pt-2 border-t border-neutral-100">
-        New to OmniService AI?{" "}
+      {/* ── Footer Link ── */}
+      <div className="text-center text-xs text-neutral-500 pt-3 border-t border-neutral-100">
+        Don&apos;t have an account?{" "}
         <Link href="/register" className="font-bold text-[#f05a28] hover:underline">
-          Create an account (Customer or Professional)
+          Create an account
         </Link>
       </div>
     </div>

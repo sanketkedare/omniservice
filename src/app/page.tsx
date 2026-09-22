@@ -323,15 +323,31 @@ export default function HomePage() {
 
   const portal = currentUser ? getPortalLink(currentUser.role) : null;
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith("#")) {
+      e.preventDefault();
+      const id = href.replace("#", "");
+      setMobileMenuOpen(false);
+      setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    } else {
+      setMobileMenuOpen(false);
+    }
+  };
+
   return (
     <div
       className="min-h-screen bg-[#faf8f5] text-neutral-900 font-serif selection:bg-[#f05a28]/15 selection:text-[#9a2c06]"
       style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
     >
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* 1. TOP NAVBAR                                                       */}
+      {/* 1. TOP NAVBAR — SLEEK PREMIUM GLASSMORPHIC DESIGN                  */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      <header className="sticky top-0 z-40 w-full border-b border-orange-200/80 bg-[#fffbf7]/95 backdrop-blur-md shadow-xs">
+      <header className="sticky top-0 z-40 w-full border-b border-orange-200/80 bg-[#fffdfa]/90 backdrop-blur-xl shadow-[0_4px_24px_rgba(240,90,40,0.05)] transition-all">
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 lg:px-12 h-20 flex items-center justify-between gap-4">
           {/* Brand Logo & Dynamic Location Selector */}
           <div className="flex items-center gap-4">
@@ -360,20 +376,39 @@ export default function HomePage() {
           </div>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-8 text-sm font-bold text-[#431407]">
-            <Link href="#how-it-works" className="transition-colors hover:text-[#f05a28]">
+          <nav className="hidden lg:flex items-center gap-7 text-sm font-bold text-[#431407]">
+            <a
+              href="#how-it-works"
+              onClick={(e) => handleNavClick(e, "#how-it-works")}
+              className="transition-colors hover:text-[#f05a28] cursor-pointer"
+            >
               How It Works
-            </Link>
-            <Link href="#categories" className="transition-colors hover:text-[#f05a28]">
+            </a>
+            <a
+              href="#categories"
+              onClick={(e) => handleNavClick(e, "#categories")}
+              className="transition-colors hover:text-[#f05a28] cursor-pointer"
+            >
               Services
-            </Link>
-            <Link href="#why-trust" className="transition-colors hover:text-[#f05a28]">
+            </a>
+            <a
+              href="#why-trust"
+              onClick={(e) => handleNavClick(e, "#why-trust")}
+              className="transition-colors hover:text-[#f05a28] cursor-pointer"
+            >
               Trust &amp; Escrow
+            </a>
+            <Link
+              href="/case-study"
+              className="transition-colors hover:text-[#f05a28] flex items-center gap-1.5 px-2.5 py-1 rounded-lg hover:bg-orange-50"
+            >
+              <Award className="h-3.5 w-3.5 text-[#f05a28]" />
+              <span>Case Study</span>
             </Link>
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden sm:flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2.5">
             {currentUser && portal ? (
               <div className="flex items-center gap-3">
                 <Link
@@ -388,22 +423,23 @@ export default function HomePage() {
                   type="button"
                   onClick={handleLogout}
                   title="Sign out"
-                  className="rounded-xl p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  className="rounded-xl p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                 >
                   <LogOut className="h-4 w-4" />
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
+                <GoogleNavButton variant="desktop" />
                 <Link
                   href="/login"
-                  className="rounded-xl px-4 py-2 text-xs font-bold text-[#431407] hover:text-[#f05a28] hover:bg-orange-50/70 transition-colors"
+                  className="rounded-xl px-3.5 py-2 text-xs font-bold text-[#431407] hover:text-[#f05a28] hover:bg-orange-50/70 transition-colors"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/register"
-                  className="rounded-xl bg-[#f05a28] px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/25 hover:bg-[#ea580c] transition-all"
+                  className="rounded-xl bg-[#f05a28] px-4.5 py-2 text-xs font-bold text-white shadow-md shadow-orange-500/25 hover:bg-[#ea580c] transition-all"
                 >
                   Get Started
                 </Link>
@@ -415,7 +451,7 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(true)}
-            className="lg:hidden p-2 rounded-xl text-neutral-800 hover:bg-orange-50 hover:text-[#f05a28] transition-colors"
+            className="lg:hidden p-2 rounded-xl text-neutral-800 hover:bg-orange-50 hover:text-[#f05a28] transition-colors cursor-pointer"
             aria-label="Open menu"
           >
             <Menu className="h-6 w-6" />
@@ -443,7 +479,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-1.5 rounded-full text-neutral-500 hover:text-neutral-900 hover:bg-orange-100"
+                className="p-1.5 rounded-full text-neutral-500 hover:text-neutral-900 hover:bg-orange-100 cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -457,7 +493,7 @@ export default function HomePage() {
                   setMobileMenuOpen(false);
                   setLocationModalOpen(true);
                 }}
-                className="w-full flex items-center justify-between p-3 rounded-2xl bg-orange-50 border border-orange-200 text-xs text-[#9a2c06] font-bold"
+                className="w-full flex items-center justify-between p-3 rounded-2xl bg-orange-50 border border-orange-200 text-xs text-[#9a2c06] font-bold cursor-pointer"
               >
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-[#f05a28]" />
@@ -467,45 +503,63 @@ export default function HomePage() {
               </button>
 
               <div className="space-y-1">
-                <Link
+                <a
                   href="#how-it-works"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60"
+                  onClick={(e) => handleNavClick(e, "#how-it-works")}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60 cursor-pointer"
                 >
                   <Layers className="h-4 w-4 text-[#f05a28]" />
                   <span>How It Works</span>
-                </Link>
+                </a>
 
-                <Link
+                <a
                   href="#categories"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60"
+                  onClick={(e) => handleNavClick(e, "#categories")}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60 cursor-pointer"
                 >
                   <Wrench className="h-4 w-4 text-[#f05a28]" />
                   <span>Service Trades</span>
-                </Link>
+                </a>
 
-                <Link
+                <a
                   href="#why-trust"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60"
+                  onClick={(e) => handleNavClick(e, "#why-trust")}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60 cursor-pointer"
                 >
                   <ShieldCheck className="h-4 w-4 text-[#f05a28]" />
                   <span>Trust &amp; Escrow</span>
+                </a>
+
+                <Link
+                  href="/case-study"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-[#c2410c] hover:bg-orange-100/60"
+                >
+                  <Award className="h-4 w-4 text-[#f05a28]" />
+                  <span>Case Study &amp; Architecture</span>
+                </Link>
+
+                <Link
+                  href="/customer/new-request"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-neutral-800 hover:bg-orange-100/60"
+                >
+                  <Camera className="h-4 w-4 text-[#f05a28]" />
+                  <span>Book AI Diagnostic</span>
                 </Link>
               </div>
 
               <div className="pt-3 border-t border-orange-100 space-y-2">
                 <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest px-3 block">
-                  Portals &amp; Join
+                  Portals &amp; Providers
                 </span>
                 <Link
-                  href="/professional/register"
+                  href="/register?role=professional"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-[#c2410c] hover:bg-orange-100/60"
                 >
                   <Briefcase className="h-4 w-4 text-[#f05a28]" />
-                  <span>Join as Provider</span>
+                  <span>Join as Provider Partner</span>
                 </Link>
                 <Link
                   href="/customer/dashboard"
@@ -516,6 +570,32 @@ export default function HomePage() {
                   <span>Customer Dashboard</span>
                 </Link>
               </div>
+
+              {/* Instant Google Login for Unauthenticated Mobile Drawer */}
+              {!currentUser && (
+                <div className="pt-3 border-t border-orange-100 space-y-2">
+                  <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest px-3 block">
+                    Instant Authentication
+                  </span>
+                  <GoogleNavButton variant="mobile" />
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <Link
+                      href="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-center py-2 px-3 rounded-xl border border-neutral-300 bg-white text-xs font-bold text-neutral-800 hover:bg-neutral-50"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-center py-2 px-3 rounded-xl bg-[#f05a28] text-xs font-bold text-white shadow-xs hover:bg-[#ea580c]"
+                    >
+                      Register
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="p-4 border-t border-orange-200/70 bg-white space-y-2 text-xs text-neutral-600">
@@ -523,6 +603,12 @@ export default function HomePage() {
                 <Phone className="h-3.5 w-3.5 text-[#f05a28]" />
                 <a href="tel:+918624851910" className="hover:text-[#f05a28] font-bold">
                   +91 86248 51910
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="h-3.5 w-3.5 text-[#f05a28]" />
+                <a href="mailto:volcanic.digitalsolutions@gmail.com" className="hover:text-[#f05a28] font-bold truncate">
+                  volcanic.digitalsolutions@gmail.com
                 </a>
               </div>
               <div className="flex items-center gap-2">
@@ -629,7 +715,7 @@ export default function HomePage() {
             </Link>
 
             <Link
-              href="/professional/register"
+              href="/register?role=professional"
               className="inline-flex items-center justify-center gap-2 rounded-2xl border border-orange-200/80 bg-white/80 px-6 py-4 text-base font-semibold text-[#7c2d12] hover:bg-white hover:border-orange-300 transition-colors shadow-2xs"
             >
               <Briefcase className="h-4 w-4 text-[#f05a28]" />
@@ -1112,12 +1198,13 @@ export default function HomePage() {
             </div>
 
             <div className="space-y-3">
-              <h4 className="text-xs font-bold text-white uppercase tracking-wider">Portals</h4>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider">Portals &amp; Overview</h4>
               <ul className="space-y-2 text-xs">
                 <li><Link href="/customer/dashboard" className="hover:text-[#f05a28] transition-colors">Customer Portal</Link></li>
                 <li><Link href="/pro/dashboard" className="hover:text-[#f05a28] transition-colors">Provider Portal</Link></li>
                 <li><Link href="/admin/dashboard" className="hover:text-[#f05a28] transition-colors">Governance Admin</Link></li>
-                <li><Link href="/professional/register" className="hover:text-[#f05a28] transition-colors">Join as Provider Partner</Link></li>
+                <li><Link href="/register?role=professional" className="hover:text-[#f05a28] transition-colors">Join as Provider Partner</Link></li>
+                <li><Link href="/case-study" className="hover:text-[#f05a28] transition-colors font-bold text-orange-300">Case Study &amp; Architecture</Link></li>
               </ul>
             </div>
 
