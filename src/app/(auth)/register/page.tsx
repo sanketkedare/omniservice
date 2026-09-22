@@ -101,11 +101,17 @@ export default function RegisterPage() {
         throw new Error(data.error || "Failed to create account");
       }
 
-      toast.success("Account Created!", `Welcome to OmniService AI, ${data.user.name}`);
+      // Remember user across browser sessions
+      try {
+        localStorage.setItem("omniservice_user", JSON.stringify(data.user));
+      } catch {
+        // Ignore localStorage error
+      }
 
-      // Establish client session & role cookies
-      document.cookie = `omniservice-role=${data.user.role}; path=/; max-age=86400; SameSite=Lax`;
-      document.cookie = `authjs.session-token=reg_sess_${Date.now()}; path=/; max-age=86400; SameSite=Lax`;
+      const maxAge = 604800; // 7 days
+      document.cookie = `omniservice-role=${data.user.role}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      document.cookie = `omniservice-user=${encodeURIComponent(JSON.stringify(data.user))}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      document.cookie = `authjs.session-token=reg_sess_${data.user.role}_${Date.now()}; path=/; max-age=${maxAge}; SameSite=Lax`;
 
       if (role === "customer") {
         router.push("/customer/dashboard");

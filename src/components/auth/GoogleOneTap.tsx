@@ -47,9 +47,16 @@ export function GoogleOneTap({ role = "customer", onSuccess }: GoogleOneTapProps
         throw new Error(data.error || "Google authentication failed");
       }
 
-      // Set client role cookie for immediate RBAC hydration
-      document.cookie = `omniservice-role=${data.user.role}; path=/; max-age=86400; SameSite=Lax`;
-      document.cookie = `authjs.session-token=mock_google_session_${timestamp}; path=/; max-age=86400; SameSite=Lax`;
+      // Set client role and user persistence
+      try {
+        localStorage.setItem("omniservice_user", JSON.stringify(data.user));
+      } catch {
+        // Ignore localStorage error
+      }
+      const maxAge = 604800; // 7 days
+      document.cookie = `omniservice-role=${data.user.role}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      document.cookie = `omniservice-user=${encodeURIComponent(JSON.stringify(data.user))}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      document.cookie = `authjs.session-token=google_sess_${data.user.role}_${timestamp}; path=/; max-age=${maxAge}; SameSite=Lax`;
 
       if (onSuccess) {
         onSuccess(data.user);

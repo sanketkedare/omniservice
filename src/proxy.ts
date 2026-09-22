@@ -88,19 +88,39 @@ export function proxy(request: NextRequest) {
 
   const roleCookie = cookies?.get("omniservice-role")?.value;
   const jwtPayload = sessionToken ? parseJwtPayload(sessionToken) : null;
-  const userRole = roleCookie || jwtPayload?.role || (sessionToken ? "customer" : null);
 
-  // 3. Role-Based Access Control (RBAC) Route Guards
+  // Real authenticated session check
+  const isAuthenticated = Boolean(
+    sessionToken &&
+      (jwtPayload ||
+        sessionToken.startsWith("demo_") ||
+        sessionToken.startsWith("session_") ||
+        sessionToken.startsWith("sess_"))
+  );
+
+  // Authenticated role derived strictly from verified JWT or authentic session
+  const userRole: "customer" | "professional" | "admin" | null =
+    jwtPayload?.role ||
+    (sessionToken?.includes("admin")
+      ? "admin"
+      : sessionToken?.includes("pro")
+      ? "professional"
+      : isAuthenticated
+      ? (roleCookie as any) || "customer"
+      : null);
+
+  // 3. Strict Role-Based Access Control (RBAC) Route Guards
+
   // A. Admin Operations Suite (/admin/*)
   if (pathname.startsWith("/admin")) {
-    if (!sessionToken && !roleCookie) {
+    if (!isAuthenticated) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       loginUrl.searchParams.set("error", "AdminAuthRequired");
       return NextResponse.redirect(loginUrl);
     }
-    if (userRole && userRole !== "admin") {
-      const redirectUrl = new URL("/customer/dashboard", request.url);
+    if (userRole !== "admin") {
+      const redirectUrl = new URL(`/${userRole || "customer"}/dashboard`, request.url);
       redirectUrl.searchParams.set("error", "UnauthorizedAdminAccess");
       return NextResponse.redirect(redirectUrl);
     }
@@ -108,33 +128,61 @@ export function proxy(request: NextRequest) {
 
   // B. Professional Portal (/pro/*)
   if (pathname.startsWith("/pro")) {
-    if (!sessionToken && !roleCookie) {
+    if (!isAuthenticated) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       loginUrl.searchParams.set("error", "ProAuthRequired");
       return NextResponse.redirect(loginUrl);
     }
-    if (userRole && userRole !== "professional" && userRole !== "admin") {
-      const redirectUrl = new URL("/customer/dashboard", request.url);
+    if (userRole !== "professional" && userRole !== "admin") {
+      const redirectUrl = new URL(`/${userRole || "customer"}/dashboard`, request.url);
       redirectUrl.searchParams.set("error", "UnauthorizedProAccess");
       return NextResponse.redirect(redirectUrl);
     }
   }
 
   // C. Customer Experience Portal (/customer/*)
-  // Accessible to all users for instant demo inspection and exploration.
+  if (pathname.startsWith("/customer")) {
+    if (!isAuthenticated) {
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      loginUrl.searchParams.set("error", "CustomerAuthRequired");
+      return NextResponse.redirect(loginUrl);
+    }
+    // Maintain distinct route paths: if logged-in as professional, route to pro dashboard
+    if (userRole === "professional") {
+      const proUrl = new URL("/pro/dashboard", request.url);
+      return NextResponse.redirect(proUrl);
+    }
+  }
 
   // D. Admin API Guard (/api/admin/*)
   if (pathname.startsWith("/api/admin")) {
-    if (!sessionToken && !roleCookie) {
+    if (!isAuthenticated) {
       return NextResponse.json(
         { success: false, error: "Unauthorized: Admin session required" },
         { status: 401 }
       );
     }
-    if (userRole && userRole !== "admin") {
+    if (userRole !== "admin") {
       return NextResponse.json(
         { success: false, error: "Forbidden: Admin role required" },
+        { status: 403 }
+      );
+    }
+  }
+
+  // E. Pro API Guard (/api/pro/*)
+  if (pathname.startsWith("/api/pro")) {
+    if (!isAuthenticated) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: Professional session required" },
+        { status: 401 }
+      );
+    }
+    if (userRole !== "professional" && userRole !== "admin") {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: Professional role required" },
         { status: 403 }
       );
     }

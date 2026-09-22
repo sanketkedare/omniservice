@@ -179,5 +179,92 @@ describe("OmniService AI — Enterprise Security & Authentication Tests", () => 
       expect(res.headers.get("Strict-Transport-Security")).toContain("max-age=63072000");
       expect(res.headers.get("X-Powered-By")).toBe("OmniService-Volcanic-Engine");
     });
+
+    it("strictly redirects customer trying to access admin dashboard", async () => {
+      const { NextRequest } = await import("next/server");
+      const { proxy } = await import("@/proxy");
+      const req = new NextRequest("http://localhost:3012/admin/dashboard", {
+        method: "GET",
+        headers: {
+          cookie: "authjs.session-token=demo_customer_active; omniservice-role=customer",
+        },
+      });
+
+      const res = proxy(req);
+      expect(res.status).toBe(307);
+      expect(res.headers.get("location")).toContain("/customer/dashboard");
+      expect(res.headers.get("location")).toContain("UnauthorizedAdminAccess");
+    });
+
+    it("strictly redirects customer trying to access pro operations portal", async () => {
+      const { NextRequest } = await import("next/server");
+      const { proxy } = await import("@/proxy");
+      const req = new NextRequest("http://localhost:3012/pro/dashboard", {
+        method: "GET",
+        headers: {
+          cookie: "authjs.session-token=demo_customer_active; omniservice-role=customer",
+        },
+      });
+
+      const res = proxy(req);
+      expect(res.status).toBe(307);
+      expect(res.headers.get("location")).toContain("/customer/dashboard");
+      expect(res.headers.get("location")).toContain("UnauthorizedProAccess");
+    });
+
+    it("allows admin session to access admin dashboard", async () => {
+      const { NextRequest } = await import("next/server");
+      const { proxy } = await import("@/proxy");
+      const req = new NextRequest("http://localhost:3012/admin/dashboard", {
+        method: "GET",
+        headers: {
+          cookie: "authjs.session-token=demo_admin_active; omniservice-role=admin",
+        },
+      });
+
+      const res = proxy(req);
+      // Next.js response allows request to proceed
+      expect(res.status).toBe(200);
+      expect(res.headers.get("X-Frame-Options")).toBe("DENY");
+    });
+  });
+
+  describe("5. Authentication API & Session Persistence", () => {
+    it("authenticates valid credentials via /api/auth/login", async () => {
+      const { POST } = await import("@/app/api/auth/login/route");
+      const req = new Request("http://localhost:3012/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identifier: "admin@omniservice.world",
+          password: "admin123",
+        }),
+      });
+
+      const res = await POST(req as any);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.user.role).toBe("admin");
+      expect(data.token).toBeDefined();
+    });
+
+    it("rejects invalid credentials with HTTP 401", async () => {
+      const { POST } = await import("@/app/api/auth/login/route");
+      const req = new Request("http://localhost:3012/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identifier: "unknown@example.com",
+          password: "wrongPassword99",
+        }),
+      });
+
+      const res = await POST(req as any);
+      expect(res.status).toBe(401);
+      const data = await res.json();
+      expect(data.success).toBe(false);
+      expect(data.error).toContain("Invalid email/phone or password");
+    });
   });
 });

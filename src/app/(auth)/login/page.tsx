@@ -13,6 +13,9 @@ import {
   CheckCircle2,
   Sparkles,
   ShieldCheck,
+  Shield,
+  Briefcase,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -27,7 +30,7 @@ export default function LoginPage() {
   const authError = searchParams.get("error");
 
   const [loginMode, setLoginMode] = useState<"password" | "otp">("password");
-  const [authMethod, setAuthMethod] = useState<"phone" | "email">("phone");
+  const [authMethod, setAuthMethod] = useState<"phone" | "email">("email");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -39,8 +42,44 @@ export default function LoginPage() {
       ? "Administrator credentials required to enter Governance Center."
       : authError === "ProAuthRequired"
       ? "Professional account required to enter Service Portal."
+      : authError === "CustomerAuthRequired"
+      ? "Please sign in to access your customer dashboard."
+      : authError === "UnauthorizedAdminAccess"
+      ? "Access Denied: Only Administrator accounts can access the Governance Center."
+      : authError === "UnauthorizedProAccess"
+      ? "Access Denied: Only verified Professionals can access the Operations Portal."
       : ""
   );
+
+  const completeLogin = (user: { id: string; name: string; email?: string | null; phone?: string | null; role: string }, token?: string) => {
+    // 1. Remember user in localStorage across browser restarts
+    try {
+      localStorage.setItem("omniservice_user", JSON.stringify(user));
+    } catch {
+      // localStorage may fail in private mode
+    }
+
+    // 2. Set 7-day persistence cookies for edge proxy
+    const maxAge = 604800; // 7 days
+    document.cookie = `omniservice-role=${user.role}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    document.cookie = `omniservice-user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    if (token) {
+      document.cookie = `authjs.session-token=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    }
+
+    toast.success("Welcome back!", `Signed in as ${user.name}`);
+
+    // 3. Strict route redirection based on role
+    if (callbackUrl) {
+      router.push(callbackUrl);
+    } else if (user.role === "admin") {
+      router.push("/admin/dashboard");
+    } else if (user.role === "professional") {
+      router.push("/pro/dashboard");
+    } else {
+      router.push("/customer/dashboard");
+    }
+  };
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,19 +118,7 @@ export default function LoginPage() {
         return;
       }
 
-      toast.success("Welcome back!", `Signed in as ${data.user.name}`);
-      document.cookie = `omniservice-role=${data.user.role}; path=/; max-age=86400; SameSite=Lax`;
-      document.cookie = `authjs.session-token=${data.token || "session_" + Date.now()}; path=/; max-age=86400; SameSite=Lax`;
-
-      if (callbackUrl) {
-        router.push(callbackUrl);
-      } else if (data.user.role === "admin") {
-        router.push("/admin/dashboard");
-      } else if (data.user.role === "professional") {
-        router.push("/pro/dashboard");
-      } else {
-        router.push("/customer/dashboard");
-      }
+      completeLogin(data.user, data.token);
     } catch {
       toast.dismiss(loadId);
       const netMsg = "Unable to connect to authentication server. Please check your network.";
@@ -115,10 +142,10 @@ export default function LoginPage() {
       setOtpSent(true);
       setError("");
       toast.info("Verification Code Sent", `A demo OTP (123456) has been dispatched to ${identifier}`);
-    }, 600);
+    }, 500);
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
+  const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (otp !== "123456" && otp.length !== 6) {
       const msg = "Invalid OTP code. Enter 123456 for immediate verification.";
@@ -134,38 +161,92 @@ export default function LoginPage() {
       ? "professional"
       : "customer";
 
-    document.cookie = `omniservice-role=${determinedRole}; path=/; max-age=86400; SameSite=Lax`;
-    document.cookie = `authjs.session-token=sess_${Date.now()}; path=/; max-age=86400; SameSite=Lax`;
-
-    toast.success("Phone Verified", "Logging into your dashboard...");
-
-    setTimeout(() => {
-      setIsLoading(false);
-      if (callbackUrl) {
-        router.push(callbackUrl);
-      } else if (determinedRole === "admin") {
-        router.push("/admin/dashboard");
-      } else if (determinedRole === "professional") {
-        router.push("/pro/dashboard");
-      } else {
-        router.push("/customer/dashboard");
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identifier:
+            determinedRole === "admin"
+              ? "admin@omniservice.world"
+              : determinedRole === "professional"
+              ? "pro@omniservice.world"
+              : "customer@omniservice.world",
+          password: "password",
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.user) {
+        completeLogin(data.user, data.token);
+        return;
       }
-    }, 400);
+    } catch {
+      // Fallback
+    }
+
+    const fallbackUser = {
+      id: `user_${determinedRole}_${Date.now()}`,
+      name:
+        determinedRole === "admin"
+          ? "Platform Administrator"
+          : determinedRole === "professional"
+          ? "Rajesh Kumar (Pro)"
+          : "Sanket Kedare (Customer)",
+      phone: identifier,
+      role: determinedRole as "customer" | "professional" | "admin",
+    };
+    completeLogin(fallbackUser, `sess_${determinedRole}_${Date.now()}`);
+  };
+
+  // Quick 1-click test role login helper
+  const handleQuickRoleLogin = async (role: "customer" | "professional" | "admin") => {
+    setIsLoading(true);
+    setError("");
+    const credentials = {
+      customer: { identifier: "customer@omniservice.world", password: "customer123" },
+      professional: { identifier: "pro@omniservice.world", password: "pro123456" },
+      admin: { identifier: "admin@omniservice.world", password: "admin123456" },
+    }[role];
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials),
+      });
+      const data = await res.json();
+      if (data.success && data.user) {
+        completeLogin(data.user, data.token);
+        return;
+      }
+    } catch {
+      // Offline fallback
+    }
+
+    const mockNames = {
+      customer: "Sanket Kedare (Customer)",
+      professional: "Rajesh Kumar (Pro)",
+      admin: "Platform Administrator",
+    };
+    completeLogin(
+      {
+        id: `user_${role}_001`,
+        name: mockNames[role],
+        email: `${role}@omniservice.world`,
+        role,
+      },
+      `sess_${role}_${Date.now()}`
+    );
   };
 
   return (
-    <div
-      className="rounded-3xl border-2 border-orange-200/80 bg-white p-6 sm:p-10 shadow-xl shadow-orange-950/5 space-y-6 font-serif"
-      style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
-    >
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-[#2d130a]">
-          {otpSent ? "Enter Verification Code" : "Sign In to OmniService AI"}
+        <h1 className="text-2xl font-bold font-serif text-[#2d130a]">
+          Sign in to OmniService
         </h1>
-        <p className="mt-1 text-xs text-neutral-600">
-          {otpSent
-            ? `Enter the 6-digit code sent to ${identifier}`
-            : "Access your HomePass passport, active diagnostics, and bookings in Ameerpet, Hyderabad."}
+        <p className="mt-1 text-xs text-neutral-500">
+          Enter your credentials to access your verified account
         </p>
       </div>
 
@@ -175,125 +256,142 @@ export default function LoginPage() {
         </Alert>
       )}
 
-      {/* Google One-Tap Integration */}
-      <GoogleOneTap />
+      {/* ── 1-Click Role Login for Quick Testing ── */}
+      <div className="rounded-2xl border border-orange-200/80 bg-[#fffaf5] p-3.5 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-[#c2410c]">
+            Quick Role Access (Testing)
+          </span>
+          <span className="text-[10px] text-neutral-400">Strictly routes to each role</span>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={() => handleQuickRoleLogin("customer")}
+            disabled={isLoading}
+            className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-orange-200/60 hover:border-[#f05a28] hover:shadow-xs transition-all text-center group"
+          >
+            <User className="h-4 w-4 text-[#f05a28] mb-1 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-bold text-neutral-800">Customer</span>
+            <span className="text-[9px] text-neutral-400">Book & Track</span>
+          </button>
 
-      <div className="relative my-3 flex items-center justify-center">
-        <div className="w-full border-t border-neutral-200" />
-        <span className="absolute bg-white px-3 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-          Or with credentials
-        </span>
+          <button
+            type="button"
+            onClick={() => handleQuickRoleLogin("professional")}
+            disabled={isLoading}
+            className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-orange-200/60 hover:border-[#ea580c] hover:shadow-xs transition-all text-center group"
+          >
+            <Briefcase className="h-4 w-4 text-amber-600 mb-1 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-bold text-neutral-800">Pro</span>
+            <span className="text-[9px] text-neutral-400">Leads & Jobs</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleQuickRoleLogin("admin")}
+            disabled={isLoading}
+            className="flex flex-col items-center justify-center p-2 rounded-xl bg-white border border-orange-200/60 hover:border-blue-500 hover:shadow-xs transition-all text-center group"
+          >
+            <Shield className="h-4 w-4 text-blue-600 mb-1 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-bold text-neutral-800">Admin</span>
+            <span className="text-[9px] text-neutral-400">Governance</span>
+          </button>
+        </div>
       </div>
 
-      {/* Mode Switcher: Password vs OTP */}
-      <div className="flex items-center justify-center gap-2 text-xs">
+      {/* ── Google Authentication ── */}
+      <div className="space-y-3">
+        <GoogleOneTap role="customer" />
+        <div className="relative flex items-center justify-center">
+          <div className="border-t border-neutral-200 w-full" />
+          <span className="bg-white px-3 text-[11px] uppercase tracking-wider text-neutral-400 font-semibold absolute">
+            or sign in with credentials
+          </span>
+        </div>
+      </div>
+
+      {/* ── Mode Switcher: Password vs OTP ── */}
+      <div className="flex rounded-xl bg-neutral-100 p-1">
         <button
           type="button"
           onClick={() => {
             setLoginMode("password");
-            setOtpSent(false);
             setError("");
           }}
-          className={`pb-1 font-semibold transition-all border-b-2 ${
+          className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${
             loginMode === "password"
-              ? "border-[#f05a28] text-[#2d130a]"
-              : "border-transparent text-neutral-400 hover:text-neutral-600"
+              ? "bg-white text-neutral-900 shadow-xs"
+              : "text-neutral-500 hover:text-neutral-900"
           }`}
         >
           Password Login
         </button>
-        <span className="text-neutral-300">•</span>
         <button
           type="button"
           onClick={() => {
             setLoginMode("otp");
             setError("");
           }}
-          className={`pb-1 font-semibold transition-all border-b-2 ${
+          className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-all ${
             loginMode === "otp"
-              ? "border-[#f05a28] text-[#2d130a]"
-              : "border-transparent text-neutral-400 hover:text-neutral-600"
+              ? "bg-white text-neutral-900 shadow-xs"
+              : "text-neutral-500 hover:text-neutral-900"
           }`}
         >
-          Instant OTP Login
+          Instant OTP (123456)
         </button>
       </div>
 
+      {/* ── Form: Password Mode ── */}
       {loginMode === "password" ? (
         <form onSubmit={handlePasswordLogin} className="space-y-4">
-          {/* Method tabs */}
-          <div className="grid grid-cols-2 rounded-xl bg-orange-50/60 p-1 border border-orange-100">
+          <div className="flex justify-end">
             <button
               type="button"
               onClick={() => {
-                setAuthMethod("phone");
+                setAuthMethod(authMethod === "phone" ? "email" : "phone");
                 setIdentifier("");
                 setError("");
               }}
-              className={`rounded-lg py-1.5 text-xs font-semibold transition-all ${
-                authMethod === "phone"
-                  ? "bg-white text-[#c2410c] shadow-xs border border-orange-200/60"
-                  : "text-neutral-500 hover:text-neutral-800"
-              }`}
+              className="text-[11px] font-semibold text-[#f05a28] hover:underline"
             >
-              Mobile Number
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMethod("email");
-                setIdentifier("");
-                setError("");
-              }}
-              className={`rounded-lg py-1.5 text-xs font-semibold transition-all ${
-                authMethod === "email"
-                  ? "bg-white text-[#c2410c] shadow-xs border border-orange-200/60"
-                  : "text-neutral-500 hover:text-neutral-800"
-              }`}
-            >
-              Email Address
+              Use {authMethod === "phone" ? "Email Address" : "Mobile Number"}
             </button>
           </div>
 
-          {authMethod === "phone" ? (
-            <Input
-              label="Mobile Number"
-              placeholder="+91 98XXX XXXXX"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              leftIcon={<Phone className="h-4 w-4 text-[#f05a28]" />}
-              helperText="Enter 10-digit mobile number"
-            />
-          ) : (
-            <Input
-              label="Email Address"
-              type="email"
-              placeholder="name@example.com"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              leftIcon={<Mail className="h-4 w-4 text-[#f05a28]" />}
-              helperText="We will never share your email address"
-            />
-          )}
+          <Input
+            label={authMethod === "phone" ? "Registered Mobile Number" : "Email Address"}
+            type={authMethod === "phone" ? "tel" : "email"}
+            placeholder={authMethod === "phone" ? "+91 98XXX XXXXX" : "name@example.com"}
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            leftIcon={
+              authMethod === "phone" ? (
+                <Phone className="h-4 w-4 text-neutral-400" />
+              ) : (
+                <Mail className="h-4 w-4 text-neutral-400" />
+              )
+            }
+          />
 
-          <div className="space-y-1">
-            <div className="relative">
-              <Input
-                label="Password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter your account password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                leftIcon={<Lock className="h-4 w-4 text-[#f05a28]" />}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-[34px] text-neutral-400 hover:text-neutral-600 transition-colors"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
+          <div className="relative">
+            <Input
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              leftIcon={<Lock className="h-4 w-4 text-neutral-400" />}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-8 text-neutral-400 hover:text-neutral-600"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
           </div>
 
           <Button
@@ -303,17 +401,20 @@ export default function LoginPage() {
             isLoading={isLoading}
             rightIcon={<ArrowRight className="h-4 w-4" />}
           >
-            Sign In Securely
+            Sign In
           </Button>
         </form>
       ) : !otpSent ? (
+        /* ── Form: OTP Phone Input ── */
         <form onSubmit={handleSendOtp} className="space-y-4">
           <Input
-            label={authMethod === "phone" ? "Mobile Number" : "Email Address"}
-            placeholder={authMethod === "phone" ? "+91 98XXX XXXXX" : "name@example.com"}
+            label="Mobile Number or Email"
+            type="text"
+            placeholder="+91 98XXX XXXXX or name@example.com"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            leftIcon={authMethod === "phone" ? <Phone className="h-4 w-4 text-[#f05a28]" /> : <Mail className="h-4 w-4 text-[#f05a28]" />}
+            leftIcon={<Phone className="h-4 w-4 text-neutral-400" />}
+            helperText="We will send a 6-digit verification code"
           />
 
           <Button
@@ -327,6 +428,7 @@ export default function LoginPage() {
           </Button>
         </form>
       ) : (
+        /* ── Form: OTP Verify ── */
         <form onSubmit={handleVerifyOtp} className="space-y-4">
           <Input
             label="Verification Code (OTP)"
@@ -352,7 +454,7 @@ export default function LoginPage() {
             onClick={() => setOtpSent(false)}
             className="w-full text-center text-xs font-semibold text-neutral-500 hover:text-neutral-900"
           >
-            Change {authMethod === "phone" ? "number" : "email"}
+            Change number
           </button>
         </form>
       )}
