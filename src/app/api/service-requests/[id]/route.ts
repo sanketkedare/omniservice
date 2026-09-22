@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { ServiceRequest } from "@/models/service-request.model";
-import { DEMO_REQUESTS } from "../route";
+import { getMockRequestById, DEMO_REQUESTS } from "@/lib/mock-data";
 
 export async function GET(
   req: NextRequest,
@@ -10,12 +10,12 @@ export async function GET(
   try {
     const { id } = await params;
 
-    // Check demo requests first
-    const demoFound = DEMO_REQUESTS.find((r) => r._id === id || r.requestNumber === id);
-    if (demoFound) {
+    // Check in-memory store and demo requests first
+    const mockFound = getMockRequestById(id);
+    if (mockFound) {
       return NextResponse.json({
         success: true,
-        data: demoFound,
+        data: mockFound,
       });
     }
 

@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { Dialog } from "@/components/ui/Dialog";
-import { DEMO_PROPERTIES } from "@/app/api/properties/route";
+import { DEMO_PROPERTIES } from "@/lib/mock-data";
 
 export default function PropertiesPage() {
   const [properties, setProperties] = useState(DEMO_PROPERTIES);

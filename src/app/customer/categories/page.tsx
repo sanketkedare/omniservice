@@ -19,7 +19,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { INITIAL_CATEGORIES } from "@/app/api/categories/route";
+import { INITIAL_CATEGORIES } from "@/lib/mock-data";
 
 const iconMap: Record<string, React.ReactNode> = {
   Wrench: <Wrench className="h-5 w-5" />,

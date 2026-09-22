@@ -18,10 +18,10 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { DEMO_REQUESTS } from "@/app/api/service-requests/route";
+import { getAllMockRequests } from "@/lib/mock-data";
 
 export default function CustomerRequestsPage() {
-  const [requests, setRequests] = useState(DEMO_REQUESTS);
+  const [requests, setRequests] = useState(getAllMockRequests);
   const [activeTab, setActiveTab] = useState<"all" | "active" | "completed">("all");
 
   useEffect(() => {

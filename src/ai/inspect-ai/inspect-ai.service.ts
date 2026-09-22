@@ -8,7 +8,7 @@ import { AIInference } from "@/models/remaining.model";
 import { getActiveAIProvider } from "../providers";
 import { calculateEstimate, PricingBreakdown } from "../pricing/pricing-engine";
 import { memoryStore, MemorySow, MemoryEstimate } from "@/lib/memory-store";
-import { DEMO_REQUESTS } from "@/app/api/service-requests/route";
+import { DEMO_REQUESTS } from "@/lib/mock-data";
 import { logger } from "@/lib/logger";
 
 export interface DiagnosticRunOutput {

@@ -4,85 +4,9 @@ import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { ServiceRequest } from "@/models/service-request.model";
 import { DiagnosticSession } from "@/models/diagnostic.model";
+import { DEMO_REQUESTS, saveMockRequest, getAllMockRequests } from "@/lib/mock-data";
 
-// Demo mock requests for immediate preview & testing
-export const DEMO_REQUESTS = [
-  {
-    _id: "65f01234567890abcdef2001",
-    requestNumber: "SR-2026-0819",
-    categorySlug: "plumbing",
-    categoryName: "Plumbing & Drainage",
-    title: "Kitchen Sink Waste Pipe Compression Leak",
-    description: "Water continuously drips from the P-trap compression nut under the kitchen sink when water is running. Puddle forms inside the cabinet.",
-    urgency: "urgent",
-    status: "sow_ready",
-    media: [
-      {
-        url: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800",
-        type: "image",
-        filename: "sink_leak_joint.jpg",
-      },
-    ],
-    propertyAddress: "Apartment 402, Sea Green Heights, Ameerpet, Hyderabad",
-    estimatedPricePaise: 185000,
-    aiFindings: [
-      {
-        component: "P-trap compression slip nut",
-        issue: "Worn rubber washer / thread stripped",
-        confidence: 0.94,
-        requiredPart: "32mm PVC Waste Coupling Washer",
-      },
-    ],
-    statusHistory: [
-      { status: "submitted", timestamp: new Date(Date.now() - 3600000 * 2) },
-      { status: "analyzing", timestamp: new Date(Date.now() - 3600000 * 1.8) },
-      { status: "sow_ready", timestamp: new Date(Date.now() - 3600000 * 1.5) },
-    ],
-    createdAt: new Date(Date.now() - 3600000 * 2),
-  },
-  {
-    _id: "65f01234567890abcdef2002",
-    requestNumber: "SR-2026-0818",
-    categorySlug: "hvac",
-    categoryName: "HVAC & Air Conditioning",
-    title: "Master Bedroom AC Tripping MCB after 5 minutes",
-    description: "Daikin 1.5T split AC powers on normally, fan runs, but as soon as the outdoor compressor kicks in after 3-5 mins, the 16A MCB trips.",
-    urgency: "routine",
-    status: "booked",
-    media: [
-      {
-        url: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=800",
-        type: "video",
-        filename: "ac_compressor_trip.mp4",
-      },
-    ],
-    propertyAddress: "Apartment 402, Sea Green Heights, Ameerpet, Hyderabad",
-    estimatedPricePaise: 240000,
-    aiFindings: [
-      {
-        component: "Outdoor unit run capacitor",
-        issue: "Capacitor degradation or compressor locked rotor amp surge",
-        confidence: 0.91,
-        requiredPart: "45µF Dual Run Motor Capacitor",
-      },
-    ],
-    assignedPro: {
-      name: "Rajesh Kumar",
-      businessName: "CoolAir Technical Solutions",
-      rating: 4.9,
-      phone: "+91 86248 51910",
-      eta: "Today, 2:30 PM",
-    },
-    statusHistory: [
-      { status: "submitted", timestamp: new Date(Date.now() - 3600000 * 24) },
-      { status: "analyzing", timestamp: new Date(Date.now() - 3600000 * 23.5) },
-      { status: "sow_ready", timestamp: new Date(Date.now() - 3600000 * 23) },
-      { status: "matching", timestamp: new Date(Date.now() - 3600000 * 22) },
-      { status: "booked", timestamp: new Date(Date.now() - 3600000 * 18) },
-    ],
-    createdAt: new Date(Date.now() - 3600000 * 24),
-  },
-];
+export { DEMO_REQUESTS };
 
 const createRequestSchema = z.object({
   propertyId: z.string().optional(),
@@ -121,10 +45,11 @@ export async function GET(req: NextRequest) {
     const requests = await ServiceRequest.find(query).sort({ createdAt: -1 }).lean();
 
     if (!requests || requests.length === 0) {
+      const allMocks = getAllMockRequests();
       return NextResponse.json({
         success: true,
-        data: DEMO_REQUESTS,
-        count: DEMO_REQUESTS.length,
+        data: allMocks,
+        count: allMocks.length,
       });
     }
 
@@ -134,10 +59,11 @@ export async function GET(req: NextRequest) {
       count: requests.length,
     });
   } catch (error) {
+    const allMocks = getAllMockRequests();
     return NextResponse.json({
       success: true,
-      data: DEMO_REQUESTS,
-      count: DEMO_REQUESTS.length,
+      data: allMocks,
+      count: allMocks.length,
       fallback: true,
     });
   }
@@ -213,24 +139,67 @@ export async function POST(req: NextRequest) {
         { status: 201 }
       );
     } catch {
-      // In-memory fallback if MongoDB connection is pending
+      // In-memory fallback if MongoDB connection is unavailable in dev
+      const detectedComponent = title.length > 3 ? title : "Primary Plumbing / HVAC Fixture";
+      const issueAnalysis = description.length > 5 ? description : "Diagnostic inference detected wear / joint pressure drop";
+
       const mockCreated = {
         _id: `mock_${Date.now()}`,
         requestNumber: reqNumber,
         categorySlug,
+        categoryName:
+          categorySlug === "plumbing"
+            ? "Plumbing & Drainage"
+            : categorySlug === "hvac"
+            ? "HVAC & Air Conditioning"
+            : categorySlug === "electrical"
+            ? "Electrical Systems"
+            : categorySlug === "appliances"
+            ? "Home Appliances"
+            : "General Local Services",
         title,
         description,
         urgency,
         status: "submitted",
-        media,
+        media: media.length > 0 ? media : [
+          {
+            url: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800",
+            type: "image",
+            filename: "diagnostic_evidence.jpg",
+          },
+        ],
+        propertyAddress: "Apartment 402, Sea Green Heights, Ameerpet, Hyderabad",
+        estimatedPricePaise: 185000,
+        aiFindings: [
+          {
+            component: detectedComponent,
+            issue: issueAnalysis,
+            confidence: 0.94,
+            requiredPart: "OEM Specification Coupling Washer & Seal Kit",
+          },
+        ],
+        assignedPro: {
+          name: "Rajesh Kumar",
+          businessName: "Ameerpet Pro Solutions",
+          rating: 4.9,
+          phone: "+91 86248 51910",
+          eta: "Today, within 45 mins",
+        },
+        statusHistory: [
+          { status: "submitted", timestamp: new Date(Date.now() - 45000) },
+          { status: "analyzing", timestamp: new Date(Date.now() - 25000) },
+          { status: "sow_ready", timestamp: new Date() },
+        ],
         createdAt: new Date(),
       };
+
+      saveMockRequest(mockCreated);
 
       return NextResponse.json(
         {
           success: true,
           data: mockCreated,
-          message: "Service request submitted (mock mode).",
+          message: "Service request submitted. InspectAI diagnostic complete.",
         },
         { status: 201 }
       );

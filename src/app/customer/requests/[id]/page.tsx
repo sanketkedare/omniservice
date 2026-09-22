@@ -23,18 +23,26 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
-import { DEMO_REQUESTS } from "@/app/api/service-requests/route";
+import { getMockRequestById, DEMO_REQUESTS } from "@/lib/mock-data";
 
 export default function RequestTrackingPage() {
   const params = useParams();
   const requestId = params?.id as string;
-  const [request, setRequest] = useState(DEMO_REQUESTS[0]!);
+  const [request, setRequest] = useState(() => getMockRequestById(requestId) || DEMO_REQUESTS[0]!);
 
   const [isReleased, setIsReleased] = useState(false);
   const [releasing, setReleasing] = useState(false);
 
   useEffect(() => {
     if (!requestId) return;
+    const local = getMockRequestById(requestId);
+    if (local) {
+      setRequest(local);
+      if (local.status === "completed") {
+        setIsReleased(true);
+      }
+    }
+
     fetch(`/api/service-requests/${requestId}`)
       .then((res) => res.json())
       .then((data) => {
@@ -177,7 +185,7 @@ export default function RequestTrackingPage() {
                   <CardTitle className="text-base">InspectAI Diagnostic Analysis</CardTitle>
                 </div>
                 <Badge variant="brand" size="sm">
-                  94% Confidence
+                  {Math.round((request.aiFindings?.[0]?.confidence || 0.94) * 100)}% Confidence
                 </Badge>
               </div>
             </CardHeader>
@@ -187,10 +195,10 @@ export default function RequestTrackingPage() {
                   Detected Root Cause
                 </span>
                 <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-                  P-trap Slip Joint Gasket Extrusion &amp; Crevice Leakage
+                  {request.aiFindings?.[0]?.component || request.title || "Identified Assembly Defect"}
                 </p>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed">
-                  Vision analysis of customer video at 00:04 reveals bead of water accumulating at the threaded joint between the vertical sink tailpiece and horizontal waste arm. Audio spectrum shows intermittent drip frequency of 1.2 Hz under hydraulic pressure.
+                  {request.aiFindings?.[0]?.issue || request.description || "Computer vision and acoustic spectrum diagnostic inference completed."}
                 </p>
               </div>
 
@@ -201,7 +209,7 @@ export default function RequestTrackingPage() {
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   <div className="flex items-center justify-between rounded-xl border border-neutral-200 dark:border-neutral-800 p-2.5">
-                    <span>32mm Beveled Washer</span>
+                    <span>{request.aiFindings?.[0]?.requiredPart || "32mm Beveled Washer & Seal"}</span>
                     <span className="font-mono font-bold text-neutral-900 dark:text-neutral-100">₹80</span>
                   </div>
                   <div className="flex items-center justify-between rounded-xl border border-neutral-200 dark:border-neutral-800 p-2.5">
@@ -234,18 +242,31 @@ export default function RequestTrackingPage() {
             </CardHeader>
             <CardContent className="p-5 pt-0">
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-neutral-950 flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=1200"
-                  alt="Diagnostic evidence"
-                  className="h-full w-full object-cover opacity-80"
-                />
-                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f05a28] shadow-lg cursor-pointer hover:scale-110 transition-transform">
-                    <Video className="h-5 w-5" />
-                  </div>
-                  <span className="text-xs font-semibold mt-2">sink_leak_intake.mp4 (0:14)</span>
-                  <span className="text-[10px] text-neutral-300">Cloud Media CID: QmZ9...</span>
+                {request.media && request.media.length > 0 && request.media[0].type === "video" ? (
+                  <video
+                    src={request.media[0].url}
+                    controls
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={
+                      request.media && request.media.length > 0 && request.media[0].url
+                        ? request.media[0].url
+                        : "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=1200"
+                    }
+                    alt={request.title || "Diagnostic evidence"}
+                    className="h-full w-full object-cover opacity-90"
+                  />
+                )}
+                <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-xs px-3 py-1.5 rounded-lg text-white">
+                  <span className="text-xs font-semibold block">
+                    {request.media?.[0]?.filename || "evidence_photo.jpg"}
+                  </span>
+                  <span className="text-[10px] text-neutral-300">
+                    Ameerpet, Hyderabad • GPS Geotagged
+                  </span>
                 </div>
               </div>
             </CardContent>

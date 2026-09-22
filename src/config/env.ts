@@ -103,6 +103,29 @@ const envSchema = z.object({
 
 // ── Validation ─────────────────────────────────────────────────────────────────
 function validateEnv() {
+  if (typeof window !== "undefined") {
+    // In client browser context: server environment variables are not exposed.
+    // Return safe client defaults to prevent React render tree crashes.
+    return {
+      NODE_ENV: (process.env.NODE_ENV as "development" | "test" | "production") || "development",
+      PORT: 3012,
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3012",
+      NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || "OmniService AI",
+      MONGODB_URI: "",
+      AUTH_SECRET: "client_safe_fallback_placeholder_32chars_min",
+      FILEBASE_ENDPOINT: "https://s3.filebase.com",
+      FILEBASE_BUCKET_NAME: "omniservice-dev",
+      FILEBASE_ACCESS_KEY: "mock-access-key",
+      FILEBASE_SECRET_KEY: "mock-secret-key",
+      FILEBASE_REGION: "us-east-1",
+      AI_PROVIDER: "mock",
+      GEMINI_MODEL: "gemini-2.0-flash",
+      NEXT_PUBLIC_SUPPORT_EMAIL: "volcanic.digitalsolutions@gmail.com",
+      NEXT_PUBLIC_SUPPORT_PHONE: "+91 86248 51910",
+      LOG_LEVEL: "info",
+    } as z.infer<typeof envSchema>;
+  }
+
   const parsed = envSchema.safeParse(process.env);
 
   if (!parsed.success) {

@@ -3,50 +3,9 @@ import { z } from "zod";
 import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { Property, IProperty } from "@/models/property.model";
+import { DEMO_PROPERTIES } from "@/lib/mock-data";
 
-// Demo mock properties for initial testing when DB is empty
-export const DEMO_PROPERTIES = [
-  {
-    _id: "65f01234567890abcdef1001",
-    name: "Apartment 402, Sea Green Heights",
-    propertyType: "apartment",
-    address: {
-      street: "Ameerpet Main Road",
-      city: "Hyderabad",
-      state: "Telangana",
-      postalCode: "500016",
-      country: "India",
-    },
-    bedrooms: 3,
-    bathrooms: 3,
-    squareFootage: 1450,
-    yearBuilt: 2018,
-    healthScore: 92,
-    isDefault: true,
-    isActive: true,
-    createdAt: new Date("2024-01-15"),
-  },
-  {
-    _id: "65f01234567890abcdef1002",
-    name: "Villa Sol, Sector 4",
-    propertyType: "villa",
-    address: {
-      street: "Plot 88, Banjara Hills Road No. 12",
-      city: "Hyderabad",
-      state: "Telangana",
-      postalCode: "500034",
-      country: "India",
-    },
-    bedrooms: 4,
-    bathrooms: 4,
-    squareFootage: 2800,
-    yearBuilt: 2021,
-    healthScore: 88,
-    isDefault: false,
-    isActive: true,
-    createdAt: new Date("2024-06-20"),
-  },
-];
+export { DEMO_PROPERTIES };
 
 const createPropertySchema = z.object({
   name: z.string().min(2, "Property name is required").max(100),
