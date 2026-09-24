@@ -18,6 +18,12 @@ import {
   Eye,
   EyeOff,
   Sparkles,
+  Store,
+  Navigation,
+  CheckSquare,
+  Square,
+  Clock,
+  Award,
 } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
@@ -26,6 +32,17 @@ import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { Avatar } from "@/components/ui/Avatar";
 import { toast } from "@/components/ui/Toast";
+
+const SPECIALTY_OPTIONS = [
+  "Split & Window AC Repair / Servicing",
+  "Electrical & Main Panel Wiring",
+  "Plumbing & Leak Detection",
+  "RO Water Purifier & Filter Replacement",
+  "Smart Home CCTV & Security Automation",
+  "Solar Inverter & Battery Installation",
+  "Washing Machine & Refrigerator Repair",
+  "Interior Painting & Waterproofing",
+];
 
 export default function ProfessionalProfilePage() {
   const router = useRouter();
@@ -38,6 +55,25 @@ export default function ProfessionalProfilePage() {
     role: "professional",
     hasPassword: true,
   });
+
+  // Provider Shop & Business Details State
+  const [shopDetails, setShopDetails] = useState({
+    shopName: "Volcanic Climate & HVAC Workshop",
+    address: "Plot 42, HITECH City Main Rd, near Cyber Towers",
+    locality: "Madhapur, Hyderabad",
+    pincode: "500081",
+    mapLink: "https://maps.google.com/?q=17.445,78.382",
+    experienceYears: "8",
+    licenseGst: "36AAAPL1234F1Z9",
+    emergency247: true,
+    specialties: [
+      "Split & Window AC Repair / Servicing",
+      "Electrical & Main Panel Wiring",
+      "RO Water Purifier & Filter Replacement",
+    ],
+  });
+
+  const [isSavingShop, setIsSavingShop] = useState(false);
 
   // Password Management State
   const [showPasswordSection, setShowPasswordSection] = useState(false);
@@ -66,6 +102,11 @@ export default function ProfessionalProfilePage() {
           hasPassword: u.hasPassword ?? true,
         }));
       }
+
+      const storedShop = localStorage.getItem("omniservice_pro_shop");
+      if (storedShop) {
+        setShopDetails(JSON.parse(storedShop));
+      }
     } catch {}
 
     fetch("/api/auth/me")
@@ -89,6 +130,29 @@ export default function ProfessionalProfilePage() {
       })
       .catch(() => {});
   }, []);
+
+  const handleToggleSpecialty = (item: string) => {
+    setShopDetails((prev) => {
+      const exists = prev.specialties.includes(item);
+      const updated = exists
+        ? prev.specialties.filter((s) => s !== item)
+        : [...prev.specialties, item];
+      return { ...prev, specialties: updated };
+    });
+  };
+
+  const handleSaveShopDetails = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingShop(true);
+    try {
+      localStorage.setItem("omniservice_pro_shop", JSON.stringify(shopDetails));
+      toast.success("Shop Details Updated", "Your business profile & location are live on OmniService.");
+    } catch {
+      toast.error("Error", "Failed to save shop details.");
+    } finally {
+      setIsSavingShop(false);
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -189,14 +253,14 @@ export default function ProfessionalProfilePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-6 sm:px-10 py-6 sm:py-8 space-y-8 text-neutral-900 font-serif">
+    <div className="max-w-5xl mx-auto space-y-8 text-neutral-900 font-serif" style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}>
       <PageHeader
-        title="Provider Profile & Security"
-        description="Manage your verified professional credentials, service trade, and password security."
+        title="Provider Profile & Shop Verification"
+        description="Manage your verified professional credentials, shop location, multiple specialties, and security."
         breadcrumbs={[
           { label: "Home", href: "/" },
           { label: "Provider Dashboard", href: "/pro/dashboard" },
-          { label: "Profile" },
+          { label: "Profile Setup" },
         ]}
       />
 
@@ -208,7 +272,7 @@ export default function ProfessionalProfilePage() {
             <div>
               <p className="text-sm font-bold text-amber-950">Password Setup Recommended</p>
               <p className="text-xs text-amber-800 mt-0.5">
-                You currently sign in via Google or Email OTP. Create a direct password below for instant access across all technician devices.
+                Create a direct password below for instant access across all technician dispatch devices.
               </p>
             </div>
           </div>
@@ -224,154 +288,163 @@ export default function ProfessionalProfilePage() {
       )}
 
       {/* Provider Details Card */}
-      <Card className="border-2 border-orange-100 shadow-xs">
+      <Card className="border-2 border-orange-100 shadow-sm">
         <CardContent className="p-6 space-y-6">
-          <div className="flex items-center gap-4">
-            <Avatar name={userData.name} size="lg" status="online" />
-            <div>
-              <h2 className="text-lg font-bold text-[#2d130a]">{userData.name}</h2>
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="brand" size="sm">
-                  {userData.trade}
-                </Badge>
-                <span className="text-xs text-neutral-500">• Greater Hyderabad Service Hub</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Avatar name={userData.name} size="lg" status="online" />
+              <div>
+                <h2 className="text-lg font-bold text-[#2d130a]">{userData.name}</h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge variant="brand" size="sm">
+                    {userData.trade}
+                  </Badge>
+                  <span className="text-xs text-neutral-500">• Greater Hyderabad Service Hub</span>
+                </div>
               </div>
             </div>
+            <Button variant="outline" size="sm" onClick={handleSignOut} className="text-rose-600 border-rose-200 hover:bg-rose-50 w-fit">
+              <LogOut className="h-4 w-4 mr-1.5" /> Sign Out
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-orange-100 text-xs">
             <div>
               <span className="text-neutral-500 block">Contact Email</span>
-              <span className="font-semibold text-neutral-900">{userData.email || "volcanic.digitalsolutions@gmail.com"}</span>
+              <span className="font-semibold text-neutral-900">{userData.email || "provider@omniservice.com"}</span>
             </div>
             <div>
               <span className="text-neutral-500 block">Mobile Dispatch Line</span>
-              <span className="font-semibold text-neutral-900">{userData.phone || "+91 98200 54321"}</span>
+              <span className="font-semibold text-neutral-900">{userData.phone || "+91 98765 43210"}</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Security & Password Card */}
-      <Card className="border-2 border-orange-100 shadow-xs">
-        <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-orange-100">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="h-5 w-5 text-[#f05a28]" />
-            <CardTitle className="text-base text-[#2d130a]">Security &amp; Account Password</CardTitle>
+      {/* Provider Shop & Location Details Form */}
+      <Card className="border-2 border-orange-200/80 shadow-md bg-white">
+        <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50/50 p-5 border-b border-orange-200/60">
+          <div className="flex items-center gap-2.5">
+            <Store className="h-5 w-5 text-[#f05a28]" />
+            <CardTitle className="text-base font-bold text-neutral-900">
+              Provider Shop Location & Business Verification
+            </CardTitle>
           </div>
-          <Button
-            size="sm"
-            variant={showPasswordSection ? "outline" : "brand"}
-            onClick={() => setShowPasswordSection(!showPasswordSection)}
-          >
-            {showPasswordSection ? "Close" : userData.hasPassword ? "Change Password" : "Create Password"}
-          </Button>
         </CardHeader>
+        <CardContent className="p-6">
+          <form onSubmit={handleSaveShopDetails} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-neutral-800 mb-1">Shop / Business Name</label>
+                <Input
+                  value={shopDetails.shopName}
+                  onChange={(e) => setShopDetails((p) => ({ ...p, shopName: e.target.value }))}
+                  className="bg-white border-neutral-300 text-xs"
+                  placeholder="e.g. Volcanic HVAC & Electrical Workshop"
+                />
+              </div>
 
-        <CardContent className="p-6 space-y-4">
-          <p className="text-xs text-neutral-600">
-            Password requirement: <strong>Min 3 letters</strong>, <strong>Min 2 numbers</strong>, and <strong>Min 1 symbol</strong>. Verified via Email OTP sent to {userData.email || "volcanic.digitalsolutions@gmail.com"}.
-          </p>
+              <div>
+                <label className="block text-xs font-bold text-neutral-800 mb-1">Locality / Zone</label>
+                <Input
+                  value={shopDetails.locality}
+                  onChange={(e) => setShopDetails((p) => ({ ...p, locality: e.target.value }))}
+                  className="bg-white border-neutral-300 text-xs"
+                  placeholder="e.g. Madhapur / Gachibowli, Hyderabad"
+                />
+              </div>
 
-          {showPasswordSection && (
-            <form onSubmit={handleSavePassword} className="space-y-4 pt-2">
-              {passwordFeedback && (
-                <div
-                  className={`rounded-xl p-3 text-xs flex items-center gap-2 ${
-                    passwordFeedback.type === "success"
-                      ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                      : "bg-red-50 text-red-800 border border-red-200"
-                  }`}
-                >
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{passwordFeedback.message}</span>
-                </div>
-              )}
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-bold text-neutral-800 mb-1">Physical Shop Address</label>
+                <Input
+                  value={shopDetails.address}
+                  onChange={(e) => setShopDetails((p) => ({ ...p, address: e.target.value }))}
+                  className="bg-white border-neutral-300 text-xs"
+                  placeholder="e.g. Plot 42, HITECH City Main Road..."
+                />
+              </div>
 
-              {/* Step 1: Send OTP */}
-              {!otpSent ? (
-                <div className="rounded-2xl border border-orange-200 bg-orange-50/50 p-4 space-y-3">
-                  <p className="text-xs text-neutral-700">
-                    Click below to dispatch an Email OTP verification code to <strong>{userData.email}</strong>.
-                  </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="brand"
-                    onClick={handleSendPasswordOtp}
-                    disabled={isSendingOtp}
-                  >
-                    {isSendingOtp ? "Dispatching OTP..." : "Send Verification Code"}
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <Input
-                    label="Email OTP Code"
-                    placeholder="Enter 6-digit verification code"
-                    value={passwordOtp}
-                    onChange={(e) => setPasswordOtp(e.target.value)}
-                    required
-                  />
+              <div>
+                <label className="block text-xs font-bold text-neutral-800 mb-1">Pincode</label>
+                <Input
+                  value={shopDetails.pincode}
+                  onChange={(e) => setShopDetails((p) => ({ ...p, pincode: e.target.value }))}
+                  className="bg-white border-neutral-300 text-xs"
+                  placeholder="e.g. 500081"
+                />
+              </div>
 
-                  {userData.hasPassword && (
-                    <Input
-                      label="Current Password (Optional if OTP is entered)"
-                      type="password"
-                      placeholder="Enter current password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                    />
-                  )}
+              <div>
+                <label className="block text-xs font-bold text-neutral-800 mb-1">Google Maps Location Link</label>
+                <Input
+                  value={shopDetails.mapLink}
+                  onChange={(e) => setShopDetails((p) => ({ ...p, mapLink: e.target.value }))}
+                  className="bg-white border-neutral-300 text-xs"
+                  placeholder="https://maps.google.com/?q=..."
+                />
+              </div>
 
-                  <div className="relative">
-                    <Input
-                      label="New Password"
-                      type={showNewPassword ? "text" : "password"}
-                      placeholder="Must have 3 letters, 2 numbers, 1 symbol"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                    />
+              <div>
+                <label className="block text-xs font-bold text-neutral-800 mb-1">Experience (Years)</label>
+                <Input
+                  value={shopDetails.experienceYears}
+                  onChange={(e) => setShopDetails((p) => ({ ...p, experienceYears: e.target.value }))}
+                  className="bg-white border-neutral-300 text-xs"
+                  placeholder="e.g. 8"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-neutral-800 mb-1">License / GST Registration ID</label>
+                <Input
+                  value={shopDetails.licenseGst}
+                  onChange={(e) => setShopDetails((p) => ({ ...p, licenseGst: e.target.value }))}
+                  className="bg-white border-neutral-300 text-xs"
+                  placeholder="e.g. 36AAAPL1234F1Z9"
+                />
+              </div>
+            </div>
+
+            {/* Multiple Specialty Selector */}
+            <div className="pt-4 border-t border-neutral-200">
+              <label className="block text-xs font-bold text-neutral-900 mb-2">
+                Service Specialties (Select Multiple Trades)
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {SPECIALTY_OPTIONS.map((item) => {
+                  const selected = shopDetails.specialties.includes(item);
+                  return (
                     <button
+                      key={item}
                       type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-[34px] text-neutral-400 hover:text-neutral-600"
+                      onClick={() => handleToggleSpecialty(item)}
+                      className={`flex items-center gap-2.5 p-3 rounded-xl border text-left text-xs transition-all ${
+                        selected
+                          ? "border-[#f05a28] bg-orange-50/70 text-[#f05a28] font-bold shadow-xs"
+                          : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300"
+                      }`}
                     >
-                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {selected ? (
+                        <CheckSquare className="h-4 w-4 text-[#f05a28] shrink-0" />
+                      ) : (
+                        <Square className="h-4 w-4 text-neutral-400 shrink-0" />
+                      )}
+                      <span>{item}</span>
                     </button>
-                  </div>
+                  );
+                })}
+              </div>
+            </div>
 
-                  <Input
-                    label="Confirm New Password"
-                    type="password"
-                    placeholder="Re-enter new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                  />
-
-                  <div className="flex gap-2 pt-2">
-                    <Button type="submit" variant="brand" disabled={isSavingPassword}>
-                      {isSavingPassword ? "Saving..." : "Update Password"}
-                    </Button>
-                    <Button type="button" variant="ghost" onClick={() => setShowPasswordSection(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </form>
-          )}
+            {/* Save Button */}
+            <div className="pt-2 flex justify-end">
+              <Button type="submit" disabled={isSavingShop} className="bg-[#f05a28] hover:bg-[#d04618] text-white font-bold text-xs px-6 py-2 rounded-xl shadow-md">
+                {isSavingShop ? "Saving..." : "Save Shop Profile"}
+              </Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
-
-      {/* Sign Out Button */}
-      <div className="pt-4 flex justify-end">
-        <Button variant="outline" onClick={handleSignOut} leftIcon={<LogOut className="h-4 w-4" />}>
-          Sign Out of Provider Portal
-        </Button>
-      </div>
     </div>
   );
 }

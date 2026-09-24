@@ -16,7 +16,9 @@ import {
   Zap,
   CheckCircle,
   Trash2,
-  Download,
+  Camera,
+  Paperclip,
+  ShieldAlert,
 } from "lucide-react";
 import { PWAInstallButton } from "@/components/shared/PWAInstallButton";
 
@@ -33,6 +35,14 @@ interface ChatMsg {
     title: string;
     category: string;
     estimatedCostPaise: number;
+  };
+  mediaAnalysis?: {
+    whatAiSaw: string;
+    issueDetected: boolean;
+    noIssueMessage?: string;
+    problemTitle?: string;
+    likelyRootCause?: string;
+    suggestedActions?: string[];
   };
 }
 
@@ -54,6 +64,7 @@ export function HomeDiagnosticChat({ disabled = false }: { disabled?: boolean })
   const [isAuth, setIsAuth] = useState(false);
   const [hasPromptedOpen, setHasPromptedOpen] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleClearChat = () => {
     try {
@@ -64,42 +75,57 @@ export function HomeDiagnosticChat({ disabled = false }: { disabled?: boolean })
         id: "welcome_0",
         role: "assistant",
         content:
-          "Chat cleared. I am OmniService InspectAI. Describe any home appliance, plumbing, or electrical issue, and I will diagnose likely causes, safety risks, and fair-market price ceilings.",
+          "Hello! I am InspectAI, your real-time home diagnostic engineer. Type a problem symptom or upload a photo/video for instant MVP visual verification.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        followUps: QUICK_PROMPTS,
       },
     ]);
   };
 
-  // Initialize usage counter & auth status from client storage
   useEffect(() => {
     try {
-      const storedCount = localStorage.getItem("omniservice_device_chat_count");
-      if (storedCount) {
-        setDeviceCount(parseInt(storedCount, 10) || 0);
-      }
-      const storedUser = localStorage.getItem("omniservice_user");
-      if (storedUser) {
-        setIsAuth(true);
-      }
-    } catch {
-      // Storage access error
-    }
+      const authStored = localStorage.getItem("omniservice_user");
+      if (authStored) setIsAuth(true);
 
-    // Default welcome message
-    setMessages([
-      {
-        id: "welcome_0",
-        role: "assistant",
-        content:
-          "Hello! I am OmniService InspectAI. Describe any home appliance, plumbing, or electrical issue, and I will diagnose likely causes, safety risks, and fair-market price ceilings.",
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        followUps: QUICK_PROMPTS,
-      },
-    ]);
+      const savedChat = localStorage.getItem("omniservice_diagnostic_chat");
+      if (savedChat) {
+        setMessages(JSON.parse(savedChat));
+      } else {
+        handleClearChat();
+      }
+
+      const count = parseInt(localStorage.getItem("omniservice_device_chat_count") || "0", 10);
+      setDeviceCount(count);
+    } catch {}
   }, []);
 
-  // Scroll to bottom on message update
+  useEffect(() => {
+    if (messages.length > 1) {
+      try {
+        localStorage.setItem("omniservice_diagnostic_chat", JSON.stringify(messages));
+      } catch {}
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (isOpen && messages.length <= 1) {
+      const timer = setTimeout(() => {
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === "auto_prompt_0")) return prev;
+          return [
+            ...prev,
+            {
+              id: "auto_prompt_0",
+              role: "assistant",
+              content: "Tip: Upload a clear photo/video of your AC unit, pipe leak, or electrical board to run instant visual AI verification.",
+              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            },
+          ];
+        });
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, messages.length]);
+
   useEffect(() => {
     if (isOpen) {
       chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -155,9 +181,7 @@ export function HomeDiagnosticChat({ disabled = false }: { disabled?: boolean })
           {
             id: `err_${Date.now()}`,
             role: "assistant",
-            content:
-              json.message ||
-              "I encountered an error connecting to our diagnostic model. Please try again or book a certified diagnostic inspection.",
+            content: json.message || "Diagnostic connection error. Please try again.",
             timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           },
         ]);
@@ -190,8 +214,7 @@ export function HomeDiagnosticChat({ disabled = false }: { disabled?: boolean })
         {
           id: `err_${Date.now()}`,
           role: "assistant",
-          content:
-            "Connectivity hiccup while contacting our diagnostic engine. Please verify your network or book a visit directly.",
+          content: "Connectivity error. Please try again.",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
@@ -200,40 +223,109 @@ export function HomeDiagnosticChat({ disabled = false }: { disabled?: boolean })
     }
   };
 
-  if (disabled) {
-    return null;
-  }
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const userMsg: ChatMsg = {
+      id: `user_upload_${Date.now()}`,
+      role: "user",
+      content: `📷 Uploaded photo/video: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/diagnostics/analyze-media", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mediaUrl: `/images/${file.name}`,
+          mediaType: file.type.startsWith("video") ? "video" : "image",
+          mimeType: file.type || "image/jpeg",
+          userNotes: `Uploaded ${file.name} for AI media verification`,
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Failed to analyze photo");
+      }
+
+      const analysis = json.analysis;
+
+      let replyText = `🔍 **What AI Saw:**\n${analysis.whatAiSaw}\n\n`;
+      if (analysis.issueDetected) {
+        replyText += `⚠️ **Detected Issue:** ${analysis.problemTitle}\n`;
+        replyText += `**Likely Root Cause:** ${analysis.likelyRootCause}\n`;
+        if (analysis.suggestedActions?.length) {
+          replyText += `\n**Recommended Actions:**\n` + analysis.suggestedActions.map((a: string) => `• ${a}`).join("\n");
+        }
+      } else {
+        replyText += `✅ **No Issue Detected:**\n${analysis.noIssueMessage}\n`;
+        if (analysis.suggestedActions?.length) {
+          replyText += `\n**Advice:**\n` + analysis.suggestedActions.map((a: string) => `• ${a}`).join("\n");
+        }
+      }
+
+      const assistantMsg: ChatMsg = {
+        id: `ai_media_${Date.now()}`,
+        role: "assistant",
+        content: replyText,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        category: analysis.categoryLabel || "Visual Diagnostics",
+        mediaAnalysis: {
+          whatAiSaw: analysis.whatAiSaw,
+          issueDetected: analysis.issueDetected,
+          noIssueMessage: analysis.noIssueMessage,
+          problemTitle: analysis.problemTitle,
+          likelyRootCause: analysis.likelyRootCause,
+          suggestedActions: analysis.suggestedActions,
+        },
+      };
+
+      setMessages((prev) => [...prev, assistantMsg]);
+    } catch (err: any) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `err_media_${Date.now()}`,
+          role: "assistant",
+          content: `Unable to inspect media: ${err.message || "Please try uploading again."}`,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (disabled) return null;
 
   return (
     <>
       {/* ── Floating Launcher Column ──────────────────────────────────── */}
-      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2.5">
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2.5 font-serif" style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}>
         {!isOpen && (
           <>
-            {/* Install App Button directly above Chat option */}
             <PWAInstallButton variant="floating" />
-
             <button
               type="button"
               onClick={() => setIsOpen(true)}
               aria-label="Chat with AI"
               className="group flex items-center gap-2.5 rounded-full border-2 border-orange-300/90 bg-gradient-to-r from-white via-orange-50 to-white pl-3.5 pr-4 py-2.5 shadow-2xl shadow-orange-950/20 hover:scale-105 hover:border-[#f05a28] transition-all backdrop-blur-md cursor-pointer"
             >
-              <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#f05a28] to-[#ea580c] text-white shadow-md shadow-orange-500/30 group-hover:rotate-6 transition-transform">
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-[#f05a28] to-[#ea580c] text-white shadow-md">
                 <Bot className="h-4 w-4" />
-                <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                </span>
               </div>
               <div className="text-left">
                 <span className="block text-xs font-black text-[#2d130a] leading-tight">
                   Chat with AI
                 </span>
                 <span className="block text-[10px] font-semibold text-[#c2410c]">
-                  {isAuth
-                    ? "Instant AI Support"
-                    : `${remaining} free diagnostic ${remaining === 1 ? "scan" : "scans"}`}
+                  {isAuth ? "Instant AI Support" : `${remaining} free diagnostic ${remaining === 1 ? "scan" : "scans"}`}
                 </span>
               </div>
             </button>
@@ -244,7 +336,7 @@ export function HomeDiagnosticChat({ disabled = false }: { disabled?: boolean })
       {/* ── Chat Modal / Floating Drawer ─────────────────────────────── */}
       {isOpen && (
         <div
-          className="fixed bottom-6 right-6 z-50 w-[92vw] sm:w-[420px] max-h-[640px] h-[82vh] rounded-3xl border-2 border-orange-200/90 bg-white/98 backdrop-blur-2xl shadow-2xl shadow-orange-950/25 flex flex-col overflow-hidden font-serif animate-in fade-in slide-in-from-bottom-6 duration-200"
+          className="fixed bottom-6 right-6 z-50 w-[92vw] sm:w-[440px] max-h-[640px] h-[82vh] rounded-3xl border-2 border-orange-200/90 bg-white/98 backdrop-blur-2xl shadow-2xl shadow-orange-950/25 flex flex-col overflow-hidden font-serif animate-in fade-in slide-in-from-bottom-6 duration-200"
           style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
         >
           {/* Header */}
@@ -255,14 +347,12 @@ export function HomeDiagnosticChat({ disabled = false }: { disabled?: boolean })
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-black text-[#2d130a]">Chat with AI</h3>
+                  <h3 className="text-sm font-black text-[#2d130a]">InspectAI Engineer</h3>
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
-                    Online
+                    Vision MVP
                   </span>
                 </div>
-                <p className="text-[11px] text-neutral-500">
-                  InspectAI Diagnostic Agent
-                </p>
+                <p className="text-[11px] text-neutral-500">Multimodal Photo & Video Verification</p>
               </div>
             </div>
 
@@ -271,8 +361,7 @@ export function HomeDiagnosticChat({ disabled = false }: { disabled?: boolean })
                 type="button"
                 onClick={handleClearChat}
                 className="rounded-xl p-1.5 text-neutral-400 hover:bg-orange-100/70 hover:text-red-500 transition-colors"
-                title="Delete / Clear Chat History"
-                aria-label="Delete Chat"
+                title="Clear Chat History"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -280,34 +369,13 @@ export function HomeDiagnosticChat({ disabled = false }: { disabled?: boolean })
                 type="button"
                 onClick={() => setIsOpen(false)}
                 className="rounded-xl p-1.5 text-neutral-400 hover:bg-orange-100/70 hover:text-neutral-700 transition-colors"
-                aria-label="Close Chat"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
           </div>
 
-          {/* Quota Banner */}
-          <div className="bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 px-4 py-2 border-b border-orange-200/50 flex items-center justify-between text-[11px]">
-            <span className="font-semibold text-[#7c2d12] flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-[#f05a28]" />
-              {isAuth ? (
-                "Verified Account: Unlimited Diagnostics"
-              ) : (
-                <>Device Free Preview: <strong className="text-[#c2410c]">{remaining} / {MAX_FREE_MESSAGES} left</strong></>
-              )}
-            </span>
-            {!isAuth && (
-              <Link
-                href="/login"
-                className="text-[10px] font-bold text-[#f05a28] hover:underline"
-              >
-                Sign In
-              </Link>
-            )}
-          </div>
-
-          {/* Chat Messages List */}
+          {/* Messages List */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-[#faf8f5] to-white">
             {messages.map((m) => (
               <div
@@ -321,113 +389,63 @@ export function HomeDiagnosticChat({ disabled = false }: { disabled?: boolean })
                 )}
 
                 <div
-                  className={`max-w-[85%] rounded-2xl p-3.5 text-xs leading-relaxed shadow-2xs ${
+                  className={`max-w-[88%] rounded-2xl p-3.5 text-xs leading-relaxed ${
                     m.role === "user"
                       ? "bg-gradient-to-r from-[#f05a28] to-[#ea580c] text-white rounded-br-xs"
-                      : "bg-white border border-orange-100/90 text-neutral-800 rounded-bl-xs shadow-xs"
+                      : "bg-white border border-orange-200 text-neutral-800 rounded-bl-xs shadow-xs"
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{m.content}</p>
 
-                  {/* Diagnostic Findings Card */}
-                  {m.draft && (
-                    <div className="mt-3 rounded-xl border border-orange-200/80 bg-[#fffbf7] p-2.5 space-y-1.5 text-neutral-800">
-                      <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#c2410c]">
-                        <span>Diagnostic Triage</span>
-                        <span className="rounded-md bg-orange-100 px-1.5 py-0.5 text-orange-800">
-                          {m.category || "General"}
+                  {/* Media Analysis Highlight Box */}
+                  {m.mediaAnalysis && (
+                    <div className="mt-3 p-3 rounded-xl border border-orange-200 bg-orange-50/60 text-neutral-900 space-y-2 text-[11px]">
+                      <div className="flex items-center justify-between font-bold border-b border-orange-200 pb-1.5">
+                        <span className="text-[#f05a28] flex items-center gap-1">
+                          <Camera className="h-3.5 w-3.5" /> AI Photo/Video Inspection
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          m.mediaAnalysis.issueDetected
+                            ? "bg-rose-100 text-rose-700"
+                            : "bg-emerald-100 text-emerald-700"
+                        }`}>
+                          {m.mediaAnalysis.issueDetected ? "Defect Detected" : "No Defect Detected"}
                         </span>
                       </div>
-                      <div className="text-[11px] font-bold text-[#2d130a]">{m.draft.title}</div>
-                      {m.costRange && (
-                        <div className="text-[11px] text-emerald-700 font-bold">
-                          Est. Price: ₹{(m.costRange.minPaise / 100).toLocaleString("en-IN")} – ₹{(m.costRange.maxPaise / 100).toLocaleString("en-IN")}
+                      <div>
+                        <strong>AI Observation:</strong> {m.mediaAnalysis.whatAiSaw}
+                      </div>
+                      {!m.mediaAnalysis.issueDetected && m.mediaAnalysis.noIssueMessage && (
+                        <div className="text-emerald-800 bg-emerald-50 p-2 rounded-lg font-medium">
+                          {m.mediaAnalysis.noIssueMessage}
                         </div>
                       )}
-                      <Link
-                        href="/register"
-                        className="mt-2 inline-flex items-center justify-center gap-1 w-full rounded-lg bg-[#f05a28] px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-[#d04618] transition-colors"
-                      >
-                        <span>Lock Price &amp; Dispatch Pro</span>
-                        <ArrowRight className="h-3 w-3" />
-                      </Link>
                     </div>
                   )}
-
-                  {/* Follow-up Prompt Chips */}
-                  {m.followUps && m.followUps.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {m.followUps.map((chip, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          disabled={loading || isLimitReached}
-                          onClick={() => handleSendMessage(chip)}
-                          className="rounded-lg border border-orange-200/90 bg-orange-50/70 px-2.5 py-1 text-[10px] font-semibold text-[#7c2d12] hover:bg-orange-100 hover:border-[#f05a28] transition-colors text-left disabled:opacity-50"
-                        >
-                          {chip}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  <span
-                    className={`block mt-1.5 text-[9px] ${
-                      m.role === "user" ? "text-orange-100 text-right" : "text-neutral-400"
-                    }`}
-                  >
-                    {m.timestamp}
-                  </span>
                 </div>
-
-                {m.role === "user" && (
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-neutral-200 text-neutral-700 mt-0.5">
-                    <User className="h-4 w-4" />
-                  </div>
-                )}
               </div>
             ))}
 
             {loading && (
-              <div className="flex items-center gap-2 text-neutral-500 text-xs italic pl-9">
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#f05a28]" />
-                <span>InspectAI is analyzing symptoms across models...</span>
-              </div>
-            )}
-
-            {/* Limit Reached Card */}
-            {isLimitReached && (
-              <div className="rounded-2xl border-2 border-orange-300 bg-gradient-to-br from-orange-50 to-amber-50 p-4 space-y-2.5 text-center shadow-xs">
-                <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-[#f05a28]/10 text-[#f05a28]">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <h4 className="text-xs font-black text-[#2d130a]">
-                  5 Free Diagnostic Messages Reached
-                </h4>
-                <p className="text-[11px] text-neutral-600 leading-relaxed">
-                  Sign in or create your free account to continue unlimited AI diagnostics, lock guaranteed price ceilings, and dispatch certified local specialists.
-                </p>
-                <div className="flex items-center justify-center gap-2 pt-1">
-                  <Link
-                    href="/login"
-                    className="rounded-xl border border-orange-300 bg-white px-3.5 py-1.5 text-xs font-bold text-[#c2410c] hover:bg-orange-50 transition-colors shadow-2xs"
-                  >
-                    Sign In
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="rounded-xl bg-gradient-to-r from-[#f05a28] to-[#ea580c] px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:from-[#ea580c] hover:to-[#c2410c] transition-all"
-                  >
-                    Create Free Account
-                  </Link>
-                </div>
+              <div className="flex items-center gap-2 text-xs text-neutral-500 italic p-2">
+                <Loader2 className="h-4 w-4 animate-spin text-[#f05a28]" />
+                InspectAI reading media & running diagnostic checks...
               </div>
             )}
 
             <div ref={chatBottomRef} />
           </div>
 
-          {/* Input Box */}
+          {/* Hidden File Input for Photo/Video Upload */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            accept="image/*,video/*"
+            className="hidden"
+          />
+
+          {/* Input Form */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -435,30 +453,31 @@ export function HomeDiagnosticChat({ disabled = false }: { disabled?: boolean })
             }}
             className="p-3 border-t border-orange-100 bg-white flex items-center gap-2"
           >
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading}
+              title="Upload Photo / Video for AI MVP Verification"
+              className="p-2.5 rounded-xl border border-orange-200 text-[#f05a28] hover:bg-orange-50 transition-colors"
+            >
+              <Camera className="h-4 w-4" />
+            </button>
+
             <input
               type="text"
               value={inputText}
-              disabled={loading || isLimitReached}
+              disabled={loading}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder={
-                isLimitReached
-                  ? "Sign in to continue unlimited chat..."
-                  : "Describe symptom (e.g. AC compressor humming, water leaking)..."
-              }
-              className="flex-1 rounded-xl border border-neutral-200 px-3.5 py-2.5 text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-[#f05a28] focus:ring-1 focus:ring-[#f05a28] disabled:bg-neutral-100 disabled:cursor-not-allowed"
+              placeholder="Describe issue or upload photo/video..."
+              className="flex-1 rounded-xl border border-neutral-200 px-3.5 py-2.5 text-xs text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-[#f05a28]"
             />
 
             <button
               type="submit"
-              disabled={loading || !inputText.trim() || isLimitReached}
+              disabled={loading || !inputText.trim()}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-[#f05a28] to-[#ea580c] text-white shadow-xs hover:from-[#ea580c] hover:to-[#c2410c] disabled:opacity-40 transition-all"
-              aria-label="Send Message"
             >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
+              <Send className="h-4 w-4" />
             </button>
           </form>
         </div>

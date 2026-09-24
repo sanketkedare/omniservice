@@ -47,6 +47,27 @@ export function TopBar({ className }: { className?: string }) {
   const [notificationsOpen, setNotificationsOpen] = React.useState(false);
   const { locality, permissionDenied } = useGeolocation();
   const { notifications, unreadCount, markAllRead } = useNotificationStream(currentUser?.role);
+  const notifRef = React.useRef<HTMLDivElement>(null);
+  const isDashboardRoute =
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/pro") ||
+    pathname.startsWith("/customer") ||
+    pathname.includes("/dashboard");
+
+  // Dismiss notification popup when clicking anywhere outside
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setNotificationsOpen(false);
+      }
+    }
+    if (notificationsOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [notificationsOpen]);
 
   React.useEffect(() => {
     // 1. Try reading from localStorage for instant offline/client recall
@@ -146,16 +167,18 @@ export function TopBar({ className }: { className?: string }) {
         <div className="max-w-7xl mx-auto flex h-20 w-full items-center justify-between px-6 sm:px-10 lg:px-12 gap-4">
           {/* Left: Brand logo & Navigation */}
           <div className="flex items-center gap-5">
-            <Link href="/" className="flex items-center group" aria-label="OmniService Home">
-              <Image
-                src="/images/OmniService_Logo.png"
-                alt="OmniService"
-                width={180}
-                height={44}
-                className="h-9 sm:h-10 w-auto rounded-xl object-contain transition-transform group-hover:scale-102"
-                priority
-              />
-            </Link>
+            {!isDashboardRoute && (
+              <Link href="/" className="flex items-center group" aria-label="OmniService Home">
+                <Image
+                  src="/images/OmniService_Logo.png"
+                  alt="OmniService"
+                  width={180}
+                  height={44}
+                  className="h-9 sm:h-10 w-auto rounded-xl object-contain transition-transform group-hover:scale-102"
+                  priority
+                />
+              </Link>
+            )}
 
             {/* Active Role Dashboard Link */}
             {portal && (
@@ -197,7 +220,7 @@ export function TopBar({ className }: { className?: string }) {
             {currentUser ? (
               <>
                 {/* Real-time Notifications Bell & Dropdown */}
-                <div className="relative">
+                <div className="relative" ref={notifRef}>
                   <button
                     type="button"
                     onClick={() => {
@@ -220,7 +243,7 @@ export function TopBar({ className }: { className?: string }) {
                     <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-orange-200 bg-white p-3 shadow-xl z-50 space-y-2 animate-in fade-in slide-in-from-top-2">
                       <div className="flex items-center justify-between pb-2 border-b border-orange-100">
                         <span className="text-xs font-bold text-[#2d130a]">Live Notifications</span>
-                        <span className="text-[10px] text-neutral-400">Real-time Stream</span>
+                        <span className="text-[10px] text-neutral-400">Click anywhere to close</span>
                       </div>
                       <div className="max-h-64 overflow-y-auto space-y-2">
                         {notifications.length === 0 ? (
@@ -229,7 +252,11 @@ export function TopBar({ className }: { className?: string }) {
                           </div>
                         ) : (
                           notifications.slice(0, 5).map((n) => (
-                            <div key={n.id} className="p-2 rounded-xl bg-orange-50/50 border border-orange-100/60 text-xs">
+                            <div
+                              key={n.id}
+                              onClick={() => setNotificationsOpen(false)}
+                              className="p-2 rounded-xl bg-orange-50/50 border border-orange-100/60 text-xs cursor-pointer hover:bg-orange-100/80 transition-colors"
+                            >
                               <p className="font-bold text-[#c2410c]">{n.title}</p>
                               <p className="text-neutral-600 text-[11px] mt-0.5">{n.message}</p>
                             </div>

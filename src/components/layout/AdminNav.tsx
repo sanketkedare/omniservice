@@ -15,6 +15,8 @@ import {
   FileText,
   Settings,
   ChevronRight,
+  User,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
@@ -36,6 +38,7 @@ const adminNavItems: AdminNavItem[] = [
   { label: "Disputes", href: "/admin/disputes", icon: AlertTriangle },
   { label: "AI Inferences", href: "/admin/ai-inferences", icon: Cpu },
   { label: "Audit Logs", href: "/admin/logs", icon: FileText },
+  { label: "Admin Security Profile", href: "/admin/profile", icon: User },
   { label: "System Settings", href: "/admin/settings", icon: Settings },
 ];
 
@@ -45,29 +48,32 @@ export function AdminNav({ className }: { className?: string }) {
   return (
     <aside
       className={cn(
-        "flex h-screen w-64 flex-col border-r border-neutral-200/80 bg-white dark:bg-neutral-900 dark:border-neutral-800",
+        "flex h-full w-full flex-col border-r border-orange-200/60 bg-white font-serif dark:bg-neutral-900 dark:border-neutral-800 shadow-sm",
         className
       )}
+      style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
     >
-      {/* Brand Logo */}
-      <div className="flex h-16 items-center justify-between border-b border-neutral-200/80 px-4 dark:border-neutral-800">
-        <Image
-          src="/images/OmniService_Logo.png"
-          alt="OmniService AI"
-          width={130}
-          height={32}
-          className="h-7 w-auto rounded-lg object-contain"
-          priority
-        />
-        <span className="rounded bg-[#f05a28]/10 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-[#f05a28]">
+      {/* Sidebar Header Brand Logo */}
+      <div className="flex h-16 items-center justify-between border-b border-orange-200/60 px-5 dark:border-neutral-800 bg-gradient-to-r from-orange-50/50 to-white">
+        <Link href="/admin/dashboard" className="flex items-center gap-2">
+          <Image
+            src="/images/OmniService_Logo.png"
+            alt="OmniService AI"
+            width={140}
+            height={36}
+            className="h-8 w-auto object-contain"
+            priority
+          />
+        </Link>
+        <span className="rounded-full bg-[#f05a28]/10 px-2 py-0.5 text-[10px] font-extrabold uppercase text-[#f05a28] border border-[#f05a28]/20">
           Admin
         </span>
       </div>
 
       {/* Navigation items */}
-      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3.5">
         {adminNavItems.map((item) => {
-          const isActive = pathname.startsWith(item.href);
+          const isActive = pathname === item.href || (item.href !== "/admin/dashboard" && pathname.startsWith(item.href));
           const Icon = item.icon;
 
           return (
@@ -75,64 +81,59 @@ export function AdminNav({ className }: { className?: string }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "group flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-semibold transition-all duration-150",
+                "group flex items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-bold transition-all duration-150",
                 isActive
-                  ? "bg-[#f05a28]/10 text-[#f05a28] dark:bg-[#f05a28]/20 dark:text-[#f47a4f]"
-                  : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                  ? "bg-[#f05a28] text-white shadow-md shadow-orange-500/20"
+                  : "text-neutral-700 hover:bg-orange-50 hover:text-[#f05a28] dark:text-neutral-300 dark:hover:bg-neutral-800"
               )}
             >
               <div className="flex items-center gap-3">
                 <Icon
                   className={cn(
                     "h-4 w-4 transition-colors",
-                    isActive
-                      ? "text-[#f05a28]"
-                      : "text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-300"
+                    isActive ? "text-white" : "text-neutral-500 group-hover:text-[#f05a28]"
                   )}
                 />
                 <span>{item.label}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 {item.badge && (
-                  <Badge
-                    size="sm"
-                    variant={item.badgeVariant || "brand"}
-                  >
+                  <Badge size="sm" variant={item.badgeVariant || "brand"}>
                     {item.badge}
                   </Badge>
                 )}
-                {isActive && <ChevronRight className="h-3 w-3 text-[#f05a28]" />}
+                {isActive && <ChevronRight className="h-3.5 w-3.5 text-white/90" />}
               </div>
             </Link>
           );
         })}
       </nav>
 
-      {/* Footer Info */}
-      <div className="border-t border-neutral-200/80 p-4 dark:border-neutral-800 space-y-2">
-        <div className="flex items-center gap-3">
-          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[11px] font-medium text-neutral-500">
-            Engine: MongoDB 8.0 • Online
+      {/* Sidebar Bottom Volcanic Branding */}
+      <div className="border-t border-orange-200/60 p-4 dark:border-neutral-800 bg-neutral-900 text-white space-y-2 rounded-b-none">
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[11px] font-bold text-white/90 flex items-center gap-1">
+            <ShieldCheck className="h-3 w-3 text-emerald-400" /> Admin Shield Active
           </span>
         </div>
         <a
           href="https://volcanic.world"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between text-[10px] font-bold tracking-widest text-neutral-400 hover:text-[#f05a28] transition-colors"
+          className="flex items-center justify-between pt-1 border-t border-white/10 text-[10px] font-bold tracking-widest text-white/70 hover:text-orange-400 transition-colors"
         >
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <Image
               src="/images/volcanic_logo.png"
               alt="Volcanic Logo"
-              width={14}
-              height={14}
-              className="h-3.5 w-3.5 object-contain"
+              width={16}
+              height={16}
+              className="h-4 w-4 object-contain brightness-125"
             />
-            <span>V O L C A N I C</span>
+            <span>VOLCANIC</span>
           </div>
-          <span className="text-[9px] font-normal tracking-normal text-neutral-500">volcanic.world ↗</span>
+          <span className="text-[9px] font-normal tracking-normal text-white/40">volcanic.world ↗</span>
         </a>
       </div>
     </aside>
