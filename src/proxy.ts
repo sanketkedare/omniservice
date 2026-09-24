@@ -98,10 +98,12 @@ export function proxy(request: NextRequest) {
     if (!isAuthenticated) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
+      loginUrl.searchParams.set("error", "AdminAuthRequired");
       return NextResponse.redirect(loginUrl);
     }
     if (userRole !== "admin") {
-      const redirectUrl = new URL("/unauthorized", request.url);
+      const redirectUrl = new URL("/customer/dashboard", request.url);
+      redirectUrl.searchParams.set("error", "UnauthorizedAdminAccess");
       redirectUrl.searchParams.set("role", "admin");
       redirectUrl.searchParams.set("reason", "Admin role required to access Governance Center");
       return NextResponse.redirect(redirectUrl);
@@ -113,10 +115,12 @@ export function proxy(request: NextRequest) {
     if (!isAuthenticated) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
+      loginUrl.searchParams.set("error", "ProAuthRequired");
       return NextResponse.redirect(loginUrl);
     }
     if (userRole !== "professional" && userRole !== "admin") {
-      const redirectUrl = new URL("/unauthorized", request.url);
+      const redirectUrl = new URL("/customer/dashboard", request.url);
+      redirectUrl.searchParams.set("error", "UnauthorizedProAccess");
       redirectUrl.searchParams.set("role", "professional");
       redirectUrl.searchParams.set("reason", "Verified Professional credentials required");
       return NextResponse.redirect(redirectUrl);
