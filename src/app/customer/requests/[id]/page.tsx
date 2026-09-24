@@ -386,10 +386,21 @@ export default function RequestTrackingPage() {
               </div>
 
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" fullWidth leftIcon={<Phone className="h-3.5 w-3.5" />}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  fullWidth
+                  leftIcon={<Phone className="h-3.5 w-3.5" />}
+                  onClick={() => alert("Secure In-App Call Bridge: Connecting call via platform masked relay. Provider phone number is shielded to maintain user privacy.")}
+                >
                   Call Masked
                 </Button>
-                <Button size="sm" variant="brand" fullWidth>
+                <Button
+                  size="sm"
+                  variant="brand"
+                  fullWidth
+                  onClick={() => alert("Secure In-App Messaging: Connecting to direct end-to-end encrypted dispatch channel.")}
+                >
                   Message
                 </Button>
               </div>

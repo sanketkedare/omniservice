@@ -30,6 +30,8 @@ export const DEFAULT_HYDERABAD_COORDINATES: Coordinates = {
   accuracy: 25,
 };
 
+export const HYDERABAD_MAX_RADIUS_KM = 45;
+
 export const DEFAULT_LOCATION_INFO: LocationInfo = {
   coordinates: DEFAULT_HYDERABAD_COORDINATES,
   locality: "Hyderabad, Telangana",
@@ -40,6 +42,50 @@ export const DEFAULT_LOCATION_INFO: LocationInfo = {
 
 // Backwards compatibility alias
 export const DEFAULT_MUMBAI_COORDINATES = DEFAULT_HYDERABAD_COORDINATES;
+
+/**
+ * Calculates geodesic distance between two coordinate points in KM.
+ */
+export function getDistanceKm(c1: Coordinates, c2: Coordinates): number {
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(c2.lat - c1.lat);
+  const dLng = toRad(c2.lng - c1.lng);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(c1.lat)) * Math.cos(toRad(c2.lat)) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return 6371 * c;
+}
+
+/**
+ * Validates if coordinates reside within the Greater Hyderabad operating boundary (<= 45 km radius).
+ */
+export function checkHyderabadRadius(coords?: Coordinates): {
+  isWithinRadius: boolean;
+  distanceKm: number;
+  nearestHub: string;
+} {
+  if (!coords || typeof coords.lat !== "number" || typeof coords.lng !== "number") {
+    return { isWithinRadius: true, distanceKm: 0, nearestHub: "Hyderabad Central" };
+  }
+
+  const dist = getDistanceKm(coords, DEFAULT_HYDERABAD_COORDINATES);
+  const isWithinRadius = dist <= HYDERABAD_MAX_RADIUS_KM;
+
+  // Determine closest operational hub
+  let nearestHub = "Hyderabad Central (Ameerpet)";
+  if (coords.lat > 17.43 && coords.lng < 78.40) nearestHub = "Hitec City / Madhapur Hub";
+  else if (coords.lat > 17.42 && coords.lng < 78.36) nearestHub = "Gachibowli Financial Hub";
+  else if (coords.lat > 17.41 && coords.lng > 78.41 && coords.lng < 78.47) nearestHub = "Banjara & Jubilee Hills Hub";
+  else if (coords.lat > 17.44 && coords.lng > 78.48) nearestHub = "Secunderabad Hub";
+  else if (coords.lat > 17.48) nearestHub = "Kukatpally North Hub";
+
+  return {
+    isWithinRadius,
+    distanceKm: Math.round(dist * 10) / 10,
+    nearestHub,
+  };
+}
 
 /**
  * Reverse geocodes coordinates to a human-readable locality, city, and state.

@@ -220,11 +220,14 @@ export async function GET(req: NextRequest) {
       source: "ai_local_search",
     }));
 
-    // Combine: Registered platform providers ALWAYS prioritized first
+    // Combine: Registered platform providers ALWAYS prioritized first, phone strictly masked for escrow privacy
     const rankedResults: ProviderSuggestion[] = [
       ...registeredProviders,
       ...aiDiscoveredProviders,
-    ];
+    ].map((p) => ({
+      ...p,
+      phone: "+91 98XXX XXXXX (In-App Protected)",
+    }));
 
     return NextResponse.json({
       success: true,

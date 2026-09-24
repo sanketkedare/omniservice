@@ -102,8 +102,9 @@ export function proxy(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
     if (userRole !== "admin") {
-      const redirectUrl = new URL(`/${userRole || "customer"}/dashboard`, request.url);
-      redirectUrl.searchParams.set("error", "UnauthorizedAdminAccess");
+      const redirectUrl = new URL("/unauthorized", request.url);
+      redirectUrl.searchParams.set("role", "admin");
+      redirectUrl.searchParams.set("reason", "Admin role required to access Governance Center");
       return NextResponse.redirect(redirectUrl);
     }
   }
@@ -117,8 +118,9 @@ export function proxy(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
     if (userRole !== "professional" && userRole !== "admin") {
-      const redirectUrl = new URL(`/${userRole || "customer"}/dashboard`, request.url);
-      redirectUrl.searchParams.set("error", "UnauthorizedProAccess");
+      const redirectUrl = new URL("/unauthorized", request.url);
+      redirectUrl.searchParams.set("role", "professional");
+      redirectUrl.searchParams.set("reason", "Verified Professional credentials required");
       return NextResponse.redirect(redirectUrl);
     }
   }

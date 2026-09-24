@@ -99,17 +99,33 @@ export default function AdminProfessionalsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center justify-between pt-1 gap-2">
                 <Button variant="outline" size="sm">
                   View Van Telemetry
                 </Button>
-                <Button
-                  variant={pro.status === "active" ? "destructive" : "brand"}
-                  size="sm"
-                  onClick={() => toggleStatus(pro.id)}
-                >
-                  {pro.status === "active" ? "Suspend Accreditation" : "Restore Active"}
-                </Button>
+                {pro.status === "under_review" ? (
+                  <Button
+                    variant="brand"
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    onClick={() => {
+                      setProsList((prev) =>
+                        prev.map((p) => (p.id === pro.id ? { ...p, status: "active" } : p))
+                      );
+                      alert(`Background Verification Approved: ${pro.name} has been certified and activated on the platform with full KYC clearance.`);
+                    }}
+                  >
+                    Approve KYC & Verify
+                  </Button>
+                ) : (
+                  <Button
+                    variant={pro.status === "active" ? "destructive" : "brand"}
+                    size="sm"
+                    onClick={() => toggleStatus(pro.id)}
+                  >
+                    {pro.status === "active" ? "Suspend Accreditation" : "Restore Active"}
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

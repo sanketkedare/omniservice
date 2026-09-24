@@ -15,7 +15,10 @@ import {
   Bot,
   Zap,
   CheckCircle,
+  Trash2,
+  Download,
 } from "lucide-react";
+import { PWAInstallButton } from "@/components/shared/PWAInstallButton";
 
 interface ChatMsg {
   id: string;
@@ -42,7 +45,7 @@ const QUICK_PROMPTS = [
   "Water purifier TDS is high and beeping",
 ];
 
-export function HomeDiagnosticChat() {
+export function HomeDiagnosticChat({ disabled = false }: { disabled?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [inputText, setInputText] = useState("");
@@ -51,6 +54,22 @@ export function HomeDiagnosticChat() {
   const [isAuth, setIsAuth] = useState(false);
   const [hasPromptedOpen, setHasPromptedOpen] = useState(false);
   const chatBottomRef = useRef<HTMLDivElement>(null);
+
+  const handleClearChat = () => {
+    try {
+      localStorage.removeItem("omniservice_diagnostic_chat");
+    } catch {}
+    setMessages([
+      {
+        id: "welcome_0",
+        role: "assistant",
+        content:
+          "Chat cleared. I am OmniService InspectAI. Describe any home appliance, plumbing, or electrical issue, and I will diagnose likely causes, safety risks, and fair-market price ceilings.",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        followUps: QUICK_PROMPTS,
+      },
+    ]);
+  };
 
   // Initialize usage counter & auth status from client storage
   useEffect(() => {
@@ -181,35 +200,44 @@ export function HomeDiagnosticChat() {
     }
   };
 
+  if (disabled) {
+    return null;
+  }
+
   return (
     <>
-      {/* ── Floating Launcher Button ──────────────────────────────────── */}
-      <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3">
+      {/* ── Floating Launcher Column ──────────────────────────────────── */}
+      <div className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-2.5">
         {!isOpen && (
-          <button
-            type="button"
-            onClick={() => setIsOpen(true)}
-            aria-label="Open AI Diagnostic Chat"
-            className="group flex items-center gap-3 rounded-full border-2 border-orange-300/90 bg-gradient-to-r from-white via-orange-50 to-white pl-4 pr-5 py-2.5 shadow-2xl shadow-orange-950/20 hover:scale-103 hover:border-[#f05a28] transition-all backdrop-blur-md"
-          >
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#f05a28] to-[#ea580c] text-white shadow-md shadow-orange-500/30 group-hover:rotate-6 transition-transform">
-              <Bot className="h-5 w-5" />
-              <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-              </span>
-            </div>
-            <div className="text-left">
-              <span className="block text-xs font-black text-[#2d130a] leading-tight">
-                Ask InspectAI™
-              </span>
-              <span className="block text-[10px] font-semibold text-[#c2410c]">
-                {isAuth
-                  ? "Unlimited Access"
-                  : `${remaining} free diagnostic ${remaining === 1 ? "msg" : "msgs"}`}
-              </span>
-            </div>
-          </button>
+          <>
+            {/* Install App Button directly above Chat option */}
+            <PWAInstallButton variant="floating" />
+
+            <button
+              type="button"
+              onClick={() => setIsOpen(true)}
+              aria-label="Chat with AI"
+              className="group flex items-center gap-2.5 rounded-full border-2 border-orange-300/90 bg-gradient-to-r from-white via-orange-50 to-white pl-3.5 pr-4 py-2.5 shadow-2xl shadow-orange-950/20 hover:scale-105 hover:border-[#f05a28] transition-all backdrop-blur-md cursor-pointer"
+            >
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#f05a28] to-[#ea580c] text-white shadow-md shadow-orange-500/30 group-hover:rotate-6 transition-transform">
+                <Bot className="h-4 w-4" />
+                <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+              </div>
+              <div className="text-left">
+                <span className="block text-xs font-black text-[#2d130a] leading-tight">
+                  Chat with AI
+                </span>
+                <span className="block text-[10px] font-semibold text-[#c2410c]">
+                  {isAuth
+                    ? "Instant AI Support"
+                    : `${remaining} free diagnostic ${remaining === 1 ? "scan" : "scans"}`}
+                </span>
+              </div>
+            </button>
+          </>
         )}
       </div>
 
@@ -220,29 +248,38 @@ export function HomeDiagnosticChat() {
           style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-orange-100 bg-gradient-to-r from-[#fff7ed] via-white to-[#fff3e8] px-5 py-4">
+          <div className="flex items-center justify-between border-b border-orange-100 bg-gradient-to-r from-[#fff7ed] via-white to-[#fff3e8] px-5 py-3.5">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#f05a28] to-[#ea580c] text-white shadow-sm shadow-orange-500/30">
-                <Bot className="h-5 w-5" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-[#f05a28] to-[#ea580c] text-white shadow-sm shadow-orange-500/30">
+                <Bot className="h-4 w-4" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-black text-[#2d130a]">InspectAI™ Assistant</h3>
+                  <h3 className="text-sm font-black text-[#2d130a]">Chat with AI</h3>
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
                     Online
                   </span>
                 </div>
                 <p className="text-[11px] text-neutral-500">
-                  Greater Hyderabad Diagnostics
+                  InspectAI Diagnostic Agent
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleClearChat}
+                className="rounded-xl p-1.5 text-neutral-400 hover:bg-orange-100/70 hover:text-red-500 transition-colors"
+                title="Delete / Clear Chat History"
+                aria-label="Delete Chat"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="rounded-xl p-1.5 text-neutral-400 hover:bg-orange-100/60 hover:text-neutral-700 transition-colors"
+                className="rounded-xl p-1.5 text-neutral-400 hover:bg-orange-100/70 hover:text-neutral-700 transition-colors"
                 aria-label="Close Chat"
               >
                 <X className="h-4 w-4" />

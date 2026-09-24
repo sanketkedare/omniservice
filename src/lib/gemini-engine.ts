@@ -10,19 +10,24 @@
 import { logger } from "@/lib/logger";
 
 export const GEMINI_MODEL_POOL = [
-  "gemini-3.5-flash",
-  "gemini-3.1-flash-lite",
-  "gemini-3-flash-preview",
-  "gemma-4-31b-it",
-  "gemini-flash-latest",
-  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+  "gemini-1.5-pro",
+  "gemini-2.0-flash-lite",
 ] as const;
 
 export type GeminiModelName = (typeof GEMINI_MODEL_POOL)[number];
 
+export interface GeminiMediaPart {
+  mimeType: string;
+  dataBase64?: string;
+  url?: string;
+}
+
 export interface GeminiGenerateOptions {
   systemPrompt?: string;
   userPrompt: string;
+  mediaParts?: GeminiMediaPart[];
   responseMimeType?: "text/plain" | "application/json";
   temperature?: number;
   maxOutputTokens?: number;
@@ -46,7 +51,7 @@ class GeminiMultiModelEngine {
   }
 
   /**
-   * Execute content generation with seamless multi-model failover
+   * Execute content generation with seamless multi-model failover and multimodal media ingestion
    */
   async generateContent(options: GeminiGenerateOptions): Promise<GeminiGenerateResult> {
     const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
@@ -58,8 +63,9 @@ class GeminiMultiModelEngine {
     const {
       systemPrompt,
       userPrompt,
+      mediaParts = [],
       responseMimeType = "text/plain",
-      temperature = 0.3,
+      temperature = 0.2,
       maxOutputTokens,
       history = [],
     } = options;
@@ -74,16 +80,50 @@ class GeminiMultiModelEngine {
       });
     }
 
-    // Append latest prompt
+    // Prepare multimodal user parts
+    const userParts: any[] = [];
+
+    // Attach media items as inlineData base64
+    for (const media of mediaParts) {
+      if (media.dataBase64) {
+        userParts.push({
+          inlineData: {
+            mimeType: media.mimeType,
+            data: media.dataBase64.replace(/^data:[^;]+;base64,/, ""),
+          },
+        });
+      } else if (media.url && (media.url.startsWith("http://") || media.url.startsWith("https://"))) {
+        try {
+          const fetchRes = await fetch(media.url, { signal: AbortSignal.timeout(6000) });
+          if (fetchRes.ok) {
+            const buf = await fetchRes.arrayBuffer();
+            const b64 = Buffer.from(buf).toString("base64");
+            userParts.push({
+              inlineData: {
+                mimeType: media.mimeType || "image/jpeg",
+                data: b64,
+              },
+            });
+          }
+        } catch {
+          // If remote fetch fails, pass text reference
+          userParts.push({
+            text: `[Attached media reference: ${media.url}]`,
+          });
+        }
+      }
+    }
+
+    // Append text prompt
+    userParts.push({
+      text: systemPrompt
+        ? `${systemPrompt}\n\nCustomer Diagnostic Intake & Physical Media Verification:\n${userPrompt}`
+        : userPrompt,
+    });
+
     contents.push({
       role: "user",
-      parts: [
-        {
-          text: systemPrompt
-            ? `${systemPrompt}\n\nCustomer Request / Diagnostic Inquiry:\n${userPrompt}`
-            : userPrompt,
-        },
-      ],
+      parts: userParts,
     });
 
     // Try models in rotation starting from the current active model

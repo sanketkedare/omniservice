@@ -70,13 +70,18 @@ Return a valid JSON object matching the following structure:
       `Title: ${input.title}`,
       `Description: ${input.description}`,
       `Urgency: ${input.urgency}`,
-      `Media Attachments Count: ${input.media.length}`,
     ].join("\n");
+
+    const mediaParts = (input.media || []).map((m) => ({
+      mimeType: m.type === "video" ? "video/mp4" : "image/jpeg",
+      url: m.url,
+    }));
 
     try {
       const result = await geminiEngine.generateContent({
         systemPrompt,
         userPrompt: userContent,
+        mediaParts,
         responseMimeType: "application/json",
         temperature: 0.2,
       });

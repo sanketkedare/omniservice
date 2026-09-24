@@ -17,6 +17,7 @@ import {
 import { connectToDatabase } from "@/lib/db";
 import { Payment, EscrowTransaction, Payout } from "@/models/payment.model";
 import { Dispute } from "@/models/remaining.model";
+import { broadcastNotification } from "@/lib/notifications";
 
 export interface EscrowReleaseParams {
   jobId?: string;
@@ -199,6 +200,14 @@ export class EscrowService {
         rating: params.rating,
       },
       timestamp: new Date(),
+    });
+
+    broadcastNotification({
+      type: "payment_held",
+      title: "TrustLock Escrow Released",
+      message: `Payment of ₹${(professionalPayoutPaise / 100).toLocaleString("en-IN")} released to provider following verified proof & customer signoff.`,
+      recipientRole: "all",
+      data: { paymentId: payment._id, jobId: payment.jobId },
     });
 
     // Try MongoDB sync

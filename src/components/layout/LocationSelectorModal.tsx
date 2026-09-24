@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { MapPin, Navigation, Check, X, Loader2 } from "lucide-react";
-import { useGeolocation, DEFAULT_HYDERABAD_COORDINATES } from "@/lib/geolocation";
+import { useGeolocation, DEFAULT_HYDERABAD_COORDINATES, checkHyderabadRadius } from "@/lib/geolocation";
 import { toast } from "@/components/ui/Toast";
 
 interface LocationSelectorModalProps {
@@ -11,6 +11,7 @@ interface LocationSelectorModalProps {
 }
 
 const POPULAR_ZONES = [
+  { name: "Ameerpet, Hyderabad (Central Hub)", lat: 17.4375, lng: 78.4482 },
   { name: "Banjara Hills, Hyderabad", lat: 17.4156, lng: 78.4357 },
   { name: "Hitec City, Hyderabad", lat: 17.4474, lng: 78.3762 },
   { name: "Gachibowli, Hyderabad", lat: 17.4401, lng: 78.3489 },
@@ -25,13 +26,23 @@ export function LocationSelectorModal({ isOpen, onClose }: LocationSelectorModal
   const { locality, coordinates, detectLocation, setManualLocation, isLoading, permissionDenied, permissionState } = useGeolocation();
   const [customInput, setCustomInput] = useState("");
 
+  const radiusCheck = checkHyderabadRadius(coordinates);
+
   if (!isOpen) return null;
 
   const handleAutoDetect = async () => {
     toast.info("Detecting Location...", "Requesting GPS from your device");
     const coords = await detectLocation();
     if (coords) {
-      toast.success("Location Detected", "Updated to your current GPS position");
+      const check = checkHyderabadRadius(coords);
+      if (!check.isWithinRadius) {
+        toast.warning(
+          "Outside Active Service Zone",
+          `You appear to be ${check.distanceKm} km from Hyderabad. Routed to nearest operating hub: ${check.nearestHub}`
+        );
+      } else {
+        toast.success("Location Verified", `Within Greater Hyderabad active radius (${check.nearestHub})`);
+      }
       onClose();
     } else {
       toast.warning("Location Unavailable", "Using default Hyderabad hub");
@@ -85,16 +96,28 @@ export function LocationSelectorModal({ isOpen, onClose }: LocationSelectorModal
         )}
 
         {/* Current Active Location Display */}
-        <div className="rounded-2xl border border-orange-200/80 bg-orange-50/50 p-3.5 flex items-center justify-between">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block">
-              Active Selected Area
+        <div className="rounded-2xl border border-orange-200/80 bg-orange-50/50 p-3.5 space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block">
+                Active Selected Area
+              </span>
+              <span className="text-xs font-bold text-[#c2410c]">{locality}</span>
+            </div>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+              radiusCheck.isWithinRadius ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+            }`}>
+              {radiusCheck.isWithinRadius ? "In Service Zone" : "Hub Routed"}
             </span>
-            <span className="text-xs font-bold text-[#c2410c]">{locality}</span>
           </div>
-          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-            Active
-          </span>
+          <div className="flex items-center gap-1.5 text-[11px] text-neutral-600 font-sans border-t border-orange-100 pt-1.5">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500" />
+            <span>
+              {radiusCheck.isWithinRadius
+                ? `Verified in Greater Hyderabad (${radiusCheck.nearestHub} • within 45km radius)`
+                : `User is ${radiusCheck.distanceKm}km away. Serving via closest ${radiusCheck.nearestHub}`}
+            </span>
+          </div>
         </div>
 
         {/* One-Click GPS Auto Detect */}

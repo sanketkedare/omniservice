@@ -120,6 +120,30 @@ export default function ProfessionalDashboardPage() {
         }
       />
 
+      {/* Provider Background Verification & Security Clearance Banner */}
+      <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/90 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-800 shrink-0">
+            <ShieldCheck className="h-6 w-6 text-emerald-700" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <h4 className="text-sm font-bold text-emerald-950">Provider Verification &amp; Security Clearance</h4>
+              <span className="text-[10px] uppercase font-bold bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">
+                Verified &amp; Active
+              </span>
+            </div>
+            <p className="text-xs text-emerald-800 leading-relaxed font-sans">
+              Identity, Aadhaar, and trade qualifications verified by OmniService Trust Team. Authorized for high-priority SmartRoute dispatches and TrustLock escrow protection in Greater Hyderabad.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="success" size="sm">KYC Verified</Badge>
+          <Badge variant="brand" size="sm">Van Stock Active</Badge>
+        </div>
+      </div>
+
       {/* KPI Stats Bar (Responsive 2 -> 4 cols) */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <Card className="bg-white border-2 border-orange-100 shadow-xs p-4">

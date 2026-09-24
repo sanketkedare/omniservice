@@ -26,8 +26,9 @@ import { cn } from "@/lib/utils";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { useGeolocation } from "@/lib/geolocation";
-import { LocationSelectorModal } from "./LocationSelectorModal";
 import { GoogleNavButton } from "@/components/auth/GoogleNavButton";
+import { PWAInstallButton } from "@/components/shared/PWAInstallButton";
+import { useNotificationStream } from "@/lib/use-notification-stream";
 
 interface AuthUser {
   id: string;
@@ -42,9 +43,10 @@ export function TopBar({ className }: { className?: string }) {
   const router = useRouter();
   const [currentUser, setCurrentUser] = React.useState<AuthUser | null>(null);
   const [loading, setLoading] = React.useState(true);
-  const [locationModalOpen, setLocationModalOpen] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [notificationsOpen, setNotificationsOpen] = React.useState(false);
   const { locality, permissionDenied } = useGeolocation();
+  const { notifications, unreadCount, markAllRead } = useNotificationStream(currentUser?.role);
 
   React.useEffect(() => {
     // 1. Try reading from localStorage for instant offline/client recall
@@ -169,59 +171,74 @@ export function TopBar({ className }: { className?: string }) {
               </Link>
             )}
 
-            {/* Case Study Direct Link */}
-            <Link
-              href="/case-study"
-              className="hidden lg:flex items-center gap-1.5 text-xs font-bold text-neutral-700 hover:text-[#f05a28] px-2 py-1 rounded-lg hover:bg-orange-50 transition-colors"
-            >
-              <Award className="h-3.5 w-3.5 text-[#f05a28]" />
-              <span>Case Study</span>
-            </Link>
-
-            {/* Interactive Dynamic Location Pill */}
-            <button
-              type="button"
-              onClick={() => setLocationModalOpen(true)}
+            {/* Static Auto-Detected Location Pill (No Manual Selector) */}
+            <div
               className={cn(
-                "hidden sm:inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-2xs transition-all cursor-pointer group",
+                "hidden sm:inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-2xs select-none",
                 permissionDenied
-                  ? "border-amber-300 bg-amber-50/90 text-amber-900 hover:bg-amber-100"
-                  : "border-orange-200/90 bg-orange-50/70 text-[#9a2c06] hover:bg-orange-100/80 hover:border-orange-300"
+                  ? "border-amber-300 bg-amber-50/90 text-amber-900"
+                  : "border-orange-200/90 bg-orange-50/70 text-[#9a2c06]"
               )}
-              title={
-                permissionDenied
-                  ? "GPS Access Denied. Showing Hyderabad fallback. Click to change."
-                  : "Click to change or auto-detect your location"
-              }
+              title="Verified Service Zone: Greater Hyderabad"
             >
               <MapPin
                 className={cn(
                   "h-3.5 w-3.5",
-                  permissionDenied ? "text-amber-600" : "text-[#f05a28] group-hover:animate-bounce"
+                  permissionDenied ? "text-amber-600" : "text-[#f05a28]"
                 )}
               />
               <span className="max-w-[170px] truncate">{locality || "Hyderabad, IN"}</span>
-              {permissionDenied && (
-                <span className="rounded-sm bg-amber-200/90 px-1 py-0.2 text-[9px] font-bold text-amber-900 uppercase tracking-wider">
-                  GPS Denied
-                </span>
-              )}
-              <ChevronDown className="h-3 w-3 text-orange-400 group-hover:text-orange-700" />
-            </button>
+            </div>
           </div>
 
           {/* Right controls */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+
             {currentUser ? (
               <>
-                {/* Notifications */}
-                <button
-                  aria-label="View notifications"
-                  className="relative rounded-xl p-2 text-neutral-600 hover:bg-orange-50 hover:text-[#c2410c] transition-colors"
-                >
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#f05a28]" />
-                </button>
+                {/* Real-time Notifications Bell & Dropdown */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNotificationsOpen(!notificationsOpen);
+                      if (!notificationsOpen) markAllRead();
+                    }}
+                    aria-label="View notifications"
+                    className="relative rounded-xl p-2 text-neutral-600 hover:bg-orange-50 hover:text-[#c2410c] transition-colors cursor-pointer"
+                  >
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#f05a28] text-[9px] font-bold text-white shadow-xs animate-pulse">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Dropdown panel */}
+                  {notificationsOpen && (
+                    <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-orange-200 bg-white p-3 shadow-xl z-50 space-y-2 animate-in fade-in slide-in-from-top-2">
+                      <div className="flex items-center justify-between pb-2 border-b border-orange-100">
+                        <span className="text-xs font-bold text-[#2d130a]">Live Notifications</span>
+                        <span className="text-[10px] text-neutral-400">Real-time Stream</span>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto space-y-2">
+                        {notifications.length === 0 ? (
+                          <div className="py-6 text-center text-xs text-neutral-400">
+                            No notifications yet. You are up to date!
+                          </div>
+                        ) : (
+                          notifications.slice(0, 5).map((n) => (
+                            <div key={n.id} className="p-2 rounded-xl bg-orange-50/50 border border-orange-100/60 text-xs">
+                              <p className="font-bold text-[#c2410c]">{n.title}</p>
+                              <p className="text-neutral-600 text-[11px] mt-0.5">{n.message}</p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* User Identity Chip */}
                 <div className="flex items-center gap-2 pl-2 border-l border-neutral-200">
@@ -257,21 +274,13 @@ export function TopBar({ className }: { className?: string }) {
                 </div>
               </>
             ) : (
-              <div className="hidden sm:flex items-center gap-2.5">
+              <div className="hidden sm:flex items-center gap-2">
                 <GoogleNavButton variant="desktop" />
                 <Link
-                  href="/login"
-                  className="flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold text-[#431407] hover:text-[#f05a28] hover:bg-orange-50/80 transition-colors"
-                >
-                  <LogIn className="h-3.5 w-3.5" />
-                  <span>Sign In</span>
-                </Link>
-                <Link
                   href="/register"
-                  className="flex items-center gap-1.5 rounded-xl bg-[#f05a28] px-4 py-2 text-xs font-bold text-white hover:bg-[#ea580c] shadow-xs shadow-orange-500/20 transition-all"
+                  className="flex items-center gap-1.5 rounded-full bg-[#f05a28] px-4 py-1.5 text-xs font-bold text-white hover:bg-[#ea580c] shadow-xs shadow-orange-500/20 transition-all"
                 >
-                  <UserPlus className="h-3.5 w-3.5" />
-                  <span>Register</span>
+                  <span>Get Started</span>
                 </Link>
               </div>
             )}
@@ -316,21 +325,19 @@ export function TopBar({ className }: { className?: string }) {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {/* Dynamic Location Button in Drawer */}
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setLocationModalOpen(true);
-                }}
-                className="w-full flex items-center justify-between p-3 rounded-2xl bg-orange-50 border border-orange-200 text-xs text-[#9a2c06] font-bold cursor-pointer"
-              >
+              {/* PWA Download Banner in Mobile Drawer */}
+              <PWAInstallButton variant="banner" />
+
+              {/* Static Verified Location Badge in Drawer (No Manual Selector) */}
+              <div className="w-full flex items-center justify-between p-3 rounded-2xl bg-orange-50 border border-orange-200 text-xs text-[#9a2c06] font-bold select-none">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-[#f05a28]" />
-                  <span className="truncate">{locality || "Hyderabad, IN"}</span>
+                  <span className="truncate">{locality || "Hyderabad, Telangana"}</span>
                 </div>
-                <span className="text-[11px] underline">Change</span>
-              </button>
+                <span className="text-[10px] uppercase font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                  Active
+                </span>
+              </div>
 
               <div className="space-y-1">
                 <Link
@@ -474,11 +481,6 @@ export function TopBar({ className }: { className?: string }) {
           </aside>
         </div>
       )}
-
-      <LocationSelectorModal
-        isOpen={locationModalOpen}
-        onClose={() => setLocationModalOpen(false)}
-      />
     </>
   );
 }

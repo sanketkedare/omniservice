@@ -90,7 +90,7 @@ export async function POST(
         professional: {
           id: pro.id,
           businessName: pro.businessName,
-          phone: pro.phone,
+          contactChannel: "in_app_dispatch",
         },
       },
     });

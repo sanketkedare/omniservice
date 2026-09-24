@@ -144,26 +144,18 @@ export function ProviderSuggestionsCard() {
                   ))}
                 </div>
 
-                {/* Action Bar */}
+                {/* Action Bar — Provider Phone Strictly Hidden for Escrow Protection */}
                 <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
-                  <div className="text-xs text-neutral-600 flex items-center gap-1.5">
-                    <Phone className="h-3.5 w-3.5 text-neutral-400" />
-                    <span>{pro.phone}</span>
+                  <div className="text-xs text-neutral-600 flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200/70 px-2 py-0.5 rounded-lg">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                    <span className="font-semibold text-[11px]">Secure In-App Routing</span>
                   </div>
 
-                  {isPriority ? (
-                    <Link href="/customer/new-request">
-                      <Button size="sm" variant="brand" rightIcon={<ChevronRight className="h-3.5 w-3.5" />}>
-                        Instant Dispatch
-                      </Button>
-                    </Link>
-                  ) : (
-                    <a href={`tel:${pro.phone.replace(/[^0-9]/g, "")}`}>
-                      <Button size="sm" variant="outline" rightIcon={<ExternalLink className="h-3.5 w-3.5" />}>
-                        Call Shop
-                      </Button>
-                    </a>
-                  )}
+                  <Link href={`/customer/new-request?category=${selectedCategory}`}>
+                    <Button size="sm" variant="brand" rightIcon={<ChevronRight className="h-3.5 w-3.5" />}>
+                      Request Inspection
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
