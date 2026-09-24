@@ -193,73 +193,88 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={contextValue}>
       {children}
-      {/* Toast Container Floating Element */}
+      {/* Toast Container Floating Element — Fully Responsive for Mobile & Desktop */}
       <aside
         aria-label="Notifications"
         aria-live="polite"
-        className="fixed bottom-5 right-5 z-50 flex flex-col gap-2.5 max-w-md w-full pointer-events-none px-4 sm:px-0"
+        className="fixed z-50 flex flex-col gap-2 pointer-events-none transition-all left-3 right-3 sm:left-auto sm:right-6 bottom-4 sm:bottom-6 max-w-sm sm:max-w-md w-auto sm:w-full mx-auto sm:mx-0"
       >
         {toasts.map((t) => (
           <div
             key={t.id}
             role={t.type === "error" || t.type === "confirm" ? "alert" : "status"}
-            className="pointer-events-auto flex w-full flex-col rounded-2xl border border-neutral-200/90 bg-white p-4 shadow-xl backdrop-blur-md transition-all duration-300 animate-in fade-in slide-in-from-bottom-5 font-serif"
+            className="pointer-events-auto relative overflow-hidden flex w-full flex-col rounded-2xl border border-orange-200/90 bg-white/95 backdrop-blur-xl p-3 sm:p-4 shadow-2xl shadow-orange-950/15 transition-all duration-300 animate-in fade-in slide-in-from-bottom-3 font-serif"
             style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
           >
-            <div className="flex items-start gap-3">
+            {/* Visual Accent Top Strip */}
+            <div
+              className={`absolute top-0 left-0 right-0 h-1 ${
+                t.type === "success"
+                  ? "bg-emerald-500"
+                  : t.type === "error"
+                  ? "bg-rose-500"
+                  : t.type === "warning"
+                  ? "bg-amber-500"
+                  : t.type === "loading"
+                  ? "bg-[#f05a28]"
+                  : "bg-blue-500"
+              }`}
+            />
+
+            <div className="flex items-start gap-2.5 sm:gap-3 pt-0.5">
               <div className="shrink-0 mt-0.5">
                 {t.type === "success" && (
-                  <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
-                    <CheckCircle2 className="h-4 w-4" />
+                  <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200">
+                    <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </div>
                 )}
                 {t.type === "error" && (
-                  <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-rose-50 text-rose-600 border border-rose-200">
-                    <AlertCircle className="h-4 w-4" />
+                  <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-xl bg-rose-50 text-rose-600 border border-rose-200">
+                    <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </div>
                 )}
                 {t.type === "warning" && (
-                  <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-200">
-                    <AlertTriangle className="h-4 w-4" />
+                  <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-xl bg-amber-50 text-amber-600 border border-amber-200">
+                    <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </div>
                 )}
                 {t.type === "info" && (
-                  <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
-                    <Info className="h-4 w-4" />
+                  <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
+                    <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </div>
                 )}
                 {t.type === "loading" && (
-                  <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-orange-50 text-[#f05a28] border border-orange-200">
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                  <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-xl bg-orange-50 text-[#f05a28] border border-orange-200">
+                    <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin" />
                   </div>
                 )}
                 {t.type === "confirm" && (
-                  <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-[#f05a28]/10 text-[#f05a28] border border-[#f05a28]/30">
-                    <HelpCircle className="h-4 w-4" />
+                  <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-xl bg-[#f05a28]/10 text-[#f05a28] border border-[#f05a28]/30">
+                    <HelpCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </div>
                 )}
               </div>
 
-              <div className="flex-1 min-w-0 pr-2">
-                <h4 className="text-sm font-bold text-neutral-900 leading-tight">
+              <div className="flex-1 min-w-0 pr-1">
+                <h4 className="text-xs sm:text-sm font-bold text-neutral-900 leading-tight">
                   {t.title}
                 </h4>
                 {t.description && (
-                  <p className="mt-1 text-xs text-neutral-600 leading-relaxed">
+                  <p className="mt-0.5 text-[11px] sm:text-xs text-neutral-600 leading-relaxed break-words">
                     {t.description}
                   </p>
                 )}
 
                 {/* Confirmation Actions */}
                 {t.type === "confirm" && (
-                  <div className="mt-3 flex items-center gap-2">
+                  <div className="mt-2.5 flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => {
                         t.onConfirm?.();
                         dismiss(t.id);
                       }}
-                      className="rounded-lg bg-[#f05a28] px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#d04618] transition-colors"
+                      className="rounded-lg bg-[#f05a28] px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-[#d04618] active:scale-95 transition-all"
                     >
                       {t.confirmLabel || "Confirm"}
                     </button>
@@ -269,7 +284,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                         t.onCancel?.();
                         dismiss(t.id);
                       }}
-                      className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100 transition-colors"
+                      className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100 active:scale-95 transition-all"
                     >
                       {t.cancelLabel || "Cancel"}
                     </button>
@@ -282,9 +297,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                   type="button"
                   aria-label="Dismiss notification"
                   onClick={() => dismiss(t.id)}
-                  className="shrink-0 rounded-lg p-1 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 transition-colors"
+                  className="shrink-0 rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 active:scale-95 transition-all"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
               )}
             </div>

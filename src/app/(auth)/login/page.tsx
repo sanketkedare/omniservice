@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Mail,
@@ -85,15 +86,29 @@ export default function LoginPage() {
 
     toast.success("Welcome back!", `Signed in as ${user.name}`);
 
-    if (callbackUrl) {
-      router.push(callbackUrl);
-    } else if (user.role === "admin") {
-      router.push("/admin/dashboard");
-    } else if (user.role === "professional") {
-      router.push("/pro/dashboard");
-    } else {
-      router.push("/customer/dashboard");
-    }
+    // Automatic Role-Specific Portal Redirection
+    const getTargetDashboard = (role: string, targetCallback?: string | null) => {
+      if (role === "admin") {
+        if (targetCallback && targetCallback.startsWith("/admin") && !targetCallback.includes("/login")) {
+          return targetCallback;
+        }
+        return "/admin/dashboard";
+      }
+      if (role === "professional" || role === "provider") {
+        if (targetCallback && targetCallback.startsWith("/pro") && !targetCallback.includes("/login")) {
+          return targetCallback;
+        }
+        return "/pro/dashboard";
+      }
+      // Customer
+      if (targetCallback && targetCallback.startsWith("/customer") && !targetCallback.includes("/login")) {
+        return targetCallback;
+      }
+      return "/customer/dashboard";
+    };
+
+    const targetUrl = getTargetDashboard(user.role, callbackUrl);
+    router.replace(targetUrl);
   };
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
@@ -223,14 +238,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="rounded-3xl border-2 border-orange-200/90 bg-white p-7 sm:p-9 shadow-xl shadow-orange-950/5 space-y-6">
+    <div className="rounded-3xl border border-orange-200/90 bg-white/95 backdrop-blur-xl p-6 sm:p-9 shadow-2xl shadow-black/40 space-y-5">
+      {/* OmniService Brand Logo at Top of Form */}
+      <div className="flex flex-col items-center justify-center">
+        <Link href="/" className="inline-block hover:opacity-95 transition-opacity" aria-label="OmniService Home">
+          <Image
+            src="/images/OmniService_Logo.png"
+            alt="OmniService AI"
+            width={180}
+            height={44}
+            className="h-9 sm:h-10 w-auto object-contain mx-auto"
+            priority
+          />
+        </Link>
+      </div>
+
       {/* Title */}
       <div className="text-center space-y-1">
         <h1 className="text-2xl sm:text-3xl font-bold font-serif text-[#2d130a]">
           Sign In
         </h1>
         <p className="text-xs text-neutral-500">
-          Enter your credentials to access your account
+          Enter your credentials to access your portal
         </p>
       </div>
 
