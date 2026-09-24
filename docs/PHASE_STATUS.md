@@ -45,14 +45,21 @@
 - Substituted stark white with warm peach and honey canvases (`#fffaf5`, `#fff7ed`, `#fff0e6`).
 - Implemented `@keyframes floatSlow` ambient orbs, `.emergent-mesh` radial canvas, and `.orange-halo` glassmorphic cards.
 
-### 5. Dedicated Sandbox Demo (`/demo`) & "See Demo" Integration
-- Replaced raw session cookie bypass buttons on the login card with an isolated interactive demonstration hub.
-- Displays realistic simulated Customer, Pro, and Governance dashboards with zero write operations to production MongoDB.
-- Added prominent "See Demo" navigation links across the Home navbar, Hero CTA, and Footer.
+### 7. Razorpay Payment Gateway Integration
+- Configured Razorpay test key `NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_Tfs9ezCx9ZjUKa` and `RAZORPAY_KEY_SECRET=3mLbGNijmV5IA8nJjxULqIbE`.
+- Integrated HMAC-SHA256 signature verification in `/api/payments/razorpay/verify` for secure escrow funding.
 
-### 6. Universal Enterprise Toaster (`@/components/ui/Toast`)
-- Built zero-dependency, rich toaster engine supporting `loading`, `success`, `error`, `info`, `warning`, and interactive `confirm` modals.
-- Fully wired into root layout and accessible globally via `toast.*`.
+### 8. Master Provider Notification Routing (`kedaresp18@gmail.com`)
+- Created and seeded primary Master Service Provider account (`kedaresp18@gmail.com`, password `admin@123`).
+- All customer service requests automatically dispatch real-time in-app notifications and WebSocket broadcasts targeted to `kedaresp18@gmail.com` for class presentation live demos.
+
+### 9. Direct MongoDB Atlas Database Seeding
+- Built standalone seeder script (`src/scripts/seed-full-db.ts`) and trigger API route (`/api/admin/seed`).
+- Populates evaluation users, service categories, properties, van inventory stock, active jobs, diagnostic sessions, SOWs, escrow records, and audit logs directly into MongoDB Atlas.
+
+### 10. Dashboard Sidebar & TopBar Header Polish
+- Fixed sidebar toggle header across Customer, Provider, and Admin dashboards (`w-64` expanded with `OmniService_Logo.png` vs `w-16` collapsed with centered `OmniService_Icon.png` and expand toggle).
+- Aligned `TopBar.tsx` height to `h-16` for seamless top border alignment across all dashboards.
 
 ---
 

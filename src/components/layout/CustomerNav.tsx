@@ -44,33 +44,54 @@ export function CustomerNav({ className }: { className?: string }) {
     <aside
       className={cn(
         "flex h-full flex-col border-r border-orange-200/60 bg-white font-serif transition-all duration-300 shadow-sm relative z-30 select-none",
-        collapsed ? "w-20" : "w-64",
+        collapsed ? "w-16" : "w-64",
         className
       )}
       style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
     >
       {/* Sidebar Header Brand Logo & Toggle Button */}
-      <div className="flex h-16 items-center justify-between border-b border-orange-200/60 px-4 bg-gradient-to-r from-orange-50/70 to-white">
-        {!collapsed && (
-          <Link href="/customer/dashboard" className="flex items-center gap-2">
+      <div className="flex h-16 items-center justify-between border-b border-orange-200/60 px-3.5 bg-gradient-to-r from-orange-50/70 to-white">
+        {!collapsed ? (
+          <>
+            <Link href="/customer/dashboard" className="flex items-center gap-2">
+              <Image
+                src="/images/OmniService_Logo.png"
+                alt="OmniService AI"
+                width={130}
+                height={32}
+                className="h-7 w-auto object-contain"
+                priority
+              />
+            </Link>
+            <button
+              type="button"
+              onClick={() => setCollapsed(true)}
+              className="p-1.5 rounded-lg text-neutral-500 hover:bg-orange-100/80 hover:text-[#f05a28] transition-all cursor-pointer border border-transparent hover:border-orange-200"
+              title="Collapse Sidebar"
+              aria-label="Collapse Sidebar"
+            >
+              <PanelLeftClose className="h-4 w-4 text-neutral-500" />
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setCollapsed(false)}
+            className="w-full flex items-center justify-center gap-1.5 p-1.5 rounded-lg text-neutral-600 hover:bg-orange-100/80 hover:text-[#f05a28] transition-all cursor-pointer group"
+            title="Expand Sidebar"
+            aria-label="Expand Sidebar"
+          >
             <Image
-              src="/images/OmniService_Logo.png"
-              alt="OmniService AI"
-              width={130}
-              height={32}
-              className="h-7 w-auto object-contain"
+              src="/images/OmniService_Icon.png"
+              alt="OmniService"
+              width={24}
+              height={24}
+              className="h-6 w-6 object-contain group-hover:scale-110 transition-transform"
               priority
             />
-          </Link>
+            <PanelLeftOpen className="h-4 w-4 text-[#f05a28]" />
+          </button>
         )}
-        <button
-          type="button"
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-2 rounded-xl text-neutral-500 hover:bg-orange-100/70 hover:text-[#f05a28] transition-colors mx-auto"
-          title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-        >
-          {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
-        </button>
       </div>
 
       {/* Navigation items */}

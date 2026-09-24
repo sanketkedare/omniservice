@@ -100,7 +100,7 @@ export default function ProfessionalJobsPage() {
   const displayedJobs = activeTab === "active" ? activeJobs : completedJobs;
 
   return (
-    <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-12 py-6 sm:py-8 space-y-8 text-neutral-900">
+    <div className="w-full max-w-none px-4 sm:px-6 py-6 sm:py-8 space-y-8 text-neutral-900">
       {/* Header */}
       <PageHeader
         title="Active Jobs & Dispatches"

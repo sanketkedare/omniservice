@@ -15,10 +15,10 @@ export default function CustomerLayout({
         <CustomerNav />
       </div>
 
-      {/* Main Content Viewport - Fluid full width */}
+      {/* Main Content Viewport - Fluid 100% Full Screen Width */}
       <div className="flex flex-1 flex-col overflow-y-auto w-full min-w-0">
         <TopBar />
-        <main className="flex-1 p-4 sm:p-8 w-full max-w-full pb-24 md:pb-8">{children}</main>
+        <main className="flex-1 p-4 sm:p-6 w-full max-w-none pb-24 md:pb-8">{children}</main>
       </div>
 
       <AIAssistantWidget />

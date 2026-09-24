@@ -13,8 +13,8 @@ Directly test each portal without registration (pre-seeded in live MongoDB Atlas
 | Role | Email | Password | Live Portal Route | Key Capability to Test |
 | :--- | :--- | :--- | :--- | :--- |
 | **Admin** | `admin@gmail.com` | `admin@123` | [`/admin/dashboard`](https://omniservice.volcanic.world/admin/dashboard) | Dispute arbitration, KYC verification, platform telemetry |
-| **Pro (Technician)** | `provider@gmail.com` | `admin@123` | [`/pro/dashboard`](https://omniservice.volcanic.world/pro/dashboard) | 4.9★ profile, active jobs, live GPS route, van stock inventory |
-| **Customer** | `customer@gmail.com` | `admin@123` | [`/customer/dashboard`](https://omniservice.volcanic.world/customer/dashboard) | HomePass property score (92/100), AI diagnostic requests |
+| **Master Pro (Presentation)** | `kedaresp18@gmail.com` | `admin@123` | [`/pro/dashboard`](https://omniservice.volcanic.world/pro/dashboard) | Receives all real-time customer requests, active jobs, live GPS route, van stock inventory |
+| **Customer** | `customer@gmail.com` | `admin@123` | [`/customer/dashboard`](https://omniservice.volcanic.world/customer/dashboard) | HomePass property score (92/100), AI diagnostic requests, Razorpay checkout |
 
 ---
 

@@ -84,7 +84,7 @@ export default function CustomerDashboardPage() {
   const defaultProperty = properties.length > 0 ? properties[0] : null;
 
   return (
-    <div className="max-w-7xl mx-auto w-full px-4 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8">
+    <div className="w-full max-w-none px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
       {/* Header */}
       <PageHeader
         title={`Welcome back, ${userName}`}

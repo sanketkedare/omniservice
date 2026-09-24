@@ -93,7 +93,7 @@ export default function ProfessionalDashboardPage() {
     : "₹0";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-8 space-y-6 sm:space-y-8 text-neutral-900">
+    <div className="w-full max-w-none px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 text-neutral-900">
       {/* Header */}
       <PageHeader
         title="Provider Operations Center"

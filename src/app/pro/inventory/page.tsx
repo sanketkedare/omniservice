@@ -146,7 +146,7 @@ export default function ProfessionalInventoryPage() {
   ).length;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 space-y-8 text-neutral-900">
+    <div className="w-full max-w-none px-4 py-6 sm:px-6 sm:py-8 space-y-8 text-neutral-900">
       {/* Header */}
       <PageHeader
         title="Van Inventory & Parts Catalog"

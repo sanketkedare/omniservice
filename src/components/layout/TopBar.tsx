@@ -164,7 +164,7 @@ export function TopBar({ className }: { className?: string }) {
           className
         )}
       >
-        <div className="max-w-7xl mx-auto flex h-20 w-full items-center justify-between px-6 sm:px-10 lg:px-12 gap-4">
+        <div className="w-full max-w-none flex h-16 items-center justify-between px-4 sm:px-6 gap-4">
           {/* Left: Brand logo & Navigation */}
           <div className="flex items-center gap-5">
             {!isDashboardRoute && (

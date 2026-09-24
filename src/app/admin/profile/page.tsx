@@ -72,7 +72,7 @@ export default function AdminProfilePage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-12 font-serif" style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}>
+    <div className="space-y-6 w-full max-w-none pb-12 font-serif" style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}>
       {/* Page Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-orange-200/60 pb-5">
         <div>

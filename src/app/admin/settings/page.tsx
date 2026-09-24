@@ -56,7 +56,7 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 w-full max-w-none">
       <PageHeader
         title="Platform Governance &amp; Financial Parameters"
         description="Configure marketplace fees, escrow release windows, and compliance thresholds."

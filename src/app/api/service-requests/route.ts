@@ -4,6 +4,9 @@ import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import { ServiceRequest } from "@/models/service-request.model";
 import { DiagnosticSession } from "@/models/diagnostic.model";
+import { User } from "@/models/user.model";
+import { Notification } from "@/models/remaining.model";
+import { broadcastNotification } from "@/lib/notifications";
 import { DEMO_REQUESTS, saveMockRequest, getAllMockRequests } from "@/lib/mock-data";
 
 export { DEMO_REQUESTS };
@@ -115,6 +118,30 @@ export async function POST(req: NextRequest) {
       // Link session to request
       newRequest.diagnosticSessionId = session._id as mongoose.Types.ObjectId;
       await newRequest.save();
+
+      // 🔔 Dispatch Notification to Provider Account: kedaresp18@gmail.com
+      const providerUser = await User.findOne({ email: "kedaresp18@gmail.com" });
+      if (providerUser) {
+        await Notification.create({
+          userId: providerUser._id,
+          channel: "in_app",
+          title: `⚡ New Customer Request: ${title}`,
+          body: `Urgent request submitted in ${categorySlug.toUpperCase()}: ${description.substring(0, 100)}...`,
+          status: "delivered",
+          entityType: "job",
+          entityId: newRequest._id,
+        });
+      }
+
+      // Broadcast live event for real-time UI notification bell
+      broadcastNotification({
+        type: "job_assigned",
+        title: `🚨 New Customer Request: ${title}`,
+        message: `Routed to Provider (kedaresp18@gmail.com). Issue: ${description.substring(0, 80)}`,
+        recipientRole: "professional",
+        recipientId: providerUser ? String(providerUser._id) : undefined,
+        link: "/pro/jobs",
+      });
 
       return NextResponse.json(
         {

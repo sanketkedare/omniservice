@@ -224,7 +224,7 @@ function HomePassContent() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 space-y-6 sm:space-y-8">
+    <div className="w-full max-w-none px-4 py-6 sm:px-6 sm:py-8 space-y-6 sm:space-y-8">
       {/* Header */}
       <PageHeader
         title="HomePass™ Digital Property Passport"

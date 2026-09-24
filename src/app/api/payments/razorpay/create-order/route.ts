@@ -12,8 +12,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate test Razorpay Order ID
-    const orderId = `order_test_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_Tfs9ezCx9ZjUKa";
+    const orderId = `order_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 
     return NextResponse.json({
       success: true,
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
         currency: currency,
         receipt: receipt,
         status: "created",
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_TIpOwrfH3Ko5Xp",
+        key: keyId,
         notes: {
           ...notes,
           app: "OmniService AI",

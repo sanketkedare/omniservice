@@ -11,6 +11,13 @@ const EVAL_PASSWORD = "admin@123";
 
 const ACCOUNTS = [
   {
+    email: "kedaresp18@gmail.com",
+    name: "Sanket Kedare (Master Provider)",
+    role: "professional" as const,
+    phone: "9876543200",
+    trade: "All-in-One Master Technician",
+  },
+  {
     email: "admin@gmail.com",
     name: "System Admin",
     role: "admin" as const,

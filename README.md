@@ -45,10 +45,10 @@ Evaluators and reviewers can immediately explore all three distinct platform rol
 | Role | Evaluation Email | Universal Password | Primary Portal Route |
 | :--- | :--- | :--- | :--- |
 | **Governance Admin** | `admin@gmail.com` *(or `admin@omniservice.volcanic.world`)* | `admin@123` | [`/admin/dashboard`](https://omniservice.volcanic.world/admin/dashboard) |
-| **Service Professional (Pro)** | `provider@gmail.com` *(or `pro@gmail.com`)* | `admin@123` | [`/pro/dashboard`](https://omniservice.volcanic.world/pro/dashboard) |
+| **Master Service Provider (Class Presentation)** | `kedaresp18@gmail.com` *(or `provider@gmail.com` / `pro@gmail.com`)* | `admin@123` | [`/pro/dashboard`](https://omniservice.volcanic.world/pro/dashboard) |
 | **Customer / Homeowner** | `customer@gmail.com` *(or `customer@omniservice.volcanic.world`)* | `admin@123` | [`/customer/dashboard`](https://omniservice.volcanic.world/customer/dashboard) |
 
-> **Note for Evaluators**: All evaluation accounts are pre-seeded directly into the live MongoDB Atlas cluster with NIST SP 800-132 PBKDF2 (SHA-512) password hashing. One-click Google Sign-In and 6-digit Email OTPs are also active.
+> **Note for Evaluators**: All evaluation accounts (including Master Provider `kedaresp18@gmail.com`) are pre-seeded directly into the live MongoDB Atlas cluster with NIST SP 800-132 PBKDF2 (SHA-512) password hashing. All customer requests automatically dispatch real-time notifications directly to `kedaresp18@gmail.com` for class presentation demos. Razorpay test mode (`rzp_test_Tfs9ezCx9ZjUKa`) is integrated for instant escrow funding.
 
 ---
 

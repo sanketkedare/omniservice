@@ -250,7 +250,7 @@ export default function NewServiceRequestPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8 space-y-8 font-serif">
+    <div className="w-full max-w-none px-4 py-6 sm:px-6 sm:py-8 space-y-8 font-serif">
       {/* Header */}
       <PageHeader
         title="InspectAI Visual Diagnostic Intake"

@@ -253,7 +253,7 @@ export default function ProfessionalProfilePage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 text-neutral-900 font-serif" style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}>
+    <div className="w-full max-w-none space-y-8 text-neutral-900 font-serif" style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}>
       <PageHeader
         title="Provider Profile & Shop Verification"
         description="Manage your verified professional credentials, shop location, multiple specialties, and security."

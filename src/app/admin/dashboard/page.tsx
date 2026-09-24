@@ -72,7 +72,7 @@ export default function AdminDashboardPage() {
     : "₹0";
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 sm:space-y-8">
+    <div className="w-full max-w-none space-y-6 sm:space-y-8">
       {/* Header */}
       <PageHeader
         title="OmniService AI Operations &amp; Governance"
