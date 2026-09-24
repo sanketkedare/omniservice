@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { memoryStore, MemoryEvidence } from "@/lib/memory-store";
 import { connectToDatabase } from "@/lib/db";
 import JobEvidence from "@/models/job-evidence.model";
+import { broadcastNotification } from "@/lib/notifications";
 
 export async function GET(req: NextRequest) {
   try {
@@ -113,6 +114,15 @@ export async function POST(req: NextRequest) {
     };
 
     memoryStore.evidence.set(evidenceId, evidenceRecord);
+
+    // Broadcast live event to customer
+    broadcastNotification({
+      type: "evidence_uploaded",
+      title: "📸 Workmanship Evidence Uploaded",
+      message: `Technician uploaded ${type === "pre_work" ? "pre-repair baseline" : "post-repair fix"} photo: "${title}". InspectAI visual verification passed.`,
+      recipientRole: "all",
+      link: "/customer/requests",
+    });
 
     // MongoDB write
     try {

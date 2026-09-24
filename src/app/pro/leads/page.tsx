@@ -21,6 +21,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { formatPaise } from "@/lib/utils";
+import { subscribeToNotifications } from "@/lib/notifications";
 
 interface LeadItem {
   id: string;
@@ -130,6 +131,10 @@ export default function ProfessionalLeadsPage() {
 
   useEffect(() => {
     fetchLeads();
+    const unsubscribe = subscribeToNotifications(() => {
+      fetchLeads();
+    });
+    return () => unsubscribe();
   }, []);
 
   const handleAcceptJob = async (lead: LeadItem) => {

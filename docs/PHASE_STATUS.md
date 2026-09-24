@@ -61,6 +61,10 @@
 - Fixed sidebar toggle header across Customer, Provider, and Admin dashboards (`w-64` expanded with `OmniService_Logo.png` vs `w-16` collapsed with centered `OmniService_Icon.png` and expand toggle).
 - Aligned `TopBar.tsx` height to `h-16` for seamless top border alignment across all dashboards.
 
+### 11. Synchronized Dual-Portal Real-Time Event Bus
+- Integrated real-time event streaming (`subscribeToNotifications` & `broadcastNotification`) linking Customer Portal & Provider Portal (`kedaresp18@gmail.com`).
+- Full lifecycle synchronization: Photo/Video Ingestion ➔ SOW Generation ➔ Escrow Lock ➔ Provider Dispatch & Accept ➔ Live Progressions (`en_route` -> `arrived` -> `in_progress` -> `completed`) ➔ Photographic Evidence Verification ➔ Escrow Release.
+
 ---
 
 ## Final Quality & Engineering Metrics

@@ -19,6 +19,8 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 
+import { subscribeToNotifications } from "@/lib/notifications";
+
 export default function CustomerRequestsPage() {
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +45,10 @@ export default function CustomerRequestsPage() {
 
   useEffect(() => {
     loadRequests();
+    const unsubscribe = subscribeToNotifications(() => {
+      loadRequests();
+    });
+    return () => unsubscribe();
   }, []);
 
   const filteredRequests = requests.filter((r) => {

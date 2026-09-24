@@ -4,6 +4,9 @@ import { connectToDatabase } from "@/lib/db";
 import { ScopeOfWork } from "@/models/scope-of-work.model";
 import { ServiceRequest } from "@/models/service-request.model";
 import { PricingEstimate } from "@/models/pricing-estimate.model";
+import { User } from "@/models/user.model";
+import { Notification } from "@/models/remaining.model";
+import { broadcastNotification } from "@/lib/notifications";
 import { logger } from "@/lib/logger";
 
 interface RouteParams {
@@ -52,6 +55,20 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
         requestId = sow.serviceRequestId.toString();
         totalPaise = sow.totalPaise;
+
+        // 🔔 Dispatch Notification to Provider Account: kedaresp18@gmail.com
+        const providerUser = await User.findOne({ email: "kedaresp18@gmail.com" });
+        if (providerUser) {
+          await (Notification as any).create({
+            userId: providerUser._id,
+            channel: "in_app",
+            title: `⚡ SOW Approved & Escrow Locked!`,
+            body: `Customer approved SOW for "${sow.problemTitle || "Service Request"}". Locked Escrow: ₹${((sow.totalPaise || 218300) / 100).toFixed(2)}. Ready for dispatch.`,
+            status: "delivered",
+            entityType: "job",
+            entityId: sow.serviceRequestId,
+          });
+        }
       }
     } catch {
       // Offline fallback
@@ -72,6 +89,15 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     if (!sow) {
       return NextResponse.json({ error: "Scope of Work not found" }, { status: 404 });
     }
+
+    // Broadcast live notification event to Provider Portal
+    broadcastNotification({
+      type: "escrow_locked",
+      title: "⚡ SOW Approved & Escrow Funds Locked!",
+      message: `Customer approved scope for "${sow.problemTitle || "Inspection & Repair"}". Escrow locked: ₹${((sow.totalPaise || totalPaise || 218300) / 100).toFixed(2)}.`,
+      recipientRole: "professional",
+      link: "/pro/jobs",
+    });
 
     logger.info(
       { sowId: sow._id, serviceRequestId: sow.serviceRequestId },

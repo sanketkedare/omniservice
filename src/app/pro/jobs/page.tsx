@@ -22,6 +22,8 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { formatPaise } from "@/lib/utils";
 
+import { subscribeToNotifications } from "@/lib/notifications";
+
 interface JobItem {
   _id: string;
   bookingId: string;
@@ -45,22 +47,50 @@ export default function ProfessionalJobsPage() {
   const [updatingJobId, setUpdatingJobId] = useState<string | null>(null);
 
   const fetchJobs = async () => {
-    // Initial demo fallback job
+    try {
+      const res = await fetch("/api/service-requests");
+      const data = await res.json();
+      if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
+        const mappedJobs: JobItem[] = data.data.map((r: any, idx: number) => ({
+          _id: r.jobId || r._id || `job_${idx}`,
+          bookingId: `bk_${r._id}`,
+          serviceRequestId: r._id,
+          scopeOfWorkId: r.scopeOfWorkId || `sow_${r._id}`,
+          customerName: "Pooja Verma",
+          customerPhone: "+91 98765 43230",
+          customerAddress: "Flat 402, Lakeview Residency, Gachibowli, Hyderabad",
+          problemTitle: r.title || "Home Repair Request",
+          category: r.aiCategoryDetected || "Electrical & Home Systems",
+          status: (r.status === "sow_approved" || r.status === "booked" ? "assigned" : r.status === "in_progress" ? "in_progress" : r.status === "completed" ? "completed" : "assigned") as any,
+          priceCeilingPaise: 218300,
+          requiredParts: [
+            { name: "Havells 63A Single Pole MCB Breaker", quantity: 1, inStock: true },
+            { name: "High-Temp Silicone Sealant", quantity: 1, inStock: true },
+          ],
+          distanceKm: 2.1,
+          estimatedArrivalMinutes: 8,
+        }));
+        setJobs(mappedJobs);
+        return;
+      }
+    } catch {}
+
+    // Fallback demo job
     setJobs([
       {
         _id: "65f01234567890abcdef6001",
         bookingId: "65f01234567890abcdef7001",
         serviceRequestId: "65f01234567890abcdef2001",
         scopeOfWorkId: "65f01234567890abcdef3001",
-        customerName: "K. Reddy",
-        customerPhone: "+91 98200 12345",
-        customerAddress: "Flat 402, Sea Green Apts, Hyderabad",
-        problemTitle: "Split AC Compressor Tripping MCB",
-        category: "hvac",
+        customerName: "Pooja Verma",
+        customerPhone: "+91 98765 43230",
+        customerAddress: "Flat 402, Lakeview Residency, Gachibowli, Hyderabad",
+        problemTitle: "Tripping MCB Main Breaker in Kitchen Corridor",
+        category: "electrical",
         status: "assigned",
-        priceCeilingPaise: 280000,
+        priceCeilingPaise: 218300,
         requiredParts: [
-          { name: "45µF Dual Run Motor Capacitor", quantity: 1, inStock: true },
+          { name: "Havells 63A Single Pole MCB Breaker", quantity: 1, inStock: true },
         ],
         distanceKm: 1.8,
         estimatedArrivalMinutes: 6,
@@ -70,6 +100,10 @@ export default function ProfessionalJobsPage() {
 
   useEffect(() => {
     fetchJobs();
+    const unsubscribe = subscribeToNotifications(() => {
+      fetchJobs();
+    });
+    return () => unsubscribe();
   }, []);
 
   const handleUpdateStatus = async (jobId: string, newStatus: "en_route" | "arrived" | "in_progress" | "completed") => {

@@ -33,7 +33,7 @@ Urban home services in India face a persistent **"trust and efficiency deficit"*
 
 **OmniService AI** eliminates these structural frictions through a continuous, closed-loop algorithmic pipeline:
 ```
-15s Multimodal Video Scan ➔ InspectAI Diagnostic ➔ SmartRoute Van-Inventory Dispatch ➔ TrustLock Fiduciary Escrow ➔ Photographic Workmanship Proof ➔ Immutable HomePass Passport
+15s Video Ingestion ➔ InspectAI Diagnostic ➔ Dual-Portal Event Bus ➔ SmartRoute Provider Dispatch (kedaresp18@gmail.com) ➔ Real-Time Status Progressions ➔ TrustLock Escrow Release ➔ HomePass Passport Update
 ```
 
 ---

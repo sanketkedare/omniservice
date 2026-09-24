@@ -10,6 +10,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { ServiceRequest } from "@/models/service-request.model";
 import { Booking } from "@/models/booking-job.model";
+import { Notification } from "@/models/remaining.model";
+import { broadcastNotification } from "@/lib/notifications";
 import { memoryStore } from "@/lib/memory-store";
 import { SEED_PROFESSIONALS } from "@/lib/pro-seed-data";
 
@@ -68,6 +70,15 @@ export async function POST(
       updatedAt: new Date(),
     });
 
+    // Broadcast real-time notification to Customer & Admin
+    broadcastNotification({
+      type: "job_assigned",
+      title: "🚗 Provider Accepted Your Request!",
+      message: `Kedare Services (kedaresp18@gmail.com) has accepted your job "${newJob.problemTitle}". ETA: ~${newJob.estimatedArrivalMinutes} mins.`,
+      recipientRole: "all",
+      link: "/customer/requests",
+    });
+
     // If MongoDB is connected, also update DB models
     try {
       const isConnected = await connectDB();
@@ -75,6 +86,16 @@ export async function POST(
         await ServiceRequest.findByIdAndUpdate(leadOrRequestId, {
           status: "matched",
           matchedProfessionalId: pro.userId,
+        });
+
+        await (Notification as any).create({
+          userId: newJob.customerId,
+          channel: "in_app",
+          title: "🚗 Provider Accepted Your Request!",
+          body: `Kedare Services accepted "${newJob.problemTitle}". Technician is en route to your location.`,
+          status: "delivered",
+          entityType: "job",
+          entityId: newJobId,
         });
       }
     } catch {
