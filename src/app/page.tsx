@@ -1280,13 +1280,12 @@ export default function HomePage() {
       {/* 6. REDESIGNED FOOTER — VOLCANIC WATERMARK & BRANDING                */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
       <footer className="relative w-full bg-[#150702] text-neutral-300 py-16 px-5 sm:px-10 lg:px-16 border-t border-orange-900/60 overflow-hidden">
-        {/* Prominent V O L C A N I C Ambient Background Watermark (Scaled to fit without being cut off) */}
+        {/* Prominent V O L C A N I C Ambient Background Watermark */}
         <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none select-none z-0">
           <span
-            className="text-[clamp(2.5rem,7.5vw,7.5rem)] font-black tracking-[0.18em] sm:tracking-[0.25em] uppercase whitespace-nowrap text-center px-4"
+            className="text-[90px] sm:text-[150px] lg:text-[210px] font-black tracking-[0.22em] uppercase whitespace-nowrap"
             style={{
               color: "rgba(240, 90, 40, 0.16)",
-              WebkitTextStroke: "1px rgba(240, 90, 40, 0.35)",
               textShadow: "0 0 50px rgba(240, 90, 40, 0.2)",
             }}
           >
@@ -1375,23 +1374,8 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Dedicated Unobstructed VOLCANIC Brand Watermark Banner across Footer */}
-          <div className="w-full text-center py-6 border-y border-orange-900/40 overflow-hidden select-none pointer-events-none">
-            <p
-              className="text-[clamp(2.2rem,8.5vw,6.5rem)] font-black uppercase tracking-[0.22em] leading-none whitespace-nowrap"
-              style={{
-                color: "rgba(240, 90, 40, 0.28)",
-                WebkitTextStroke: "1px rgba(240, 90, 40, 0.45)",
-                textShadow: "0 0 45px rgba(240, 90, 40, 0.25)",
-                margin: 0,
-              }}
-            >
-              V O L C A N I C
-            </p>
-          </div>
-
           {/* Volcanic Branding Bar with Logo */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-400">
+          <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-400">
             <div className="flex items-center gap-3">
               <Image
                 src="/images/volcanic_logo.png"
