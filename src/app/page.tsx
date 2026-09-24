@@ -44,6 +44,7 @@ import { HomeDiagnosticChat } from "@/components/ai/HomeDiagnosticChat";
 import { useGeolocation } from "@/lib/geolocation";
 import { GoogleNavButton } from "@/components/auth/GoogleNavButton";
 import { PWAInstallButton } from "@/components/shared/PWAInstallButton";
+import { HeroMobile } from "@/components/home/HeroMobile";
 
 // ── 4 Consumer Trust Flow Steps ──────────────────────────────────────────────
 const TRUST_FLOW_STEPS = [
@@ -117,7 +118,7 @@ const SERVICE_CATEGORIES = [
     description:
       "Inverter AC diagnostics, compressor failures, gas leakage, coil replacement & seasonal deep cleaning.",
     avgTime: "45 mins",
-    priceRange: "₹499 – ₹3,200",
+    priceRange: "Starting from ₹499",
     jobsCount: "1,420+ completed",
   },
   {
@@ -130,7 +131,7 @@ const SERVICE_CATEGORIES = [
     description:
       "Distribution boards, short circuits, MCB tripping, wiring faults & heavy load automation.",
     avgTime: "30 mins",
-    priceRange: "₹349 – ₹2,400",
+    priceRange: "Starting from ₹349",
     jobsCount: "980+ completed",
   },
   {
@@ -143,7 +144,7 @@ const SERVICE_CATEGORIES = [
     description:
       "Concealed pipe leaks, motorized valves, pressure booster pumps, fixture replacements & drainage.",
     avgTime: "40 mins",
-    priceRange: "₹399 – ₹2,800",
+    priceRange: "Starting from ₹399",
     jobsCount: "1,150+ completed",
   },
   {
@@ -156,7 +157,7 @@ const SERVICE_CATEGORIES = [
     description:
       "Front-load washing machines, microwave inverters, dishwashers, refrigerators & chimney motors.",
     avgTime: "50 mins",
-    priceRange: "₹599 – ₹4,500",
+    priceRange: "Starting from ₹599",
     jobsCount: "820+ completed",
   },
   {
@@ -169,7 +170,7 @@ const SERVICE_CATEGORIES = [
     description:
       "RO membrane replacement, booster pump pressure check, TDS adjustment & UV chamber servicing.",
     avgTime: "35 mins",
-    priceRange: "₹450 – ₹2,600",
+    priceRange: "Starting from ₹450",
     jobsCount: "670+ completed",
   },
   {
@@ -182,7 +183,7 @@ const SERVICE_CATEGORIES = [
     description:
       "Hybrid rooftop solar inverters, lithium battery banks, surge protection & high-load UPS checks.",
     avgTime: "60 mins",
-    priceRange: "₹799 – ₹5,800",
+    priceRange: "Starting from ₹799",
     jobsCount: "340+ completed",
   },
   {
@@ -195,7 +196,7 @@ const SERVICE_CATEGORIES = [
     description:
       "AI camera installations, smart video doorbells, biometric locks, NVR storage & sensor setups.",
     avgTime: "45 mins",
-    priceRange: "₹699 – ₹4,200",
+    priceRange: "Starting from ₹699",
     jobsCount: "510+ completed",
   },
   {
@@ -208,7 +209,7 @@ const SERVICE_CATEGORIES = [
     description:
       "Digital health passport for your home, appliance inventory audits, electrical safety checks & warranty logs.",
     avgTime: "90 mins",
-    priceRange: "₹1,499 Flat",
+    priceRange: "Starting from ₹1,499",
     jobsCount: "410+ properties",
   },
 ];
@@ -398,10 +399,10 @@ export default function HomePage() {
       style={{ fontFamily: '"Times New Roman", Times, "Liberation Serif", serif' }}
     >
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* 1. TOP NAVBAR — FLOATING ISLAND PILL WITH MINIMAL WORDS             */}
+      {/* 1. TOP NAVBAR — FLOATING ISLAND PILL WITH SIMPLE WORDS & VISUALS   */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      <div className="sticky top-3 sm:top-4 z-40 w-full px-3 sm:px-6 pointer-events-none transition-all">
-        <header className="max-w-5xl mx-auto w-full rounded-full border border-orange-200/90 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl shadow-xl shadow-orange-950/5 px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 pointer-events-auto transition-all">
+      <div className="fixed top-3 sm:top-4 left-0 right-0 z-40 w-full px-3 sm:px-6 pointer-events-none transition-all">
+        <header className="max-w-5xl mx-auto w-full rounded-full border border-orange-200/90 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-xl shadow-xl shadow-orange-950/5 px-4 sm:px-6 py-2 flex items-center justify-between gap-3 pointer-events-auto transition-all">
           {/* Brand Logo & Auto-Detected Hyderabad Badge */}
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center group" aria-label="OmniService AI Home">
@@ -415,38 +416,52 @@ export default function HomePage() {
               />
             </Link>
 
-            {/* Static Non-Clickable Location Status Badge (No Manual Popup) */}
+            {/* Static Non-Clickable Location Status Badge with Live Visual Indicator */}
             <div
-              className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-orange-200/80 bg-orange-50/70 px-3 py-1 text-[11px] font-bold text-[#9a2c06] select-none"
+              className="hidden md:inline-flex items-center gap-2 rounded-full border border-orange-200/80 bg-orange-50/80 px-3 py-1 text-[11px] font-bold text-[#9a2c06] select-none"
               title="Verified Service Zone: Greater Hyderabad"
             >
-              <MapPin className="h-3 w-3 text-[#f05a28]" />
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
               <span className="max-w-[130px] truncate">{locality || "Hyderabad, IN"}</span>
             </div>
           </div>
 
-          {/* Desktop Navigation Links — Minimal Words */}
-          <nav className="hidden lg:flex items-center gap-6 text-xs font-bold text-[#431407]">
-            <a
-              href="#how-it-works"
-              onClick={(e) => handleNavClick(e, "#how-it-works")}
-              className="transition-colors hover:text-[#f05a28] cursor-pointer"
-            >
-              Flow
-            </a>
+          {/* Desktop Navigation Links — Simple Everyday Words with Clean Visual Icons */}
+          <nav className="hidden lg:flex items-center gap-1 text-xs font-bold text-[#431407]">
             <a
               href="#categories"
               onClick={(e) => handleNavClick(e, "#categories")}
-              className="transition-colors hover:text-[#f05a28] cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-orange-50 hover:text-[#f05a28] transition-all cursor-pointer"
             >
-              Trades
+              <Wrench className="h-3.5 w-3.5 text-[#f05a28]" />
+              <span>Services</span>
+            </a>
+            <a
+              href="#how-it-works"
+              onClick={(e) => handleNavClick(e, "#how-it-works")}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-orange-50 hover:text-[#f05a28] transition-all cursor-pointer"
+            >
+              <Layers className="h-3.5 w-3.5 text-amber-600" />
+              <span>How It Works</span>
             </a>
             <a
               href="#why-trust"
               onClick={(e) => handleNavClick(e, "#why-trust")}
-              className="transition-colors hover:text-[#f05a28] cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-orange-50 hover:text-[#f05a28] transition-all cursor-pointer"
             >
-              Escrow
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+              <span>Guarantee</span>
+            </a>
+            <a
+              href="#reviews"
+              onClick={(e) => handleNavClick(e, "#reviews")}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-orange-50 hover:text-[#f05a28] transition-all cursor-pointer"
+            >
+              <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-400" />
+              <span>Reviews</span>
             </a>
           </nav>
 
@@ -625,22 +640,30 @@ export default function HomePage() {
       )}
 
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* 2. HERO SECTION — WORLD-CLASS ARTISTIC FLOW & GEOMETRIC DESIGN      */}
+      {/* 2. HERO SECTION — DEDICATED MOBILE & DESKTOP ARCHITECTURES          */}
       {/* ═══════════════════════════════════════════════════════════════════ */}
-      <section className="relative w-full overflow-hidden border-b border-orange-200/80 py-16 sm:py-24 lg:py-28">
-        {/* Real Photographic Background with Warm Ambient Overlay */}
+      {/* Small Screen Experience (<1024px) */}
+      <div className="block lg:hidden">
+        <HeroMobile locality={locality} />
+      </div>
+
+      {/* Desktop / Large Screen Split Experience (>=1024px) */}
+      <section className="hidden lg:flex relative w-full h-screen overflow-hidden border-b border-orange-200/80 pt-20 sm:pt-24 pb-6 sm:pb-8 flex-col justify-center">
+        {/* Real Photographic Background — Positioned to Far Right for Clean Visual Split */}
         <div className="absolute inset-0 z-0">
           <img
-            src="/api/media/asset?name=hero_technician"
+            src="/api/media/asset?name=hero_technician&v=2"
             alt="OmniService Field Technician"
-            className="w-full h-full object-cover object-center filter brightness-[0.88] contrast-[1.05]"
+            className="w-full h-full object-cover object-[88%_center] lg:object-right filter brightness-[1.01]"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#fffaf4]/92 via-[#fff5eb]/88 to-[#fdecdb]/95 backdrop-blur-[1px]" />
+          {/* Natural Atmospheric Gradient — Softly Blends with Warm Room Tone on Left, Keeping Full Image Natural & Clear */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#fffaf4]/90 from-25% via-[#fff8f0]/50 via-50% to-transparent to-70%" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#faf8f5]/60 via-transparent to-transparent" />
         </div>
 
         {/* Artistic SVG Flow Ribbons */}
         <svg
-          className="absolute inset-0 w-full h-full pointer-events-none opacity-30 z-1"
+          className="absolute inset-0 w-full h-full pointer-events-none opacity-20 z-1"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 1440 900"
           fill="none"
@@ -670,129 +693,128 @@ export default function HomePage() {
         </svg>
 
         {/* Floating Geometric Light Spheres */}
-        <div className="absolute -top-36 left-1/4 w-[520px] h-[520px] rounded-full bg-gradient-to-tr from-[#f05a28]/15 via-amber-300/15 to-transparent blur-3xl pointer-events-none z-1" />
-        <div className="absolute -bottom-36 right-1/4 w-[560px] h-[560px] rounded-full bg-gradient-to-bl from-amber-400/15 via-orange-300/10 to-transparent blur-3xl pointer-events-none z-1" />
+        <div className="absolute -top-36 left-10 w-[450px] h-[450px] rounded-full bg-gradient-to-tr from-[#f05a28]/10 via-amber-300/10 to-transparent blur-3xl pointer-events-none z-1" />
 
-        <div className="max-w-6xl mx-auto w-full px-4 sm:px-8 lg:px-12 flex flex-col items-center text-center relative z-10 space-y-8">
-          {/* Static Verified Service Zone Badge (No Manual Popup) */}
-          <div className="inline-flex items-center gap-2.5 rounded-full border border-orange-300/90 bg-white/95 px-4 py-1.5 text-xs font-bold text-[#c2410c] shadow-xs backdrop-blur-md select-none">
-            <span className="flex h-2 w-2 rounded-full bg-[#f05a28] animate-ping" />
-            <span>Serving: <strong>{locality || "Greater Hyderabad Active Radius"}</strong></span>
-            <span className="text-orange-300">•</span>
-            <span className="text-emerald-700 font-bold">Auto-Verified Hub</span>
-          </div>
+        {/* ── LEFT-ALIGNED HERO CONTENT CONTAINER ── */}
+        <div className="max-w-7xl mx-auto w-full px-5 sm:px-10 lg:px-16 flex flex-col justify-center items-start text-left relative z-10 py-4">
+          <div className="max-w-xl lg:max-w-lg xl:max-w-xl space-y-4">
+            {/* Static Verified Service Zone Badge */}
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-orange-300/90 bg-white/95 px-4 py-1.5 text-xs font-bold text-[#c2410c] shadow-xs backdrop-blur-md select-none">
+              <span className="flex h-2 w-2 rounded-full bg-[#f05a28] animate-ping" />
+              <span>Serving: <strong>{locality || "Greater Hyderabad Active Radius"}</strong></span>
+              <span className="text-orange-300">•</span>
+              <span className="text-emerald-700 font-bold">Auto-Verified Hub</span>
+            </div>
 
-          {/* Grand Hero Headline in Times New Roman */}
-          <div className="space-y-4 max-w-4xl">
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[#2d130a] leading-[1.1]">
-              Show the problem.{" "}
-              <span className="bg-gradient-to-r from-[#f05a28] via-[#ea580c] to-[#c2410c] bg-clip-text text-transparent italic">
-                Let AI diagnose it.
-              </span>{" "}
-              Pay only when verified.
-            </h1>
+            {/* Grand Hero Headline in Times New Roman */}
+            <div className="space-y-2.5">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#2d130a] leading-[1.12]">
+                Show the problem.{" "}
+                <span className="bg-gradient-to-r from-[#f05a28] via-[#ea580c] to-[#c2410c] bg-clip-text text-transparent italic">
+                  Let AI diagnose it.
+                </span>{" "}
+                Pay only when verified.
+              </h1>
 
-            <p className="text-base sm:text-xl text-neutral-700 leading-relaxed max-w-2xl mx-auto font-normal">
-              Record a 15-second video of your repair issue. Get locked upfront pricing, certified local providers with parts on board, and 100% escrow payment protection.
-            </p>
-          </div>
+              <p className="text-sm sm:text-base text-neutral-700 leading-relaxed font-normal max-w-lg">
+                Record a 15-second video of your repair issue. Get locked upfront pricing, certified local providers with parts on board, and 100% escrow payment protection.
+              </p>
+            </div>
 
-          {/* Action CTAs: Book Diagnostic, Install App, Case Study, Join as Provider */}
-          <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
-            <Link
-              href="/customer/new-request"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f05a28] via-[#ea580c] to-[#c2410c] px-7 py-3.5 text-sm sm:text-base font-bold text-white shadow-xl shadow-orange-500/25 hover:shadow-orange-500/40 transition-all hover:scale-102"
-            >
-              <Camera className="h-5 w-5" />
-              <span>Book AI Diagnostic</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            {/* Action CTAs: Book Diagnostic, Install App, Case Study */}
+            <div className="space-y-2.5 pt-1">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <Link
+                  href="/customer/new-request"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f05a28] via-[#ea580c] to-[#c2410c] px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-xl shadow-orange-500/25 hover:shadow-orange-500/40 transition-all hover:scale-102"
+                >
+                  <Camera className="h-4 w-4" />
+                  <span>Book AI Diagnostic</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
 
-            {/* Install App Button in Hero */}
-            <PWAInstallButton variant="hero" />
+                {/* Install App Button in Hero */}
+                <PWAInstallButton variant="hero" />
 
-            {/* Case Study Button in Hero */}
-            <Link
-              href="/case-study"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-orange-300/90 bg-white/95 px-6 py-3.5 text-sm font-bold text-[#c2410c] shadow-md shadow-orange-900/5 hover:bg-orange-50 hover:border-orange-400 transition-all cursor-pointer"
-            >
-              <Award className="h-4 w-4 text-[#f05a28]" />
-              <span>Case Study</span>
-            </Link>
-
-            <Link
-              href="/register?role=professional"
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-orange-200/80 bg-white/80 px-6 py-3.5 text-sm font-semibold text-[#7c2d12] hover:bg-white hover:border-orange-300 transition-colors shadow-2xs"
-            >
-              <Briefcase className="h-4 w-4 text-[#f05a28]" />
-              <span>Join as Provider</span>
-            </Link>
-          </div>
-
-          {/* ── 3-STEP GEOMETRIC FLOW DIAGRAM (SHAPES, MINIMAL READING, NO CLUTTER) ── */}
-          <div className="w-full max-w-4xl pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 relative">
-              {/* Step 1 Geometric Card */}
-              <div className="group rounded-3xl border-2 border-orange-200/90 bg-white/90 backdrop-blur-md p-6 shadow-lg shadow-orange-950/5 hover:border-[#f05a28] hover:-translate-y-1 transition-all text-center space-y-3">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#f05a28] to-[#ea580c] text-white shadow-md shadow-orange-500/30 group-hover:scale-105 transition-transform">
-                  <Camera className="h-7 w-7" />
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-orange-100 text-[#c2410c] text-[11px] font-bold">
-                  <span>Step 1</span>
-                </div>
-                <h3 className="text-base font-bold text-[#2d130a]">15-Sec Video Intake</h3>
-                <p className="text-xs text-neutral-600 leading-relaxed font-sans">
-                  Point camera at the defect. InspectAI pinpoints root cause and OEM replacement part.
-                </p>
+                {/* Case Study Button in Hero */}
+                <Link
+                  href="/case-study"
+                  className="inline-flex items-center gap-1.5 rounded-2xl border border-orange-300/80 bg-white/95 px-4 py-3 text-xs font-bold text-[#c2410c] shadow-xs hover:bg-orange-50 transition-all"
+                >
+                  <Award className="h-3.5 w-3.5 text-[#f05a28]" />
+                  <span>Case Study</span>
+                </Link>
               </div>
 
-              {/* Step 2 Geometric Card */}
-              <div className="group rounded-3xl border-2 border-orange-200/90 bg-white/90 backdrop-blur-md p-6 shadow-lg shadow-orange-950/5 hover:border-[#f05a28] hover:-translate-y-1 transition-all text-center space-y-3">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-[#f05a28] text-white shadow-md shadow-orange-500/30 group-hover:scale-105 transition-transform">
-                  <Lock className="h-7 w-7" />
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[11px] font-bold">
-                  <span>Step 2</span>
-                </div>
-                <h3 className="text-base font-bold text-[#2d130a]">Locked Price Ceiling</h3>
-                <p className="text-xs text-neutral-600 leading-relaxed font-sans">
-                  Guaranteed upfront cost ceiling before dispatch. Funds held secure in portal escrow.
-                </p>
-              </div>
+              <Link
+                href="/register?role=professional"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#7c2d12] hover:text-[#f05a28] transition-colors"
+              >
+                <Briefcase className="h-3.5 w-3.5 text-[#f05a28]" />
+                <span>Service professional? Join as Provider Partner →</span>
+              </Link>
+            </div>
 
-              {/* Step 3 Geometric Card */}
-              <div className="group rounded-3xl border-2 border-orange-200/90 bg-white/90 backdrop-blur-md p-6 shadow-lg shadow-orange-950/5 hover:border-emerald-500 hover:-translate-y-1 transition-all text-center space-y-3">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/30 group-hover:scale-105 transition-transform">
-                  <Truck className="h-7 w-7" />
+            {/* ── 3-STEP MICRO PROCESS CONDUIT ── */}
+            <div className="w-full pt-1">
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4 p-3 rounded-2xl bg-white/70 backdrop-blur-md border border-orange-200/60 shadow-2xs max-w-lg">
+                {/* Step 1 */}
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#f05a28] to-[#ea580c] text-white text-xs font-black shadow-xs">
+                    1
+                  </span>
+                  <div className="text-left">
+                    <p className="text-xs font-extrabold text-[#2d130a] leading-none">Video Intake</p>
+                    <p className="text-[10px] text-neutral-500 font-sans mt-0.5">AI Diagnosis</p>
+                  </div>
                 </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
-                  <span>Step 3</span>
+
+                <ChevronRight className="h-3.5 w-3.5 text-orange-300 shrink-0 hidden sm:block" />
+
+                {/* Step 2 */}
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-[#f05a28] text-white text-xs font-black shadow-xs">
+                    2
+                  </span>
+                  <div className="text-left">
+                    <p className="text-xs font-extrabold text-[#2d130a] leading-none">Locked Price</p>
+                    <p className="text-[10px] text-neutral-500 font-sans mt-0.5">Escrow Safe</p>
+                  </div>
                 </div>
-                <h3 className="text-base font-bold text-[#2d130a]">Van Dispatched with Parts</h3>
-                <p className="text-xs text-neutral-600 leading-relaxed font-sans">
-                  Accredited specialist arrives with OEM inventory ready for single-trip resolution.
-                </p>
+
+                <ChevronRight className="h-3.5 w-3.5 text-orange-300 shrink-0 hidden sm:block" />
+
+                {/* Step 3 */}
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white text-xs font-black shadow-xs">
+                    3
+                  </span>
+                  <div className="text-left">
+                    <p className="text-xs font-extrabold text-[#2d130a] leading-none">Dispatched</p>
+                    <p className="text-[10px] text-neutral-500 font-sans mt-0.5">OEM Parts</p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Centered Trust Metrics Row */}
-          <div className="w-full max-w-4xl rounded-2xl border border-orange-200/80 bg-white/95 backdrop-blur-md p-6 shadow-sm grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
-            <div className="space-y-1">
-              <span className="text-2xl sm:text-3xl font-bold text-[#2d130a] block">₹14.8L+</span>
-              <span className="text-xs text-neutral-600 font-medium">Escrow Protected</span>
-            </div>
-            <div className="space-y-1">
-              <span className="text-2xl sm:text-3xl font-bold text-emerald-700 block">0.12%</span>
-              <span className="text-xs text-neutral-600 font-medium">Dispute Rate</span>
-            </div>
-            <div className="space-y-1">
-              <span className="text-2xl sm:text-3xl font-bold text-[#2d130a] block">15 Sec</span>
-              <span className="text-xs text-neutral-600 font-medium">Video Intake</span>
-            </div>
-            <div className="space-y-1">
-              <span className="text-2xl sm:text-3xl font-bold text-[#f05a28] block">100%</span>
-              <span className="text-xs text-neutral-600 font-medium">Locked Price Ceiling</span>
+            {/* Trust Metrics Strip — Left Aligned, 4 Columns */}
+            <div className="grid grid-cols-4 gap-2 pt-2 border-t border-orange-200/60 max-w-lg w-full text-left">
+              <div>
+                <span className="text-base sm:text-lg font-black text-[#2d130a] block leading-none">₹14.8L+</span>
+                <span className="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider mt-1 block">Escrow</span>
+              </div>
+              <div>
+                <span className="text-base sm:text-lg font-black text-emerald-700 block leading-none">0.12%</span>
+                <span className="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider mt-1 block">Disputes</span>
+              </div>
+              <div>
+                <span className="text-base sm:text-lg font-black text-[#2d130a] block leading-none">15 Sec</span>
+                <span className="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider mt-1 block">AI Intake</span>
+              </div>
+              <div>
+                <span className="text-base sm:text-lg font-black text-[#f05a28] block leading-none">100%</span>
+                <span className="text-[10px] text-neutral-500 font-semibold uppercase tracking-wider mt-1 block">Locked Cap</span>
+              </div>
             </div>
           </div>
         </div>
@@ -959,7 +981,7 @@ export default function HomePage() {
                           <span className="font-bold text-neutral-800">{cat.avgTime}</span>
                         </div>
                         <div className="text-right">
-                          <span className="text-[10px] text-neutral-400 block font-semibold uppercase">Price Range</span>
+                          <span className="text-[10px] text-neutral-400 block font-semibold uppercase">Pricing</span>
                           <span className="font-bold text-[#f05a28]">{cat.priceRange}</span>
                         </div>
                       </div>
@@ -1283,10 +1305,9 @@ export default function HomePage() {
         {/* Prominent V O L C A N I C Ambient Background Watermark */}
         <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none select-none z-0">
           <span
-            className="text-[90px] sm:text-[150px] lg:text-[210px] font-black tracking-[0.22em] uppercase whitespace-nowrap"
+            className="text-[90px] sm:text-[150px] lg:text-[210px] font-black tracking-[0.22em] uppercase whitespace-nowrap select-none"
             style={{
-              color: "rgba(240, 90, 40, 0.16)",
-              textShadow: "0 0 50px rgba(240, 90, 40, 0.2)",
+              color: "rgba(156, 163, 175, 0.07)",
             }}
           >
             V O L C A N I C

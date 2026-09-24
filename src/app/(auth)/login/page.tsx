@@ -23,7 +23,6 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
-  const authError = searchParams.get("error");
 
   const [loginMode, setLoginMode] = useState<"password" | "otp">("password");
   const [email, setEmail] = useState("");
@@ -32,19 +31,7 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(
-    authError === "AdminAuthRequired"
-      ? "Administrator credentials required to enter Governance Center."
-      : authError === "ProAuthRequired"
-      ? "Professional account required to enter Service Portal."
-      : authError === "CustomerAuthRequired"
-      ? "Please sign in to access your customer dashboard."
-      : authError === "UnauthorizedAdminAccess"
-      ? "Access Denied: Only Administrator accounts can access the Governance Center."
-      : authError === "UnauthorizedProAccess"
-      ? "Access Denied: Only verified Professionals can access the Operations Portal."
-      : ""
-  );
+  const [error, setError] = useState("");
 
   // ── Block Logged-In Users from Accessing Login Page ──────────────────────
   useEffect(() => {

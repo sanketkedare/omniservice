@@ -98,7 +98,6 @@ export function proxy(request: NextRequest) {
     if (!isAuthenticated) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
-      loginUrl.searchParams.set("error", "AdminAuthRequired");
       return NextResponse.redirect(loginUrl);
     }
     if (userRole !== "admin") {
@@ -114,7 +113,6 @@ export function proxy(request: NextRequest) {
     if (!isAuthenticated) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
-      loginUrl.searchParams.set("error", "ProAuthRequired");
       return NextResponse.redirect(loginUrl);
     }
     if (userRole !== "professional" && userRole !== "admin") {
@@ -130,7 +128,6 @@ export function proxy(request: NextRequest) {
     if (!isAuthenticated) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
-      loginUrl.searchParams.set("error", "CustomerAuthRequired");
       return NextResponse.redirect(loginUrl);
     }
     // Maintain distinct route paths: if logged-in as professional, route to pro dashboard

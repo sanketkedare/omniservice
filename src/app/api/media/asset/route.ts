@@ -3,7 +3,8 @@ import fs from "fs";
 import path from "path";
 
 const ASSET_MAP: Record<string, string> = {
-  hero_technician: "C:\\Users\\Lenovo\\.gemini\\antigravity-ide\\brain\\3184ff43-30b4-4df9-afd2-3b34d557ba1c\\hero_technician_1790227585610.jpg",
+  hero_technician: "C:\\Users\\Lenovo\\.gemini\\antigravity-ide\\brain\\3184ff43-30b4-4df9-afd2-3b34d557ba1c\\hero_technician_v2_1790241050910.jpg",
+  hero_technician_v2: "C:\\Users\\Lenovo\\.gemini\\antigravity-ide\\brain\\3184ff43-30b4-4df9-afd2-3b34d557ba1c\\hero_technician_v2_1790241050910.jpg",
   electrical_service: "C:\\Users\\Lenovo\\.gemini\\antigravity-ide\\brain\\3184ff43-30b4-4df9-afd2-3b34d557ba1c\\plumbing_electric_repair_1790227603297.jpg",
   plumbing_service: "C:\\Users\\Lenovo\\.gemini\\antigravity-ide\\brain\\3184ff43-30b4-4df9-afd2-3b34d557ba1c\\plumbing_inspection_1790227655299.jpg",
   appliance_repair: "C:\\Users\\Lenovo\\.gemini\\antigravity-ide\\brain\\3184ff43-30b4-4df9-afd2-3b34d557ba1c\\appliance_repair_tech_1790230767617.jpg",
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
   return new NextResponse(buffer, {
     headers: {
       "Content-Type": "image/jpeg",
-      "Cache-Control": "public, max-age=31536000, immutable",
+      "Cache-Control": "no-cache, must-revalidate",
     },
   });
 }
